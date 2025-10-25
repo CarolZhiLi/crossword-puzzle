@@ -266,6 +266,11 @@ class CrosswordGame {
             this.handleDifficultyChange(e.target.value);
         });
 
+        // Start game button handler
+        document.getElementById('startGameBtn').addEventListener('click', () => {
+            this.startGame();
+        });
+
         // Control button handlers
         document.getElementById('hintBtn').addEventListener('click', () => this.showHint());
         document.getElementById('checkPuzzleBtn').addEventListener('click', () => this.checkPuzzle());
@@ -473,6 +478,32 @@ class CrosswordGame {
             this.initializeGrid();
             alert(`Grid size changed to ${newGridSize}x${newGridSize} for ${difficulty} difficulty.`);
         }
+    }
+
+    startGame() {
+        const topic = document.getElementById('topicSelect').value;
+        const difficulty = document.getElementById('difficultySelect').value;
+        
+        console.log(`Starting new game with topic: ${topic}, difficulty: ${difficulty}`);
+        
+        // Reset game state
+        this.currentWord = null;
+        this.currentDirection = 'across';
+        this.startTime = Date.now();
+        
+        // Clear any existing timer
+        if (this.timerInterval) {
+            clearInterval(this.timerInterval);
+        }
+        
+        // Start new timer
+        this.startTimer();
+        
+        // Initialize grid with new settings
+        this.initializeGrid();
+        
+        // Show success message
+        alert(`New game started!\nTopic: ${topic}\nDifficulty: ${difficulty}`);
     }
 
     setupResponsiveGrid() {
