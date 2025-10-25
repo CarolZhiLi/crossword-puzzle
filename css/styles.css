@@ -50,7 +50,8 @@ body {
 }
 
 .logo {
-    height: 150px;
+    margin: 10px;
+    height: 100px;
     width: auto;
     object-fit: contain;
 }
@@ -68,12 +69,14 @@ body {
 }
 
 .dropdown {
+    width: 300px;
     padding: 12px 20px;
-    border: 5px groove rgb(70, 155, 220);
+    border: 5px solid #d6df8e   ;
+    background-color: #d6df8e;
     border-radius: 25px;
     font-size: 2.0rem;
     font-weight: 600;
-    color: #595b65;
+    color: rgb(25, 25, 90);
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 140px;
@@ -81,13 +84,12 @@ body {
     appearance: none;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a5568' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right 50px center;
-    background-size: 16px;
+    background-position: right center;
     padding-right: 45px;
 }
 
 .dropdown:hover {
-    border-color: #4299e1;
+    border-color: #de42e1;
     box-shadow: 0 4px 12px rgba(66, 153, 225, 0.2);
 }
 
