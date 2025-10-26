@@ -1,5 +1,6 @@
 import copy
 import random
+from request import request
 
 class CrosswordGenerator:
     def __init__(self, words, grid_size=30):
@@ -150,25 +151,44 @@ class CrosswordGenerator:
 
 # --- Main execution block ---
 if __name__ == "__main__":
-    test_words = [
-    "AUSTRALIA", "ARGENTINA", "AMSTERDAM", "HIMALAYAS",
-    "SAHARA", "AMAZON", "PACIFIC", "ATLANTIC",
-    "VOLGA", "DANUBE", "PYRAMID", "SAVANNA",
-    "TUNDRA", "LONDON", "TOKYO", "PARIS",
-    "ROME", "NILE", "ALPS", "ASIA"
-]
-    
-    print(f"Attempting to generate a crossword with {len(test_words)} words...")
-    generator = CrosswordGenerator([w.upper() for w in test_words])
+    results = request("Generate 20 one-word terms related to JavaScript. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.")
+    words = [w.upper() for _,w, _ in results]  # Convert to uppercase immediately
+    print(f"Attempting to generate a crossword with {len(words)} words...")
+    generator = CrosswordGenerator(words)
 
     if generator.solve():
         print("\n✅ Solution Found!\n")
-        generator.print_grid()
+        generator.print_grid()        
+        print(f"\n--- Words Successfully Used in Grid ---")
+        used_words = [word for word, _, _, _ in generator.solution_coordinates]
+        print(f"Total words placed: {len(used_words)}/{len(words)}")
+        print("Used words:")
+        for i, word in enumerate(sorted(set(used_words)), 1):
+            print(f"{i:2d}. {word}")
         
-        print("\n--- Word Coordinates (word, (col, row), direction) ---")
-        # Sort alphabetically for clean output
-        for word, c, r, direction in sorted(generator.solution_coordinates):
-            dir_str = 'Horizontal' if direction == 'H' else 'Vertical'
-            print(f"- {word:<15} @ ({c:2}, {r:2}) {dir_str}")
+        print(f"\n--- Words NOT Used ---")
+        unused_words = set(words) - set(used_words)
+        if unused_words:
+            for i, word in enumerate(sorted(unused_words), 1):
+                print(f"{i:2d}. {word}")
+        else:
+            print("All words were successfully used!")
+            
     else:
         print("\n❌ No solution could be found for the given words.")
+        print(f"Words placed: {len(generator.solution_coordinates)}/{len(words)}")
+        
+        if len(generator.solution_coordinates) > 0:
+            used_words = [word for word, _, _, _ in generator.solution_coordinates]
+            print(f"\n--- Words Successfully Placed ---")
+            for i, word in enumerate(sorted(set(used_words)), 1):
+                print(f"{i:2d}. {word}")
+        
+        print(f"\n--- Words NOT Used ---")
+        used_words = [word for word, _, _, _ in generator.solution_coordinates]
+        unused_words = set(words) - set(used_words)
+        if unused_words:
+            for i, word in enumerate(sorted(unused_words), 1):
+                print(f"{i:2d}. {word}")
+        else:
+            print("All words were successfully used!")
