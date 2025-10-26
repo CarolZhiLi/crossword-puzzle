@@ -1,6 +1,5 @@
 class CrosswordGame {
     constructor() {
-        this.gridSize = 15;
         this.currentWord = null;
         this.currentDirection = 'across';
         this.startTime = Date.now();
