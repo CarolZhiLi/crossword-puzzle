@@ -175,7 +175,7 @@ if __name__ == "__main__":
             print("All words were successfully used!")
             
     else:
-        print("\n❌ No solution could be found for the given words.")
+        print("\nNo solution could be found for the given words.")
         print(f"Words placed: {len(generator.solution_coordinates)}/{len(words)}")
         
         if len(generator.solution_coordinates) > 0:
