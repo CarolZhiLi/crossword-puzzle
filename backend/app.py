@@ -12,6 +12,8 @@ from request import request as generate_words
 import secrets
 import hashlib
 from datetime import datetime, timedelta
+import smtplib
+import ssl
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
@@ -208,6 +210,55 @@ def _build_reset_link(token: str) -> str:
     return f"{base.rstrip('/')}/reset.html?token={token}"
 
 
+def send_reset_email(to_email: str, reset_link: str) -> bool:
+    host = os.getenv('SMTP_HOST')
+    port = int(os.getenv('SMTP_PORT', '587'))
+    user = os.getenv('SMTP_USER')
+    password = os.getenv('SMTP_PASSWORD')
+    from_addr = os.getenv('SMTP_FROM', user or '')
+    use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() == 'true'
+    use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
+    app_name = os.getenv('APP_NAME', 'CrossyThink')
+
+    if not host or not (user and password):
+        return False
+
+    subject = f"{app_name} Password Reset"
+    body = (
+        f"You requested a password reset for your {app_name} account.\n\n"
+        f"Click the link below to reset your password (valid for a limited time):\n"
+        f"{reset_link}\n\n"
+        f"If you did not request this, please ignore this email."
+    )
+
+    msg = (
+        f"From: {from_addr}\r\n"
+        f"To: {to_email}\r\n"
+        f"Subject: {subject}\r\n"
+        f"MIME-Version: 1.0\r\n"
+        f"Content-Type: text/plain; charset=utf-8\r\n\r\n"
+        f"{body}"
+    )
+
+    try:
+        if use_ssl:
+            context = ssl.create_default_context()
+            with smtplib.SMTP_SSL(host, port, context=context) as server:
+                server.login(user, password)
+                server.sendmail(from_addr, [to_email], msg.encode('utf-8'))
+        else:
+            with smtplib.SMTP(host, port) as server:
+                if use_tls:
+                    context = ssl.create_default_context()
+                    server.starttls(context=context)
+                server.login(user, password)
+                server.sendmail(from_addr, [to_email], msg.encode('utf-8'))
+        return True
+    except Exception as e:
+        print(f"[Password Reset] Failed to send email to {to_email}: {e}")
+        return False
+
+
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     try:
@@ -301,7 +352,10 @@ def forgot_password():
         db.session.commit()
 
         reset_link = _build_reset_link(token)
-        print(f"[Password Reset] Send to {user.email}: {reset_link}")
+        sent = send_reset_email(user.email, reset_link)
+        if sent:
+            print(f"[Password Reset] Email sent to {user.email}")
+        print(f"[Password Reset] Link for {user.email}: {reset_link}")
 
         return generic_resp, 200
     except Exception as e:
