@@ -1,4 +1,4 @@
-import requests, json, re
+﻿import requests, json, re
 
 
 # prompt format: Generate 20 one-word terms related to [topic]. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.
@@ -35,10 +35,13 @@ def request(prompt):
             "error": str(e),
             "response_text": r.text if 'r' in locals() else "No response"
         }
-        return [("Error", json.dumps(error_msg, indent=2, ensure_ascii=False))]
+        return [(0, "Error", json.dumps(error_msg, indent=2, ensure_ascii=False))]
 
 
 if __name__ == "__main__":
     results = request("Generate 20 one-word terms related to JavaScript. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.")
-    for word, definition in results:
+    for _, word, definition in results:
         print(f"{word}: {definition}")
+
+
+

@@ -1,9 +1,13 @@
+﻿const API_BASE = 'http://localhost:5050';
+
 class CrosswordGame {
     constructor() {
         this.currentWord = null;
         this.currentDirection = 'across';
         this.startTime = Date.now();
         this.timerInterval = null;
+        this.gridSize = 15; 
+        this.solutionGrid = [];
         this.grid = [];
         this.words = {};
         
@@ -16,24 +20,19 @@ class CrosswordGame {
     initializeGrid() {
         const gridContainer = document.getElementById('crosswordGrid');
         gridContainer.innerHTML = '';
+
+        // Use solution grid shape; if not loaded yet, skip rendering
+        if (!this.solutionGrid || !this.solutionGrid.length) {
+            this.grid = [];
+            return;
+        }
+
+        // Set grid template based on current solution grid size
+        this.gridSize = this.solutionGrid.length;
         
         // Set grid template based on current grid size
         gridContainer.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
         gridContainer.style.gridTemplateRows = `repeat(${this.gridSize}, 1fr)`;
-        
-        // Sample crossword data
-        this.words = {
-            1: { word: 'AVENGERS', start: [2, 2], direction: 'across', length: 8 },
-            2: { word: 'INCEPTION', start: [2, 2], direction: 'down', length: 9 },
-            3: { word: 'LUKE', start: [2, 4], direction: 'across', length: 4 },
-            4: { word: 'JOKER', start: [2, 4], direction: 'down', length: 5 },
-            5: { word: 'FORREST', start: [2, 6], direction: 'across', length: 7 },
-            6: { word: 'BATMAN', start: [2, 6], direction: 'down', length: 6 },
-            7: { word: 'AVATAR', start: [2, 8], direction: 'across', length: 6 },
-            8: { word: 'GUMP', start: [2, 8], direction: 'down', length: 4 },
-            9: { word: 'TITANIC', start: [2, 10], direction: 'across', length: 7 },
-            10: { word: 'MARTIAN', start: [2, 10], direction: 'down', length: 7 }
-        };
 
         // Create grid
         for (let row = 0; row < this.gridSize; row++) {
@@ -45,7 +44,7 @@ class CrosswordGame {
                 cell.dataset.col = col;
                 
                 // Add black cells for empty spaces
-                if (this.isBlackCell(row, col)) {
+                if (!this.solutionGrid[row][col] || this.solutionGrid[row][col] === '') {
                     cell.classList.add('black');
                 } else {
                     const input = document.createElement('input');
@@ -266,17 +265,17 @@ class CrosswordGame {
         });
 
         // Start game button handler
-        document.getElementById('startGameBtn').addEventListener('click', () => {
+        document.getElementById('startGameBtn')?.addEventListener('click', () => {
             this.startGame();
         });
 
         // Control button handlers
-        document.getElementById('hintBtn').addEventListener('click', () => this.showHint());
-        document.getElementById('checkPuzzleBtn').addEventListener('click', () => this.checkPuzzle());
-        document.getElementById('hintWordBtn').addEventListener('click', () => this.hintWord());
-        document.getElementById('checkWordBtn').addEventListener('click', () => this.checkWord());
-        document.getElementById('newGameBtn').addEventListener('click', () => this.newGame());
-        document.getElementById('restartBtn').addEventListener('click', () => this.restartGame());
+        document.getElementById('hintBtn')?.addEventListener('click', () => this.showHint());
+        document.getElementById('checkPuzzleBtn')?.addEventListener('click', () => this.checkPuzzle());
+        document.getElementById('hintWordBtn')?.addEventListener('click', () => this.hintWord());
+        document.getElementById('checkWordBtn')?.addEventListener('click', () => this.checkWord());
+        document.getElementById('newGameBtn')?.addEventListener('click', () => this.newGame());
+        document.getElementById('restartBtn')?.addEventListener('click', () => this.restartGame());
     }
 
     selectWord(wordNum) {
@@ -439,8 +438,10 @@ class CrosswordGame {
         const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
-        document.getElementById('timer').textContent = 
-            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        const el = document.getElementById('timer');
+        if (el) {
+            el.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
     }
 
     handleTopicChange(topic) {
@@ -498,11 +499,46 @@ class CrosswordGame {
         // Start new timer
         this.startTimer();
         
-        // Initialize grid with new settings
-        this.initializeGrid();
-        
-        // Show success message
-        alert(`New game started!\nTopic: ${topic}\nDifficulty: ${difficulty}`);
+        // Fetch and render new puzzle
+const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
+const mapped = diffMap[difficulty] || 'easy';
+fetch(`${API_BASE}/api/generate-crossword`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ topic, difficulty: mapped })
+        }).then(r => r.json().then(data => ({ ok: r.ok, data }))).then(({ ok, data }) => {
+            if (!ok || !data.success) throw new Error(data.error || 'Failed to generate puzzle');
+            this.gridSize = data.grid_size || (data.grid ? data.grid.length : 15);
+            this.solutionGrid = data.grid || [];
+            this.words = {};
+            let num = 1;
+            (data.words || []).forEach(item => {
+                const dir = (item.direction === 'h' || item.direction === 'horizontal') ? 'across' : 'down';
+                const start = [item.row, item.col];
+                const word = (item.word || '').toUpperCase();
+                this.words[num] = { word, start, direction: dir, length: item.length || word.length };
+                num++;
+            });
+            const defs = data.definitions || {};
+            const acrossEl = document.getElementById('acrossClues');
+            const downEl = document.getElementById('downClues');
+            if (acrossEl) {
+                acrossEl.innerHTML = Object.entries(this.words).filter(([,w]) => w.direction==='across').map(([n,w]) => `<div class="clue-item" data-word="${n}"><span class="clue-number">${n}.</span><span class="clue-text">${defs[w.word] || ''}</span></div>`).join('');
+            }
+            if (downEl) {
+                downEl.innerHTML = Object.entries(this.words).filter(([,w]) => w.direction==='down').map(([n,w]) => `<div class="clue-item" data-word="${n}"><span class="clue-number">${n}.</span><span class="clue-text">${defs[w.word] || ''}</span></div>`).join('');
+            }
+            document.querySelectorAll('.clue-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const wordNum = item.dataset.word;
+                    this.selectWord(wordNum);
+                });
+            });
+            this.initializeGrid();
+        }).catch(err => {
+            console.error(err);
+            alert(err.message || 'Error generating puzzle');
+        });
     }
 
     setupResponsiveGrid() {
@@ -556,3 +592,4 @@ class CrosswordGame {
 document.addEventListener('DOMContentLoaded', () => {
     new CrosswordGame();
 });
+

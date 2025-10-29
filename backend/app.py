@@ -94,19 +94,27 @@ def generate_crossword():
         
         # Extract parameters with defaults
         topic = data.get('topic', 'JavaScript')
-        word_count = diff_levels.get(data.get('difficulty', 'easy'), 10)
+        word_count = diff_levels.get((data.get('difficulty', 'easy') or 'easy').lower(), 10)
         
         # Generate words based on topic
         prompt = f"Generate {word_count} one-word terms related to {topic}. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description."
         results = generate_words(prompt)
         
-        # Extract words and convert to uppercase
-        words = [w.upper() for _, w, _ in results]
+        # Parse results into (WORD, definition) pairs
+        pairs = []
+        for item in results:
+            try:
+                _, w, definition = item
+                pairs.append((w.upper(), (definition or '').strip()))
+            except Exception:
+                continue
 
-        # definitions
-        definitions = {w.upper(): definition for _, w, definition in results}
-    
-        
+        if not pairs:
+            return jsonify({'success': False, 'error': 'Word generation failed'}), 502
+
+        words = [w for w, _ in pairs]
+        definitions = {w: d for w, d in pairs}
+
         # Create crossword generator
         generator = CrosswordGenerator(words)
         
@@ -117,18 +125,15 @@ def generate_crossword():
             # Extract word data
             used_words = [word for word, _, _, _ in generator.solution_coordinates]
             unused_words = list(set(words) - set(used_words))
-            
+
             # Create grid data for frontend
             grid_data = []
             for row in generator.grid:
                 grid_row = []
                 for cell in row:
-                    if cell:
-                        grid_row.append(cell)
-                    else:
-                        grid_row.append('')
+                    grid_row.append(cell if cell else '')
                 grid_data.append(grid_row)
-            
+
             # Create word coordinates for frontend
             word_coordinates = []
             for word, col, row, direction in generator.solution_coordinates:
@@ -139,7 +144,6 @@ def generate_crossword():
                     'direction': direction.lower(),
                     'length': len(word)
                 })
-            
             response = {
                 'success': True,
                 'grid': grid_data,
@@ -151,7 +155,33 @@ def generate_crossword():
                 'placed_words': len(used_words),
                 'grid_size': generator.grid_size
             }
-        
+        else:
+            # Minimal fallback: place first word horizontally in center
+            size = max(generator.grid_size, max(len(words[0]) + 2, 10)) if words else generator.grid_size
+            grid_data = [['' for _ in range(size)] for __ in range(size)]
+            word_coordinates = []
+            used_words = []
+            unused_words = words[:]
+            if words:
+                r = size // 2
+                c = (size - len(words[0])) // 2
+                for i, ch in enumerate(words[0]):
+                    grid_data[r][c + i] = ch
+                word_coordinates.append({'word': words[0], 'col': c, 'row': r, 'direction': 'h', 'length': len(words[0])})
+                used_words = [words[0]]
+                unused_words = words[1:]
+            response = {
+                'success': True,
+                'grid': grid_data,
+                'words': word_coordinates,
+                'definitions': definitions,
+                'used_words': used_words,
+                'unused_words': unused_words,
+                'total_words': len(words),
+                'placed_words': len(used_words),
+                'grid_size': size
+            }
+
         return jsonify(response)
         
     except Exception as e:
@@ -403,10 +433,16 @@ def reset_password():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-    print("ðŸš€ Starting Crossword Generator API Server...")
-    print("ðŸ“¡ API Endpoints:")
+    print("Starting Crossword Generator API Server...")
+    print("API Endpoints:")
     print("   POST /api/generate-crossword - Generate full crossword")
-    print("ðŸŒ Server running on http://localhost:5050")
+    print("Server running on http://localhost:5050")
 
     app.run(debug=True, host='0.0.0.0', port=5050)
+
+
+
+
+
+
 
