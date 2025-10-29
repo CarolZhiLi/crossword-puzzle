@@ -1,20 +1,55 @@
+﻿import os
+import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import or_
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
-import json
+from dotenv import load_dotenv
 from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
 
-# Simple in-memory user store (replace with Aiven DB later)
-USERS = {}
+# Load environment variables from backend/.env
+load_dotenv(os.path.join(os.path.dirname(__file__), '.env'))
 
 # JWT setup
-app.config['JWT_SECRET_KEY'] = 'change-this-secret-in-production'
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'change-this-secret-in-production')
 jwt = JWTManager(app)
+
+# Database configuration via env vars
+database_url = os.getenv('DATABASE_URL')
+if not database_url:
+    db_user = os.getenv('DB_USER')
+    db_password = os.getenv('DB_PASSWORD')
+    db_host = os.getenv('DB_HOST', 'localhost')
+    db_port = os.getenv('DB_PORT', '3306')
+    db_name = os.getenv('DB_NAME', 'crswd')
+    database_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+
+engine_options = { 'pool_pre_ping': True }
+ssl_ca = os.getenv('DB_SSL_CA')
+if ssl_ca and os.path.exists(ssl_ca):
+    engine_options['connect_args'] = { 'ssl': { 'ca': ssl_ca } }
+
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+class User(db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    username = db.Column(db.String(32), nullable=False, unique=True, index=True)
+    email = db.Column(db.String(255), nullable=False, unique=True, index=True)
+    password_hash = db.Column(db.String(255), nullable=False)
+    created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 diff_levels = {
     'easy': 10,
@@ -142,13 +177,7 @@ def is_valid_password(password: str) -> bool:
 
 def find_user_by_username_or_email(identifier: str):
     # identifier can be username or email
-    if identifier in USERS:
-        return USERS[identifier]
-    # Search by email
-    for u in USERS.values():
-        if u.get('email') == identifier:
-            return u
-    return None
+    return User.query.filter(or_(User.username == identifier, User.email == identifier)).first()
 
 
 @app.route('/api/auth/register', methods=['POST'])
@@ -167,17 +196,18 @@ def register():
         if not is_valid_password(password):
             return jsonify({'success': False, 'error': 'Invalid password. Must be 6-15 characters.'}), 400
 
-        if username in USERS:
+        if User.query.filter_by(username=username).first():
             return jsonify({'success': False, 'error': 'Username already exists.'}), 409
-        if any(u.get('email') == email for u in USERS.values()):
+        if User.query.filter_by(email=email).first():
             return jsonify({'success': False, 'error': 'Email already in use.'}), 409
 
-        user = {
-            'username': username,
-            'email': email,
-            'password_hash': generate_password_hash(password)
-        }
-        USERS[username] = user
+        user = User(
+            username=username,
+            email=email,
+            password_hash=generate_password_hash(password)
+        )
+        db.session.add(user)
+        db.session.commit()
 
         token = create_access_token(identity=username)
         public_user = {'username': username, 'email': email}
@@ -197,11 +227,11 @@ def login():
             return jsonify({'success': False, 'error': 'Username/email and password are required.'}), 400
 
         user = find_user_by_username_or_email(identifier)
-        if not user or not check_password_hash(user['password_hash'], password):
+        if not user or not check_password_hash(user.password_hash, password):
             return jsonify({'success': False, 'error': 'Invalid credentials.'}), 401
 
-        token = create_access_token(identity=user['username'])
-        public_user = {'username': user['username'], 'email': user['email']}
+        token = create_access_token(identity=user.username)
+        public_user = {'username': user.username, 'email': user.email}
         return jsonify({'success': True, 'user': public_user, 'access_token': token}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -211,16 +241,19 @@ def login():
 @jwt_required()
 def me():
     current = get_jwt_identity()
-    user = USERS.get(current)
+    user = User.query.filter_by(username=current).first()
     if not user:
         return jsonify({'success': False, 'error': 'User not found'}), 404
-    return jsonify({'success': True, 'user': {'username': user['username'], 'email': user['email']}}), 200
+    return jsonify({'success': True, 'user': {'username': user.username, 'email': user.email}}), 200
 
 
 if __name__ == '__main__':
-    print("🚀 Starting Crossword Generator API Server...")
-    print("📡 API Endpoints:")
+    with app.app_context():
+        db.create_all()
+    print("ðŸš€ Starting Crossword Generator API Server...")
+    print("ðŸ“¡ API Endpoints:")
     print("   POST /api/generate-crossword - Generate full crossword")
-    print("🌐 Server running on http://localhost:5050")
+    print("ðŸŒ Server running on http://localhost:5050")
 
     app.run(debug=True, host='0.0.0.0', port=5050)
+

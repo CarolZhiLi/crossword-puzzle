@@ -1,0 +1,8 @@
+backend/.env
+backend/.env.*
+.env
+.venv/
+backend/.venv/
+backend/certs/*.pem
+!backend/.env.example
+!backend/certs/README.md
