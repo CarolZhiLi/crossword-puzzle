@@ -1,3 +1,5 @@
+const API_BASE = 'http://localhost:5050';
+
 class AuthManager {
     constructor() {
         this.currentUser = null;
@@ -121,7 +123,7 @@ class AuthManager {
                             <form id="registerFormElement" class="auth-form">
                                 <div class="form-group">
                                     <label for="registerUsername">Username</label>
-                                    <input type="text" id="registerUsername" name="username" required>
+                                    <input type="text" id="registerUsername" name="username" required minlength="6" maxlength="12" pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,12}$" title="6-12 characters, letters and numbers, must include both">
                                 </div>
                                 <div class="form-group">
                                     <label for="registerEmail">Email</label>
@@ -129,7 +131,7 @@ class AuthManager {
                                 </div>
                                 <div class="form-group">
                                     <label for="registerPassword">Password</label>
-                                    <input type="password" id="registerPassword" name="password" required>
+                                    <input type="password" id="registerPassword" name="password" required minlength="6" maxlength="15" title="6-15 characters">
                                 </div>
                                 <div class="form-group">
                                     <label for="confirmPassword">Confirm Password</label>
@@ -164,7 +166,7 @@ class AuthManager {
         }
     }
 
-    handleSignIn() {
+    async handleSignIn() {
         const form = document.getElementById('signInFormElement');
         const formData = new FormData(form);
         const username = formData.get('username');
@@ -176,24 +178,35 @@ class AuthManager {
             return;
         }
 
-        // Simulate API call
         this.showMessage('Signing in...', 'info');
-        
-        setTimeout(() => {
-            // Mock authentication - in real app, this would be an API call
-            if (this.validateCredentials(username, password)) {
-                this.currentUser = { username, email: username + '@example.com' };
-                this.isAuthenticated = true;
-                this.updateUI();
-                this.closeModal();
-                this.showMessage('Welcome back, ' + username + '!', 'success');
-            } else {
-                this.showMessage('Invalid credentials. Please try again.', 'error');
+
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }) // backend accepts username or email
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Login failed');
             }
-        }, 1000);
+
+            // Persist token for later use
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+            }
+
+            this.currentUser = data.user;
+            this.isAuthenticated = true;
+            this.updateUI();
+            this.closeModal();
+            this.showMessage('Welcome back, ' + this.currentUser.username + '!', 'success');
+        } catch (err) {
+            this.showMessage(err.message, 'error');
+        }
     }
 
-    handleRegister() {
+    async handleRegister() {
         const form = document.getElementById('registerFormElement');
         const formData = new FormData(form);
         const username = formData.get('username');
@@ -201,9 +214,24 @@ class AuthManager {
         const password = formData.get('password');
         const confirmPassword = formData.get('confirmPassword');
 
-        // Validation
-        if (!username || !password) {
-            this.showMessage('Username and password are required', 'error');
+        // Frontend Validation
+        if (!username || !email || !password || !confirmPassword) {
+            this.showMessage('All fields are required', 'error');
+            return;
+        }
+
+        if (!this.validateUsername(username)) {
+            this.showMessage('Username must be 6-12 chars, letters and numbers, and include both.', 'error');
+            return;
+        }
+
+        if (!this.validateEmail(email)) {
+            this.showMessage('Please enter a valid email address', 'error');
+            return;
+        }
+
+        if (!this.validatePassword(password)) {
+            this.showMessage('Password must be 6-15 characters', 'error');
             return;
         }
 
@@ -212,22 +240,31 @@ class AuthManager {
             return;
         }
 
-        if (password.length < 6) {
-            this.showMessage('Password must be at least 6 characters', 'error');
-            return;
-        }
-
-        // Simulate API call
         this.showMessage('Creating account...', 'info');
-        
-        setTimeout(() => {
-            // Mock registration - in real app, this would be an API call
-            this.currentUser = { username, email: email || username + '@example.com' };
+
+        try {
+            const res = await fetch(`${API_BASE}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Registration failed');
+            }
+
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+            }
+
+            this.currentUser = data.user;
             this.isAuthenticated = true;
             this.updateUI();
             this.closeModal();
-            this.showMessage('Account created successfully! Welcome, ' + username + '!', 'success');
-        }, 1000);
+            this.showMessage('Account created successfully! Welcome, ' + this.currentUser.username + '!', 'success');
+        } catch (err) {
+            this.showMessage(err.message, 'error');
+        }
     }
 
     validateCredentials(username, password) {
@@ -238,6 +275,28 @@ class AuthManager {
             'test': 'test123'
         };
         return validUsers[username] === password;
+    }
+
+    // Frontend validators matching backend rules
+    validateUsername(username) {
+        if (!username) return false;
+        if (username.length < 6 || username.length > 12) return false;
+        const alnum = /^[A-Za-z0-9]+$/;
+        if (!alnum.test(username)) return false;
+        const hasLetter = /[A-Za-z]/.test(username);
+        const hasDigit = /\d/.test(username);
+        return hasLetter && hasDigit;
+    }
+
+    validateEmail(email) {
+        if (!email) return false;
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
+    }
+
+    validatePassword(password) {
+        if (!password) return false;
+        return password.length >= 6 && password.length <= 15;
     }
 
     updateUI() {
@@ -257,6 +316,7 @@ class AuthManager {
     signOut() {
         this.currentUser = null;
         this.isAuthenticated = false;
+        localStorage.removeItem('token');
         this.updateUI();
         this.showMessage('You have been signed out', 'info');
     }
