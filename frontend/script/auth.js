@@ -33,6 +33,10 @@ class AuthManager {
                 e.preventDefault();
                 this.handleRegister();
             }
+            if (e.target.id === 'forgotPasswordFormElement') {
+                e.preventDefault();
+                this.handleForgotPassword();
+            }
         });
 
         // Switch between forms
@@ -42,6 +46,10 @@ class AuthManager {
             }
             if (e.target.id === 'switchToSignIn') {
                 this.showSignInForm();
+            }
+            if (e.target.classList.contains('forgot-password')) {
+                e.preventDefault();
+                this.showForgotPasswordForm();
             }
         });
     }
@@ -111,7 +119,7 @@ class AuthManager {
                     </div>
                 </div>
             `;
-        } else {
+        } else if (type === 'register') {
             return `
                 <div class="auth-modal-content">
                     <button class="close-btn">&times;</button>
@@ -153,6 +161,39 @@ class AuthManager {
                     </div>
                 </div>
             `;
+        } else if (type === 'forgot') {
+            return `
+                <div class="auth-modal-content">
+                    <button class="close-btn">&times;</button>
+                    <div class="auth-modal-body">
+                        <div class="auth-form-section">
+                            <div class="auth-form-header">
+                                <h2>Reset your password</h2>
+                                <p>Enter your email or username and we’ll send a reset link.</p>
+                            </div>
+                            <form id="forgotPasswordFormElement" class="auth-form">
+                                <div class="form-group">
+                                    <label for="forgotIdentifier">Email or Username</label>
+                                    <input type="text" id="forgotIdentifier" name="identifier" required>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">Send Reset Link</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">Back to Sign In</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="auth-logo-section">
+                            <div class="logo-container">
+                                <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
+                                <h3>CrossyThink</h3>
+                                <p>We’ll help you get back in.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return '';
         }
     }
 
@@ -297,6 +338,42 @@ class AuthManager {
     validatePassword(password) {
         if (!password) return false;
         return password.length >= 6 && password.length <= 15;
+    }
+
+    showForgotPasswordForm() {
+        this.createModal('forgot');
+    }
+
+    async handleForgotPassword() {
+        const form = document.getElementById('forgotPasswordFormElement');
+        const formData = new FormData(form);
+        const identifier = formData.get('identifier');
+
+        if (!identifier) {
+            this.showMessage('Please enter your email or username', 'error');
+            return;
+        }
+
+        this.showMessage('Sending reset link...', 'info');
+        try {
+            const payload = this.validateEmail(identifier)
+                ? { email: identifier }
+                : { username: identifier };
+
+            const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Failed to request password reset');
+            }
+            this.showMessage('If that account exists, a reset link has been sent.', 'success');
+        } catch (err) {
+            // Still show generic success to avoid enumeration
+            this.showMessage('If that account exists, a reset link has been sent.', 'success');
+        }
     }
 
     updateUI() {

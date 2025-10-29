@@ -9,6 +9,9 @@ from flask_jwt_extended import JWTManager, create_access_token, jwt_required, ge
 from dotenv import load_dotenv
 from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
+import secrets
+import hashlib
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend communication
@@ -50,6 +53,18 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+
+class PasswordReset(db.Model):
+    __tablename__ = 'password_resets'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    token_hash = db.Column(db.String(64), unique=True, index=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+    user = db.relationship('User')
 
 diff_levels = {
     'easy': 10,
@@ -180,6 +195,19 @@ def find_user_by_username_or_email(identifier: str):
     return User.query.filter(or_(User.username == identifier, User.email == identifier)).first()
 
 
+def _gen_reset_token() -> str:
+    return secrets.token_urlsafe(32)
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode('utf-8')).hexdigest()
+
+
+def _build_reset_link(token: str) -> str:
+    base = os.getenv('FRONTEND_BASE_URL', 'http://localhost:8080')
+    return f"{base.rstrip('/')}/reset.html?token={token}"
+
+
 @app.route('/api/auth/register', methods=['POST'])
 def register():
     try:
@@ -245,6 +273,77 @@ def me():
     if not user:
         return jsonify({'success': False, 'error': 'User not found'}), 404
     return jsonify({'success': True, 'user': {'username': user.username, 'email': user.email}}), 200
+
+
+@app.route('/api/auth/forgot-password', methods=['POST'])
+def forgot_password():
+    try:
+        data = request.get_json(force=True)
+        identifier = (data.get('email') or data.get('username') or '').strip()
+
+        # Always return a generic response to avoid user enumeration
+        generic_resp = jsonify({'success': True, 'message': 'If that account exists, a reset link has been sent.'})
+
+        if not identifier:
+            return generic_resp, 200
+
+        user = find_user_by_username_or_email(identifier)
+        if not user:
+            return generic_resp, 200
+
+        token = _gen_reset_token()
+        token_hash = _hash_token(token)
+        ttl_minutes = int(os.getenv('RESET_TOKEN_MINUTES', '15'))
+        expires_at = datetime.utcnow() + timedelta(minutes=ttl_minutes)
+
+        pr = PasswordReset(user_id=user.id, token_hash=token_hash, expires_at=expires_at)
+        db.session.add(pr)
+        db.session.commit()
+
+        reset_link = _build_reset_link(token)
+        print(f"[Password Reset] Send to {user.email}: {reset_link}")
+
+        return generic_resp, 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    try:
+        data = request.get_json(force=True)
+        token = (data.get('token') or '').strip()
+        password = data.get('password') or ''
+        confirm = data.get('confirmPassword') or password
+
+        if not token:
+            return jsonify({'success': False, 'error': 'Invalid or expired token.'}), 400
+
+        if password != confirm:
+            return jsonify({'success': False, 'error': 'Passwords do not match.'}), 400
+
+        if not is_valid_password(password):
+            return jsonify({'success': False, 'error': 'Invalid password. Must be 6-15 characters.'}), 400
+
+        token_hash = _hash_token(token)
+        pr = PasswordReset.query.filter_by(token_hash=token_hash).first()
+        if not pr:
+            return jsonify({'success': False, 'error': 'Invalid or expired token.'}), 400
+
+        if pr.used_at is not None or pr.expires_at < datetime.utcnow():
+            return jsonify({'success': False, 'error': 'Invalid or expired token.'}), 400
+
+        user = User.query.get(pr.user_id)
+        if not user:
+            return jsonify({'success': False, 'error': 'Invalid or expired token.'}), 400
+
+        user.password_hash = generate_password_hash(password)
+        pr.used_at = datetime.utcnow()
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'Password reset successful. You can now sign in.'}), 200
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 
 if __name__ == '__main__':
