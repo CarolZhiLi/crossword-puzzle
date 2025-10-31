@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5050';
+window.API_BASE = window.API_BASE || 'http://localhost:5050';
 
 function showMsg(text, type = 'success') {
   const el = document.getElementById('msg');
@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/auth/reset-password`, {
+      const res = await fetch(`${window.API_BASE}/api/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password, confirmPassword })
@@ -56,4 +56,3 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
-

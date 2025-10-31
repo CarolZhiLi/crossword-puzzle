@@ -594,7 +594,7 @@ class CrosswordGame {
         // Fetch and render new puzzle
 const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
 const mapped = diffMap[difficulty] || 'easy';
-fetch(`${API_BASE}/api/generate-crossword`, {
+            fetch(`${window.API_BASE}/api/generate-crossword`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ topic, difficulty: mapped })

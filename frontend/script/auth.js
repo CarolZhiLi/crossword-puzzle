@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5050';
+window.API_BASE = window.API_BASE || 'http://localhost:5050';
 
 class AuthManager {
     constructor() {
@@ -222,7 +222,7 @@ class AuthManager {
         this.showMessage('Signing in...', 'info');
 
         try {
-            const res = await fetch(`${API_BASE}/api/auth/login`, {
+            const res = await fetch(`${window.API_BASE}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }) // backend accepts username or email
@@ -284,7 +284,7 @@ class AuthManager {
         this.showMessage('Creating account...', 'info');
 
         try {
-            const res = await fetch(`${API_BASE}/api/auth/register`, {
+            const res = await fetch(`${window.API_BASE}/api/auth/register`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
@@ -360,7 +360,7 @@ class AuthManager {
                 ? { email: identifier }
                 : { username: identifier };
 
-            const res = await fetch(`${API_BASE}/api/auth/forgot-password`, {
+            const res = await fetch(`${window.API_BASE}/api/auth/forgot-password`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
