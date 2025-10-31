@@ -40,7 +40,7 @@ class CrosswordGame {
         if (!this.isAuthenticated()) {
             const used = localStorage.getItem('guestPlayed') === 'true';
             if (used) {
-                alert('您的免费体验次数已用完。请注册/登录后每天可免费玩3次。');
+                alert(t('guest_free_over'));
                 // Open sign-in modal via header button
                 document.getElementById('signInBtn')?.click();
                 return false;
@@ -52,7 +52,7 @@ class CrosswordGame {
         const key = this.getTodayKey(`plays_${username}`);
         const count = parseInt(localStorage.getItem(key) || '0', 10);
         if (count >= 3) {
-            alert('今天的3次免费次数已用完。后续将提供付费功能，敬请期待。');
+            alert(t('user_daily_limit'));
             return false;
         }
         return true;
@@ -444,7 +444,7 @@ class CrosswordGame {
 
     showHint() {
         if (!this.currentWord) {
-            alert('Please select a word first!');
+            alert(t('select_word_first'));
             return;
         }
         
@@ -462,7 +462,7 @@ class CrosswordGame {
 
     hintWord() {
         if (!this.currentWord) {
-            alert('Please select a word first!');
+            alert(t('select_word_first'));
             return;
         }
         
@@ -484,7 +484,7 @@ class CrosswordGame {
 
     checkWord() {
         if (!this.currentWord) {
-            alert('Please select a word first!');
+            alert(t('select_word_first'));
             return;
         }
         
@@ -501,7 +501,7 @@ class CrosswordGame {
         }
         
         if (userWord === word.word) {
-            alert('Correct!');
+            alert(t('correct'));
             // Highlight correct word
             for (let i = 0; i < word.length; i++) {
                 const row = this.currentDirection === 'across' ? startRow : startRow + i;
@@ -510,7 +510,7 @@ class CrosswordGame {
                 cell.style.background = '#c6f6d5';
             }
         } else {
-            alert('Incorrect. Try again!');
+            alert(t('incorrect'));
         }
     }
 
@@ -536,22 +536,22 @@ class CrosswordGame {
         }
         
         const percentage = Math.round((correctWords / totalWords) * 100);
-        alert(`Puzzle Progress: ${correctWords}/${totalWords} words correct (${percentage}%)`);
+        alert(t('puzzle_progress', { correct: correctWords, total: totalWords, percent: percentage }));
         
         if (correctWords === totalWords) {
-            alert('Congratulations! You solved the puzzle!');
+            alert(t('puzzle_solved'));
             this.stopTimer();
         }
     }
 
     newGame() {
-        if (confirm('Are you sure you want to start a new game? Your progress will be lost.')) {
+        if (confirm(t('confirm_new_game'))) {
             location.reload();
         }
     }
 
     restartGame() {
-        if (confirm('Are you sure you want to restart this puzzle?')) {
+        if (confirm(t('confirm_restart'))) {
             // Clear all inputs
             document.querySelectorAll('.grid-cell input').forEach(input => {
                 input.value = '';
@@ -593,7 +593,7 @@ class CrosswordGame {
         console.log('Topic changed to:', topic);
         // Here you would typically generate a new puzzle based on the topic
         // For now, we'll just show a message
-        alert(`Topic changed to: ${topic}. New puzzle will be generated based on this topic.`);
+        alert(t('topic_changed', { topic }));
     }
 
     handleDifficultyChange(difficulty) {
@@ -621,7 +621,7 @@ class CrosswordGame {
         if (newGridSize !== this.gridSize) {
             this.gridSize = newGridSize;
             this.initializeGrid();
-            alert(`Grid size changed to ${newGridSize}x${newGridSize} for ${difficulty} difficulty.`);
+            alert(t('grid_size_changed', { size: newGridSize, difficulty }));
         }
     }
 
@@ -702,7 +702,7 @@ class CrosswordGame {
             try { this.markGameStartedSuccessfully(); } catch (_) {}
         }).catch(err => {
             console.error(err);
-            alert(err.message || 'Error generating puzzle');
+            alert(err.message || t('error_generating_puzzle'));
         });
     }
 
