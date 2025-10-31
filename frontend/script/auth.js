@@ -232,9 +232,12 @@ class AuthManager {
                 throw new Error(data.error || 'Login failed');
             }
 
-            // Persist token for later use
+            // Persist token and user for later use
             if (data.access_token) {
                 localStorage.setItem('token', data.access_token);
+            }
+            if (data.user) {
+                try { localStorage.setItem('user', JSON.stringify(data.user)); } catch (_) {}
             }
 
             this.currentUser = data.user;
@@ -296,6 +299,9 @@ class AuthManager {
 
             if (data.access_token) {
                 localStorage.setItem('token', data.access_token);
+            }
+            if (data.user) {
+                try { localStorage.setItem('user', JSON.stringify(data.user)); } catch (_) {}
             }
 
             this.currentUser = data.user;
@@ -394,6 +400,7 @@ class AuthManager {
         this.currentUser = null;
         this.isAuthenticated = false;
         localStorage.removeItem('token');
+        localStorage.removeItem('user');
         this.updateUI();
         this.showMessage('You have been signed out', 'info');
     }

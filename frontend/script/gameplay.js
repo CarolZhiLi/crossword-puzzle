@@ -17,6 +17,59 @@ class CrosswordGame {
         this.setupResponsiveGrid();
     }
 
+    // ---- Free play gating helpers ----
+    isAuthenticated() {
+        return !!localStorage.getItem('token');
+    }
+
+    getCurrentUsername() {
+        try {
+            const u = JSON.parse(localStorage.getItem('user') || 'null');
+            return u && u.username ? u.username : null;
+        } catch (_) { return null; }
+    }
+
+    getTodayKey(prefix) {
+        const d = new Date();
+        const day = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+        const iso = day.toISOString().slice(0, 10);
+        return `${prefix}_${iso}`;
+    }
+
+    canStartGame() {
+        if (!this.isAuthenticated()) {
+            const used = localStorage.getItem('guestPlayed') === 'true';
+            if (used) {
+                alert('您的免费体验次数已用完。请注册/登录后每天可免费玩3次。');
+                // Open sign-in modal via header button
+                document.getElementById('signInBtn')?.click();
+                return false;
+            }
+            return true; // allow the one free play
+        }
+
+        const username = this.getCurrentUsername() || 'user';
+        const key = this.getTodayKey(`plays_${username}`);
+        const count = parseInt(localStorage.getItem(key) || '0', 10);
+        if (count >= 3) {
+            alert('今天的3次免费次数已用完。后续将提供付费功能，敬请期待。');
+            return false;
+        }
+        return true;
+    }
+
+    markGameStartedSuccessfully() {
+        if (!this.isAuthenticated()) {
+            // consume the one-time guest play after success
+            localStorage.setItem('guestPlayed', 'true');
+            return;
+        }
+        const username = this.getCurrentUsername() || 'user';
+        const key = this.getTodayKey(`plays_${username}`);
+        const count = parseInt(localStorage.getItem(key) || '0', 10);
+        localStorage.setItem(key, String((isNaN(count) ? 0 : count) + 1));
+    }
+
     normalizeGrid(grid) {
         if (!grid || !grid.length || !grid[0]) {
             return { grid: [], size: 0, offset: { row: 0, col: 0 } };
@@ -591,9 +644,14 @@ class CrosswordGame {
         // Start new timer
         this.startTimer();
         
+        // Enforce free-play limits before generating a new puzzle
+        if (!this.canStartGame()) {
+            return;
+        }
+
         // Fetch and render new puzzle
-const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
-const mapped = diffMap[difficulty] || 'easy';
+        const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
+        const mapped = diffMap[difficulty] || 'easy';
             fetch(`${window.API_BASE}/api/generate-crossword`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -640,6 +698,8 @@ const mapped = diffMap[difficulty] || 'easy';
                 });
             });
             this.initializeGrid();
+            // Count this successful start toward free-play limits
+            try { this.markGameStartedSuccessfully(); } catch (_) {}
         }).catch(err => {
             console.error(err);
             alert(err.message || 'Error generating puzzle');
