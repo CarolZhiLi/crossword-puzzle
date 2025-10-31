@@ -6,42 +6,44 @@
     <title>Reset Password - CrossyThink</title>
     <link rel="icon" type="image/png" href="./assets/crossythink_logo.png">
     <link rel="stylesheet" href="./css/styles.css">
-    <style>
-        .reset-container { max-width: 480px; margin: 60px auto; background: #fff; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); padding: 24px; }
-        .reset-header { text-align: center; margin-bottom: 16px; }
-        .reset-header img { width: 48px; height: 48px; }
-        .reset-actions { display: flex; gap: 12px; margin-top: 12px; }
-        .reset-message { margin-bottom: 12px; padding: 10px 12px; border-radius: 8px; }
-        .reset-message-success { background: #ecfdf5; color: #065f46; }
-        .reset-message-error { background: #fef2f2; color: #991b1b; }
-        .field { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
-    </style>
-    </head>
+</head>
 <body>
-    <div class="reset-container">
-        <div class="reset-header">
-            <img src="./assets/crossythink_logo.png" alt="CrossyThink" />
-            <h2>Reset your password</h2>
-            <p>Pick a new password to access your account.</p>
+    <div class="auth-modal show">
+        <div class="auth-modal-content">
+            <a href="./gameplay.html" class="close-btn" aria-label="Back to Game">&times;</a>
+            <div class="auth-modal-body">
+                <div class="auth-form-section">
+                    <div class="auth-form-header">
+                        <h2>Reset your password</h2>
+                        <p>Pick a new password to access your account.</p>
+                    </div>
+                    <div id="msg" class="auth-message" style="display:none"></div>
+                    <form id="resetForm" class="auth-form">
+                        <div class="form-group">
+                            <label for="newPassword">New Password (6-15 chars)</label>
+                            <input type="password" id="newPassword" name="password" required minlength="6" maxlength="15">
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">Confirm Password</label>
+                            <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6" maxlength="15">
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">Reset Password</button>
+                            <a class="btn btn-secondary" href="./gameplay.html">Back to Game</a>
+                        </div>
+                    </form>
+                </div>
+                <div class="auth-logo-section">
+                    <div class="logo-container">
+                        <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
+                        <h3>CrossyThink</h3>
+                        <p>We’ll help you get back in.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div id="msg" class="reset-message" style="display:none"></div>
-        <form id="resetForm">
-            <div class="field">
-                <label for="newPassword">New Password (6-15 chars)</label>
-                <input type="password" id="newPassword" name="password" required minlength="6" maxlength="15">
-            </div>
-            <div class="field">
-                <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" required minlength="6" maxlength="15">
-            </div>
-            <div class="reset-actions">
-                <button type="submit" class="btn btn-primary">Reset Password</button>
-                <a class="btn btn-secondary" href="./gameplay.html">Back to Game</a>
-            </div>
-        </form>
     </div>
 
     <script src="./script/reset.js"></script>
 </body>
 </html>
-

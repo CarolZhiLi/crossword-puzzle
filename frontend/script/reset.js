@@ -3,7 +3,7 @@ window.API_BASE = window.API_BASE || 'http://localhost:5050';
 function showMsg(text, type = 'success') {
   const el = document.getElementById('msg');
   el.textContent = text;
-  el.className = `reset-message reset-message-${type}`;
+  el.className = `auth-message auth-message-${type}`;
   el.style.display = 'block';
 }
 
