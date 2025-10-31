@@ -669,7 +669,8 @@ class CrosswordGame {
 
             let num = 1;
             (data.words || []).forEach(item => {
-                const dir = (item.direction === 'h' || item.direction === 'horizontal') ? 'across' : 'down';
+                const d = (item.direction || '').toString().toLowerCase();
+                const dir = (d === 'h' || d === 'horizontal' || d === 'across') ? 'across' : 'down';
                 const startRow = (item.row ?? 0) + rowOffset;
                 const startCol = (item.col ?? 0) + colOffset;
                 const start = [startRow, startCol];

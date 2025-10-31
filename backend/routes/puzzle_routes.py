@@ -48,7 +48,7 @@ def generate_crossword():
 
         used_words = [word for word, _, _, _ in generator.solution_coordinates]
         size = generator.grid_size
-        grid = generator.solution_grid
+        grid = generator.grid
 
         response = {
             'success': True,
@@ -56,12 +56,12 @@ def generate_crossword():
             'words': [
                 {
                     'word': word,
-                    'direction': 'across' if direction == 'h' else 'down',
+                    'direction': ('across' if (str(direction).upper() == 'H') else 'down'),
                     'row': row,
                     'col': col,
                     'length': len(word)
                 }
-                for word, direction, row, col in generator.solution_coordinates
+                for word, col, row, direction in generator.solution_coordinates
             ],
             'definitions': definitions,
             'total_words': len(words),
