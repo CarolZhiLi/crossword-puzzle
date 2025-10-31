@@ -30,8 +30,8 @@ body {
 .header-bar {
     backdrop-filter: blur(10px);
     border-radius: 0 0 15px 15px;
-    padding: 15px 25px;
-    margin-bottom: 10px;
+    padding: 10px 18px;
+    margin-bottom: 2px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -40,7 +40,7 @@ body {
 }
 
 .game-title {
-    font-size: 2.5rem;
+    font-size: 1.9rem;
     font-weight:bolder;
     color: #0d2f69;
     display: flex;
@@ -50,8 +50,8 @@ body {
 }
 
 .logo {
-    margin: 10px;
-    height: 100px;
+    margin: 8px;
+    height: 75px;
     width: auto;
     object-fit: contain;
 }
@@ -69,12 +69,12 @@ body {
 }
 
 .dropdown {
-    width: 300px;
-    padding: 12px 20px;
-    border: 5px solid #d6df8e   ;
+    width: 220px;
+    padding: 9px 15px;
+    border: 4px solid #d6df8e;
     background-color: #d6df8e;
-    border-radius: 25px;
-    font-size: 2.0rem;
+    border-radius: 20px;
+    font-size: 1.5rem;
     font-weight: 600;
     color: rgb(25, 25, 90);
     cursor: pointer;
@@ -111,14 +111,14 @@ body {
 }
 
 .btn {
-    padding: 12px 24px;
+    padding: 9px 18px;
     border: none;
     border-radius: 12px;
     cursor: pointer;
     font-weight: 600;
-    font-size: 2.0rem;
+    font-size: 1.5rem;
     transition: all 0.2s;
-    width: 300px;
+    width: 220px;
 }
 
 .btn-primary {
@@ -135,37 +135,46 @@ body {
     display: grid;
     grid-template-columns: 20% 60% 20%;
     align-items: start;
+    align-content: start;
     flex: 1;
     min-height: 0;
-    padding: 0 20px;
+    padding: 4px 16px 14px;
+    gap: 14px;
 }
 
 /* Crossword Grid */
 .crossword-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
     height: 100%;
-    padding: 10px;
+    padding: 8px;
     min-height: 0;
+    overflow: visible;
+    position: relative;
+    z-index: 1;
+    gap: 12px;
 }
 
 .game-controls {
     width: 100%;
-    margin-bottom: 20px;
+    margin: 6px 0 12px;
     display: flex;
     justify-content: center;
 }
 
 .game-settings {
     display: flex;
-    gap: 15px;
+    gap: 12px;
     align-items: center;
-    padding: 15px 25px;
+    padding: 10px 14px;
     border-radius: 15px;
     backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    flex-wrap: wrap;
 }
 
 .crossword-grid {
@@ -177,11 +186,12 @@ body {
     padding: 10px;
     border-radius: 15px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    height: 90%;
-    max-width: 90%;
-    max-height: 90%;
-    aspect-ratio: 1;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto;
 }
 
 .grid-cell {
@@ -195,8 +205,7 @@ body {
     position: relative;
     cursor: pointer;
     transition: all 0.2s;
-    min-height: 30px;
-    min-width: 30px;
+    aspect-ratio: 1 / 1;
 }
 
 .grid-cell.black {
@@ -222,10 +231,11 @@ body {
     border: none;
     background: transparent;
     text-align: center;
-    font-size: 1.5rem;
+    font-size: clamp(14px, calc(var(--cell-size, 36px) * 0.6), 32px);
     font-weight: bold;
     color: #2d3748;
     text-transform: uppercase;
+    line-height: 1;
 }
 
 .grid-cell input:focus {
@@ -236,7 +246,7 @@ body {
     position: absolute;
     top: 3px;
     left: 3px;
-    font-size: 1.3rem;
+    font-size: clamp(9px, calc(var(--cell-size, 36px) * 0.28), 18px);
     font-weight: bold;
     color: #4a5568;
 }
@@ -294,30 +304,30 @@ body {
 
 .clue-text {
     color: #2d3748;
+    font-size: 1.35rem;
 }
 
 /* Controls Bar */
 .controls-bar {
     backdrop-filter: blur(10px);
     border-radius: 15px 15px 0 0;
-    padding: 15px 25px;
-    margin-top: 10px;
+    padding: 10px 16px;
+    margin-top: 18px;
     display: flex;
     justify-content: center;
-    gap: 20px;
+    gap: 15px;
     flex-wrap: wrap;
     box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.1);
     flex-shrink: 0;
-    position: sticky;
-    bottom: 0;
-    z-index: 100;
+    position: static;
+    z-index: 10;
 }
 
 .btn-large {
-    padding: 18px 36px;
-    font-size: 2.0rem;
+    padding: 14px 27px;
+    font-size: 1.5rem;
     font-weight: 700;
-    width: 400px;
+    width: 300px;
 }
 
 .btn-success {
@@ -360,21 +370,15 @@ body {
 
     .game-info {
         flex-direction: column;
-        gap: 10px;
-    }
-
-    .crossword-grid {
-        grid-template-columns: repeat(15, 35px);
-        grid-template-rows: repeat(15, 35px);
-    }
+    gap: 10px;
+}
 
     .grid-cell {
-        width: 35px;
-        height: 35px;
+        aspect-ratio: 1 / 1;
     }
 
     .grid-cell input {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     .controls-bar {

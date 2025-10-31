@@ -17,6 +17,96 @@ class CrosswordGame {
         this.setupResponsiveGrid();
     }
 
+    normalizeGrid(grid) {
+        if (!grid || !grid.length || !grid[0]) {
+            return { grid: [], size: 0, offset: { row: 0, col: 0 } };
+        }
+
+        const isEmptyCell = (val) => {
+            if (val === null || val === undefined) return true;
+            if (typeof val === 'string') {
+                return val.trim() === '';
+            }
+            return false;
+        };
+
+        const totalRows = grid.length;
+        const totalCols = grid[0].length;
+
+        const rowEmpty = (idx) => grid[idx].every(isEmptyCell);
+        const colEmpty = (idx) => grid.every(row => isEmptyCell(row[idx]));
+
+        let top = 0;
+        let bottom = totalRows - 1;
+        let left = 0;
+        let right = totalCols - 1;
+
+        while (top <= bottom && rowEmpty(top)) top++;
+        while (bottom >= top && rowEmpty(bottom)) bottom--;
+        while (left <= right && colEmpty(left)) left++;
+        while (right >= left && colEmpty(right)) right--;
+
+        if (top > bottom || left > right) {
+            // No meaningful content; return a minimal 1x1 grid
+            return {
+                grid: [['']],
+                size: 1,
+                offset: { row: 0, col: 0 }
+            };
+        }
+
+        const trimmed = [];
+        for (let r = top; r <= bottom; r++) {
+            trimmed.push(grid[r].slice(left, right + 1));
+        }
+
+        const basePadding = 1; // ensure at least one empty layer around the puzzle
+        let padTop = basePadding;
+        let padBottom = basePadding;
+        let padLeft = basePadding;
+        let padRight = basePadding;
+
+        const trimmedRows = trimmed.length;
+        const trimmedCols = trimmed[0].length;
+
+        let paddedRows = trimmedRows + basePadding * 2;
+        let paddedCols = trimmedCols + basePadding * 2;
+
+        const targetSize = Math.max(paddedRows, paddedCols);
+        if (paddedRows < targetSize) {
+            const extraRows = targetSize - paddedRows;
+            const addTop = Math.floor(extraRows / 2);
+            const addBottom = extraRows - addTop;
+            padTop += addTop;
+            padBottom += addBottom;
+            paddedRows = targetSize;
+        }
+        if (paddedCols < targetSize) {
+            const extraCols = targetSize - paddedCols;
+            const addLeft = Math.floor(extraCols / 2);
+            const addRight = extraCols - addLeft;
+            padLeft += addLeft;
+            padRight += addRight;
+            paddedCols = targetSize;
+        }
+
+        const normalized = Array.from({ length: paddedRows }, () => new Array(paddedCols).fill(''));
+        for (let r = 0; r < trimmedRows; r++) {
+            for (let c = 0; c < trimmedCols; c++) {
+                normalized[r + padTop][c + padLeft] = trimmed[r][c];
+            }
+        }
+
+        return {
+            grid: normalized,
+            size: targetSize,
+            offset: {
+                row: padTop - top,
+                col: padLeft - left
+            }
+        };
+    }
+
     initializeGrid() {
         const gridContainer = document.getElementById('crosswordGrid');
         gridContainer.innerHTML = '';
@@ -69,6 +159,8 @@ class CrosswordGame {
                 this.grid[row][col] = cell;
             }
         }
+
+        this.adjustGridSize();
     }
 
     isBlackCell(row, col) {
@@ -508,16 +600,29 @@ fetch(`${API_BASE}/api/generate-crossword`, {
             body: JSON.stringify({ topic, difficulty: mapped })
         }).then(r => r.json().then(data => ({ ok: r.ok, data }))).then(({ ok, data }) => {
             if (!ok || !data.success) throw new Error(data.error || 'Failed to generate puzzle');
-            this.gridSize = data.grid_size || (data.grid ? data.grid.length : 15);
-            this.solutionGrid = data.grid || [];
+
+            const normalized = this.normalizeGrid(data.grid || []);
+            this.solutionGrid = normalized.grid;
+            this.gridSize = normalized.size || (this.solutionGrid ? this.solutionGrid.length : 0) || 15;
             this.words = {};
+            const rowOffset = normalized.offset?.row ?? 0;
+            const colOffset = normalized.offset?.col ?? 0;
+
             let num = 1;
             (data.words || []).forEach(item => {
                 const dir = (item.direction === 'h' || item.direction === 'horizontal') ? 'across' : 'down';
-                const start = [item.row, item.col];
+                const startRow = (item.row ?? 0) + rowOffset;
+                const startCol = (item.col ?? 0) + colOffset;
+                const start = [startRow, startCol];
                 const word = (item.word || '').toUpperCase();
                 this.words[num] = { word, start, direction: dir, length: item.length || word.length };
                 num++;
+            });
+            console.info('Crossword loaded', {
+                gridSize: this.gridSize,
+                rows: this.solutionGrid.length,
+                columns: this.solutionGrid[0] ? this.solutionGrid[0].length : 0,
+                words: Object.keys(this.words).length
             });
             const defs = data.definitions || {};
             const acrossEl = document.getElementById('acrossClues');
@@ -553,38 +658,71 @@ fetch(`${API_BASE}/api/generate-crossword`, {
 
     adjustGridSize() {
         const gridContainer = document.getElementById('crosswordGrid');
-        const gameArea = document.querySelector('.game-area');
+        if (!gridContainer || !this.gridSize) {
+            return;
+        }
+
+        const parent = gridContainer.parentElement;
+        if (!parent) {
+            return;
+        }
+
         const headerBar = document.querySelector('.header-bar');
         const controlsBar = document.querySelector('.controls-bar');
-        
-        // Calculate available height
+        const topControls = document.querySelector('.game-controls');
+
         const windowHeight = window.innerHeight;
-        const headerHeight = headerBar.offsetHeight;
-        const controlsHeight = controlsBar.offsetHeight;
-        const availableHeight = windowHeight - headerHeight - controlsHeight - 40; // 40px for margins
-        
-        // Calculate available width
-        const containerWidth = gridContainer.parentElement.offsetWidth;
-        const availableWidth = containerWidth * 0.9; // 90% of container width
-        
-        // Use the smaller dimension to ensure grid fits
-        const maxDimension = Math.min(availableWidth, availableHeight);
-        const cellSize = Math.floor(maxDimension / this.gridSize);
-        
-        // Ensure minimum cell size
-        const minCellSize = 20;
-        if (cellSize < minCellSize) {
-            console.log('Grid too large for container, consider reducing grid size');
-            // Optionally reduce grid size automatically
-            if (this.gridSize > 10) {
-                this.gridSize = Math.max(10, Math.floor(maxDimension / minCellSize));
-                this.initializeGrid();
-            }
+        const headerHeight = headerBar ? headerBar.offsetHeight : 0;
+        const controlsHeight = controlsBar ? controlsBar.offsetHeight : 0;
+        const topControlsHeight = topControls ? topControls.offsetHeight : 0;
+        let topControlsGap = 0;
+        if (topControls) {
+            const styles = window.getComputedStyle(topControls);
+            topControlsGap =
+                parseFloat(styles.marginTop || '0') +
+                parseFloat(styles.marginBottom || '0');
         }
-        
-        // Update grid container size
+        const verticalPadding = 40; // breathing room so the grid never touches edges
+        const availableHeight = Math.max(
+            0,
+            windowHeight - headerHeight - controlsHeight - topControlsHeight - topControlsGap - verticalPadding
+        );
+
+        const availableWidth = Math.max(0, parent.clientWidth - 20);
+        const maxDimension = Math.min(availableWidth, availableHeight);
+
+        const attempts = Number(gridContainer.dataset.resizeAttempts || 0);
+        if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
+            if (attempts < 5) {
+                gridContainer.dataset.resizeAttempts = attempts + 1;
+                requestAnimationFrame(() => this.adjustGridSize());
+            } else {
+                delete gridContainer.dataset.resizeAttempts;
+            }
+            return;
+        }
+
+        delete gridContainer.dataset.resizeAttempts;
+
+        gridContainer.style.width = `${maxDimension}px`;
+        gridContainer.style.height = `${maxDimension}px`;
         gridContainer.style.maxWidth = `${maxDimension}px`;
         gridContainer.style.maxHeight = `${maxDimension}px`;
+        gridContainer.style.margin = '0 auto';
+
+        const cellSize = maxDimension / this.gridSize;
+        if (Number.isFinite(cellSize) && cellSize > 0) {
+            gridContainer.style.setProperty('--cell-size', `${cellSize}px`);
+        } else {
+            gridContainer.style.removeProperty('--cell-size');
+        }
+        console.debug('Crossword sizing', {
+            containerWidth: parent.clientWidth,
+            availableHeight,
+            gridDimension: maxDimension,
+            gridSize: this.gridSize,
+            cellSize
+        });
     }
 }
 
