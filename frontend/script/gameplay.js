@@ -1,6 +1,6 @@
 ﻿const API_BASE = 'http://localhost:5050';
 
-class CrosswordGame {
+export default class CrosswordGame {
     constructor() {
         this.currentWord = null;
         this.currentDirection = 'across';
@@ -649,6 +649,12 @@ class CrosswordGame {
         if (!this.canStartGame()) {
             return;
         }
+        // Immediately consume the guest free play to prevent multiple attempts
+        try {
+            if (!this.isAuthenticated() && localStorage.getItem('guestPlayed') !== 'true') {
+                localStorage.setItem('guestPlayed', 'true');
+            }
+        } catch (_) {}
 
         // Fetch and render new puzzle
         const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
@@ -824,8 +830,5 @@ class CrosswordGame {
     }
 }
 
-// Initialize the game when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    new CrosswordGame();
-});
+// (moved to module entry)
 
