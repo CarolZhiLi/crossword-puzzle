@@ -13,9 +13,23 @@ function getToken() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Apply i18n to static texts
+  try {
+    const setText = (id, key) => { const n = document.getElementById(id); if (n) n.textContent = t(key); };
+    setText('resetHeader', 'reset_header');
+    setText('resetSubtitle', 'reset_subtitle');
+    setText('newPasswordLabel', 'reset_new_password_label');
+    setText('confirmPasswordLabel', 'reset_confirm_password_label');
+    setText('resetSubmitBtn', 'reset_button');
+    setText('backToGameBtn', 'back_to_game');
+    setText('resetRightPanel', 'reset_right_panel');
+    const closeBtn = document.getElementById('resetCloseBtn');
+    if (closeBtn) closeBtn.setAttribute('aria-label', t('back_to_game'));
+  } catch (_) {}
+
   const token = getToken();
   if (!token) {
-    showMsg('Invalid or missing reset token.', 'error');
+    showMsg(t('reset_invalid_token'), 'error');
     document.getElementById('resetForm').style.display = 'none';
     return;
   }
@@ -28,15 +42,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const confirmPassword = formData.get('confirmPassword');
 
     if (!password || !confirmPassword) {
-      showMsg('Please fill in all fields.', 'error');
+      showMsg(t('reset_fill_fields'), 'error');
       return;
     }
     if (password.length < 6 || password.length > 15) {
-      showMsg('Password must be 6-15 characters.', 'error');
+      showMsg(t('reset_password_length'), 'error');
       return;
     }
     if (password !== confirmPassword) {
-      showMsg('Passwords do not match.', 'error');
+      showMsg(t('reset_passwords_no_match'), 'error');
       return;
     }
 
@@ -48,11 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Reset failed');
+        throw new Error(data.error || t('reset_failed'));
       }
-      showMsg('Password reset successful. You can now sign in.', 'success');
+      showMsg(t('reset_success'), 'success');
     } catch (err) {
-      showMsg(err.message || 'Invalid or expired token.', 'error');
+      showMsg(err.message || t('reset_invalid_or_expired'), 'error');
     }
   });
 });

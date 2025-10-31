@@ -89,31 +89,31 @@ class AuthManager {
                     <div class="auth-modal-body">
                         <div class="auth-form-section">
                             <div class="auth-form-header">
-                                <h2>Sign in to continue your crossword journey</h2>
+                                <h2>${t('signin_title')}</h2>
                             </div>
                             <form id="signInFormElement" class="auth-form">
                                 <div class="form-group">
-                                    <label for="signInUsername">Username or Email</label>
+                                    <label for="signInUsername">${t('username_or_email')}</label>
                                     <input type="text" id="signInUsername" name="username" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="signInPassword">Password</label>
+                                    <label for="signInPassword">${t('password')}</label>
                                     <input type="password" id="signInPassword" name="password" required>
                                 </div>
                                 <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary">Log In</button>
-                                    <button type="button" class="btn btn-secondary" id="switchToRegister">Create Account</button>
+                                    <button type="submit" class="btn btn-primary">${t('login')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToRegister">${t('create_account')}</button>
                                 </div>
                                 <div class="auth-links">
-                                    <a href="#" class="forgot-password">Forgot Password?</a>
+                                    <a href="#" class="forgot-password">${t('forgot_password_link')}</a>
                                 </div>
                             </form>
                         </div>
                         <div class="auth-logo-section">
                             <div class="logo-container">
                                 <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
-                                <h3>CrossyThink</h3>
-                                <p>Challenge your mind with AI-powered crosswords</p>
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('brand_tagline')}</p>
                             </div>
                         </div>
                     </div>
@@ -126,36 +126,36 @@ class AuthManager {
                     <div class="auth-modal-body">
                         <div class="auth-form-section">
                             <div class="auth-form-header">
-                                <h2>Create your account and start solving puzzles</h2>
+                                <h2>${t('register_title')}</h2>
                             </div>
                             <form id="registerFormElement" class="auth-form">
                                 <div class="form-group">
-                                    <label for="registerUsername">Username</label>
+                                    <label for="registerUsername">${t('username')}</label>
                                     <input type="text" id="registerUsername" name="username" required minlength="6" maxlength="12" pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,12}$" title="6-12 characters, letters and numbers, must include both">
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerEmail">Email</label>
+                                    <label for="registerEmail">${t('email')}</label>
                                     <input type="email" id="registerEmail" name="email" required>
                                 </div>
                                 <div class="form-group">
-                                    <label for="registerPassword">Password</label>
+                                    <label for="registerPassword">${t('password')}</label>
                                     <input type="password" id="registerPassword" name="password" required minlength="6" maxlength="15" title="6-15 characters">
                                 </div>
                                 <div class="form-group">
-                                    <label for="confirmPassword">Confirm Password</label>
+                                    <label for="confirmPassword">${t('confirm_password')}</label>
                                     <input type="password" id="confirmPassword" name="confirmPassword" required>
                                 </div>
                                 <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary">Create Account</button>
-                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">Already have an account?</button>
+                                    <button type="submit" class="btn btn-primary">${t('create_account')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">${t('already_have_account')}</button>
                                 </div>
                             </form>
                         </div>
                         <div class="auth-logo-section">
                             <div class="logo-container">
                                 <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
-                                <h3>CrossyThink</h3>
-                                <p>Challenge your mind with AI-powered crosswords</p>
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('brand_tagline')}</p>
                             </div>
                         </div>
                     </div>
@@ -168,25 +168,25 @@ class AuthManager {
                     <div class="auth-modal-body">
                         <div class="auth-form-section">
                             <div class="auth-form-header">
-                                <h2>Reset your password</h2>
-                                <p>Enter your email or username and we’ll send a reset link.</p>
+                                <h2>${t('forgot_title')}</h2>
+                                <p>${t('forgot_instructions')}</p>
                             </div>
                             <form id="forgotPasswordFormElement" class="auth-form">
                                 <div class="form-group">
-                                    <label for="forgotIdentifier">Email or Username</label>
+                                    <label for="forgotIdentifier">${t('email_or_username')}</label>
                                     <input type="text" id="forgotIdentifier" name="identifier" required>
                                 </div>
                                 <div class="form-actions">
-                                    <button type="submit" class="btn btn-primary">Send Reset Link</button>
-                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">Back to Sign In</button>
+                                    <button type="submit" class="btn btn-primary">${t('send_reset_link')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">${t('back_to_signin')}</button>
                                 </div>
                             </form>
                         </div>
                         <div class="auth-logo-section">
                             <div class="logo-container">
                                 <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
-                                <h3>CrossyThink</h3>
-                                <p>We’ll help you get back in.</p>
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('reset_right_panel')}</p>
                             </div>
                         </div>
                     </div>
@@ -215,11 +215,11 @@ class AuthManager {
 
         // Simple validation
         if (!username || !password) {
-            this.showMessage('Please fill in all fields', 'error');
+            this.showMessage(t('fill_all_fields'), 'error');
             return;
         }
 
-        this.showMessage('Signing in...', 'info');
+        this.showMessage(t('signing_in'), 'info');
 
         try {
             const res = await fetch(`${window.API_BASE}/api/auth/login`, {
@@ -229,7 +229,7 @@ class AuthManager {
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
-                throw new Error(data.error || 'Login failed');
+                throw new Error(data.error || t('login_failed'));
             }
 
             // Persist token and user for later use
@@ -244,7 +244,7 @@ class AuthManager {
             this.isAuthenticated = true;
             this.updateUI();
             this.closeModal();
-            this.showMessage('Welcome back, ' + this.currentUser.username + '!', 'success');
+            this.showMessage(t('welcome_back', { username: this.currentUser.username }), 'success');
         } catch (err) {
             this.showMessage(err.message, 'error');
         }
@@ -260,31 +260,31 @@ class AuthManager {
 
         // Frontend Validation
         if (!username || !email || !password || !confirmPassword) {
-            this.showMessage('All fields are required', 'error');
+            this.showMessage(t('all_fields_required'), 'error');
             return;
         }
 
         if (!this.validateUsername(username)) {
-            this.showMessage('Username must be 6-12 chars, letters and numbers, and include both.', 'error');
+            this.showMessage(t('username_requirements'), 'error');
             return;
         }
 
         if (!this.validateEmail(email)) {
-            this.showMessage('Please enter a valid email address', 'error');
+            this.showMessage(t('invalid_email'), 'error');
             return;
         }
 
         if (!this.validatePassword(password)) {
-            this.showMessage('Password must be 6-15 characters', 'error');
+            this.showMessage(t('password_requirements'), 'error');
             return;
         }
 
         if (password !== confirmPassword) {
-            this.showMessage('Passwords do not match', 'error');
+            this.showMessage(t('passwords_no_match'), 'error');
             return;
         }
 
-        this.showMessage('Creating account...', 'info');
+        this.showMessage(t('creating_account'), 'info');
 
         try {
             const res = await fetch(`${window.API_BASE}/api/auth/register`, {
@@ -294,7 +294,7 @@ class AuthManager {
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
-                throw new Error(data.error || 'Registration failed');
+                throw new Error(data.error || t('registration_failed'));
             }
 
             if (data.access_token) {
@@ -308,7 +308,7 @@ class AuthManager {
             this.isAuthenticated = true;
             this.updateUI();
             this.closeModal();
-            this.showMessage('Account created successfully! Welcome, ' + this.currentUser.username + '!', 'success');
+            this.showMessage(t('account_created_welcome', { username: this.currentUser.username }), 'success');
         } catch (err) {
             this.showMessage(err.message, 'error');
         }
@@ -356,11 +356,11 @@ class AuthManager {
         const identifier = formData.get('identifier');
 
         if (!identifier) {
-            this.showMessage('Please enter your email or username', 'error');
+            this.showMessage(t('enter_email_or_username'), 'error');
             return;
         }
 
-        this.showMessage('Sending reset link...', 'info');
+        this.showMessage(t('sending_reset_link'), 'info');
         try {
             const payload = this.validateEmail(identifier)
                 ? { email: identifier }
@@ -373,12 +373,12 @@ class AuthManager {
             });
             const data = await res.json();
             if (!res.ok || !data.success) {
-                throw new Error(data.error || 'Failed to request password reset');
+                throw new Error(data.error || t('reset_failed'));
             }
-            this.showMessage('If that account exists, a reset link has been sent.', 'success');
+            this.showMessage(t('reset_link_generic_ok'), 'success');
         } catch (err) {
             // Still show generic success to avoid enumeration
-            this.showMessage('If that account exists, a reset link has been sent.', 'success');
+            this.showMessage(t('reset_link_generic_ok'), 'success');
         }
     }
 
@@ -386,11 +386,11 @@ class AuthManager {
         const signInBtn = document.getElementById('signInBtn');
         
         if (this.isAuthenticated) {
-            signInBtn.textContent = 'Log Out';
+            signInBtn.textContent = t('logout');
             signInBtn.className = 'btn btn-success';
             signInBtn.onclick = () => this.signOut();
         } else {
-            signInBtn.textContent = 'Log In';
+            signInBtn.textContent = t('login');
             signInBtn.className = 'btn btn-primary';
             signInBtn.onclick = () => this.showSignInForm();
         }
@@ -402,7 +402,7 @@ class AuthManager {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         this.updateUI();
-        this.showMessage('You have been signed out', 'info');
+        this.showMessage(t('signed_out'), 'info');
     }
 
     showMessage(message, type) {

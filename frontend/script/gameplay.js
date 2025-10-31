@@ -15,6 +15,7 @@ class CrosswordGame {
         this.setupEventListeners();
         this.startTimer();
         this.setupResponsiveGrid();
+        this.applyI18nUI();
     }
 
     // ---- Free play gating helpers ----
@@ -783,6 +784,42 @@ class CrosswordGame {
             gridSize: this.gridSize,
             cellSize
         });
+    }
+
+    applyI18nUI() {
+        try {
+            const start = document.getElementById('startGameBtn');
+            if (start) start.textContent = t('btn_start_game');
+            const hint = document.getElementById('hintWordBtn');
+            if (hint) hint.textContent = t('btn_hint');
+            const check = document.getElementById('checkWordBtn');
+            if (check) check.textContent = t('btn_check_puzzle');
+            const newBtn = document.getElementById('newGameBtn');
+            if (newBtn) newBtn.textContent = t('btn_new_game');
+
+            const titles = document.querySelectorAll('.clues-title');
+            if (titles && titles.length >= 2) {
+                titles[0].textContent = t('clues_across');
+                titles[1].textContent = t('clues_down');
+            }
+
+            const topic = document.getElementById('topicSelect');
+            if (topic && topic.options && topic.options.length >= 5) {
+                topic.options[0].text = t('topic_js');
+                topic.options[1].text = t('topic_science');
+                topic.options[2].text = t('topic_history');
+                topic.options[3].text = t('topic_animals');
+                topic.options[4].text = t('topic_custom');
+            }
+
+            const diff = document.getElementById('difficultySelect');
+            if (diff && diff.options && diff.options.length >= 4) {
+                diff.options[0].text = t('diff_easy');
+                diff.options[1].text = t('diff_medium');
+                diff.options[2].text = t('diff_hard');
+                diff.options[3].text = t('diff_expert');
+            }
+        } catch (_) {}
     }
 }
 
