@@ -422,6 +422,57 @@ export default class CrosswordGame {
         document.getElementById('checkWordBtn')?.addEventListener('click', () => this.checkWord());
         document.getElementById('newGameBtn')?.addEventListener('click', () => this.newGame());
         document.getElementById('restartBtn')?.addEventListener('click', () => this.restartGame());
+
+        // Mobile button handlers
+        document.getElementById('mobileHintBtn')?.addEventListener('click', () => this.hintWord());
+        document.getElementById('mobileCheckBtn')?.addEventListener('click', () => this.checkWord());
+        document.getElementById('mobileNewGameBtn')?.addEventListener('click', () => this.newGame());
+        document.getElementById('mobileSignInBtn')?.addEventListener('click', () => {
+            const signInBtn = document.getElementById('signInBtn');
+            if (signInBtn) signInBtn.click();
+        });
+
+        // Clues panel toggle (mobile)
+        const cluesToggleBtn = document.getElementById('cluesToggleBtn');
+        const cluesPanel = document.getElementById('cluesPanel');
+        const cluesCloseBtn = document.getElementById('cluesCloseBtn');
+        const cluesBackdrop = document.getElementById('cluesBackdrop');
+        
+        const openCluesPanel = () => {
+            if (cluesPanel) cluesPanel.classList.add('mobile-open');
+            if (cluesBackdrop) cluesBackdrop.classList.add('active');
+        };
+
+        const closeCluesPanel = () => {
+            if (cluesPanel) cluesPanel.classList.remove('mobile-open');
+            if (cluesBackdrop) cluesBackdrop.classList.remove('active');
+        };
+        
+        if (cluesToggleBtn) {
+            cluesToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (cluesPanel && cluesPanel.classList.contains('mobile-open')) {
+                    closeCluesPanel();
+                } else {
+                    openCluesPanel();
+                }
+            });
+        }
+
+        if (cluesCloseBtn) {
+            cluesCloseBtn.addEventListener('click', closeCluesPanel);
+        }
+
+        if (cluesBackdrop) {
+            cluesBackdrop.addEventListener('click', closeCluesPanel);
+        }
+
+        // Also close on window resize if switching to desktop view
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                closeCluesPanel();
+            }
+        });
     }
 
     selectWord(wordNum) {
@@ -546,8 +597,105 @@ export default class CrosswordGame {
     }
 
     newGame() {
-        if (confirm(t('confirm_new_game'))) {
-            location.reload();
+        // Check if user is authenticated
+        if (!this.isAuthenticated()) {
+            // Guest user - show login modal
+            const signInBtn = document.getElementById('signInBtn');
+            if (signInBtn) {
+                signInBtn.click();
+            }
+            return;
+        }
+        
+        // Registered user - show game controls modal
+        this.showGameControlsModal();
+    }
+
+    showGameControlsModal() {
+        // Remove existing modal if any
+        const existingModal = document.querySelector('.game-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'game-modal';
+        modal.innerHTML = `
+            <div class="game-modal-content">
+                <button class="game-modal-close">&times;</button>
+                <div class="game-modal-header">
+                    <h2>${t('new_game') || 'New Game'}</h2>
+                </div>
+                <div class="game-settings">
+                    <select id="modalTopicSelect" class="dropdown">
+                        <option value="JavaScript">${t('topic_js') || 'JavaScript'}</option>
+                        <option value="Science">${t('topic_science') || 'Science'}</option>
+                        <option value="History">${t('topic_history') || 'History'}</option>
+                        <option value="Animals">${t('topic_animals') || 'Animals'}</option>
+                        <option value="General">${t('topic_custom') || 'Customize'}</option>
+                    </select>
+                    <select id="modalDifficultySelect" class="dropdown">
+                        <option value="Easy">${t('diff_easy') || 'Easy'}</option>
+                        <option value="Medium">${t('diff_medium') || 'Medium'}</option>
+                        <option value="Hard">${t('diff_hard') || 'Hard'}</option>
+                    </select>
+                    <button class="btn btn-primary" id="modalStartGameBtn">${t('btn_start_game') || 'Start Game'}</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Sync dropdowns with current values
+        const topicSelect = document.getElementById('topicSelect');
+        const difficultySelect = document.getElementById('difficultySelect');
+        const modalTopicSelect = document.getElementById('modalTopicSelect');
+        const modalDifficultySelect = document.getElementById('modalDifficultySelect');
+        
+        if (topicSelect && modalTopicSelect) {
+            modalTopicSelect.value = topicSelect.value;
+        }
+        if (difficultySelect && modalDifficultySelect) {
+            modalDifficultySelect.value = difficultySelect.value;
+        }
+        
+        // Add event listeners
+        modal.querySelector('.game-modal-close').addEventListener('click', () => {
+            this.closeGameModal();
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target.classList.contains('game-modal')) {
+                this.closeGameModal();
+            }
+        });
+        
+        document.getElementById('modalStartGameBtn').addEventListener('click', () => {
+            // Sync values to main dropdowns
+            if (topicSelect && modalTopicSelect) {
+                topicSelect.value = modalTopicSelect.value;
+            }
+            if (difficultySelect && modalDifficultySelect) {
+                difficultySelect.value = modalDifficultySelect.value;
+            }
+            
+            this.closeGameModal();
+            this.startGame();
+        });
+        
+        // Add animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+
+    closeGameModal() {
+        const modal = document.querySelector('.game-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
         }
     }
 
@@ -691,13 +839,19 @@ export default class CrosswordGame {
                 words: Object.keys(this.words).length
             });
             const defs = data.definitions || {};
-            const acrossEl = document.getElementById('acrossClues');
-            const downEl = document.getElementById('downClues');
-            if (acrossEl) {
-                acrossEl.innerHTML = Object.entries(this.words).filter(([,w]) => w.direction==='across').map(([n,w]) => `<div class="clue-item" data-word="${n}"><span class="clue-number">${n}.</span><span class="clue-text">${defs[w.word] || ''}</span></div>`).join('');
-            }
-            if (downEl) {
-                downEl.innerHTML = Object.entries(this.words).filter(([,w]) => w.direction==='down').map(([n,w]) => `<div class="clue-item" data-word="${n}"><span class="clue-number">${n}.</span><span class="clue-text">${defs[w.word] || ''}</span></div>`).join('');
+            const allCluesEl = document.getElementById('allClues');
+            if (allCluesEl) {
+                // Combine all clues and sort by number
+                const allClues = Object.entries(this.words)
+                    .map(([n, w]) => ({
+                        number: parseInt(n, 10),
+                        word: n,
+                        text: defs[w.word] || ''
+                    }))
+                    .sort((a, b) => a.number - b.number)
+                    .map(item => `<div class="clue-item" data-word="${item.word}"><span class="clue-number">${item.word}.</span><span class="clue-text">${item.text}</span></div>`)
+                    .join('');
+                allCluesEl.innerHTML = allClues;
             }
             document.querySelectorAll('.clue-item').forEach(item => {
                 item.addEventListener('click', () => {
@@ -804,11 +958,7 @@ export default class CrosswordGame {
             const newBtn = document.getElementById('newGameBtn');
             if (newBtn) newBtn.textContent = t('btn_new_game');
 
-            const titles = document.querySelectorAll('.clues-title');
-            if (titles && titles.length >= 2) {
-                titles[0].textContent = t('clues_across');
-                titles[1].textContent = t('clues_down');
-            }
+            // Clues titles removed - all clues shown in number order
 
             const topic = document.getElementById('topicSelect');
             if (topic && topic.options && topic.options.length >= 5) {
