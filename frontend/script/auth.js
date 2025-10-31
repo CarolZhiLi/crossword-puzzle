@@ -15,9 +15,9 @@ class AuthManager {
 
         // Close modal handlers
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('auth-modal')) {
-                this.closeModal();
-            }
+            // if (e.target.classList.contains('auth-modal')) {
+            //     this.closeModal();
+            // }
             if (e.target.classList.contains('close-btn')) {
                 this.closeModal();
             }

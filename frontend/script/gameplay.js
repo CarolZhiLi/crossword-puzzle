@@ -824,7 +824,6 @@ export default class CrosswordGame {
                 diff.options[0].text = t('diff_easy');
                 diff.options[1].text = t('diff_medium');
                 diff.options[2].text = t('diff_hard');
-                diff.options[3].text = t('diff_expert');
             }
         } catch (_) {}
     }
