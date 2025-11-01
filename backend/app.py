@@ -29,9 +29,11 @@ def create_app() -> Flask:
     app.register_blueprint(puzzle_bp, url_prefix='/api')
     app.register_blueprint(usage_bp, url_prefix='/api')
 
-    # Create tables on first run
-    with app.app_context():
-        db.create_all()
+    # Create tables on first run (opt-in)
+    # Set DB_AUTO_CREATE=true in backend/.env to enable automatic table creation.
+    if (os.getenv('DB_AUTO_CREATE') or 'false').strip().lower() == 'true':
+        with app.app_context():
+            db.create_all()
 
     return app
 

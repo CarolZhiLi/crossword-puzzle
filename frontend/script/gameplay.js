@@ -867,6 +867,8 @@ export default class CrosswordGame {
             this.initializeGrid();
             // Count this successful start toward free-play limits
             try { this.markGameStartedSuccessfully(); } catch (_) {}
+            // Refresh usage indicator (calls/tokens) for logged-in users
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
         }).catch(err => {
             console.error(err);
             alert(err.message || t('error_generating_puzzle'));

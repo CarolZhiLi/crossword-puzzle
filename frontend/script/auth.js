@@ -458,8 +458,9 @@ class AuthManager {
                     }).then(r => r.json().then(data => ({ ok: r.ok, data })))
                     .then(({ ok, data }) => {
                         if (ok && data && data.success && data.usage) {
-                            const total = Number(data.usage.total_calls || 0);
-                            apiUsageEl.textContent = `API used: ${total}`;
+                            const totalCalls = Number(data.usage.total_calls || 0);
+                            const tokens = Number(data.usage.tokens_total || 0);
+                            apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
                             apiUsageEl.style.display = 'inline-block';
                             // Admin: make clickable to view all usage
                             try {
@@ -475,7 +476,7 @@ class AuthManager {
                                         }).then(r => r.json().then(d => ({ ok: r.ok, data: d })))
                                         .then(({ ok, data: all }) => {
                                             if (!ok || !all || !all.success) return;
-                                            const lines = (all.results || []).slice(0, 10).map((row, i) => `${i+1}. ${row.username}: ${row.total_calls}`);
+                                            const lines = (all.results || []).slice(0, 10).map((row, i) => `${i+1}. ${row.username}: calls=${row.total_calls}, tokens=${row.tokens_total}`);
                                             alert(['Top usage', ...lines].join('\n'));
                                         }).catch(() => {});
                                     };
@@ -538,3 +539,50 @@ class AuthManager {
 document.addEventListener('DOMContentLoaded', () => {
     new AuthManager();
 });
+
+// Expose a small helper to refresh usage indicator after actions (e.g., new game)
+window.refreshUsageIndicator = function () {
+    try {
+        const apiUsageEl = document.getElementById('apiUsage');
+        const token = localStorage.getItem('token');
+        if (!apiUsageEl || !token) {
+            if (apiUsageEl) apiUsageEl.style.display = 'none';
+            return;
+        }
+        fetch(`${window.API_BASE}/api/usage/me`, {
+            method: 'GET',
+            headers: { 'Authorization': `Bearer ${token}` }
+        }).then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok && data && data.success && data.usage) {
+                const totalCalls = Number(data.usage.total_calls || 0);
+                const tokens = Number(data.usage.tokens_total || 0);
+                apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
+                apiUsageEl.style.display = 'inline-block';
+                // Re-wire admin click each refresh idempotently
+                let user = null;
+                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                if (user && user.role === 'admin') {
+                    apiUsageEl.style.cursor = 'pointer';
+                    apiUsageEl.title = 'Click to view usage by user';
+                    apiUsageEl.onclick = () => {
+                        fetch(`${window.API_BASE}/api/usage/all`, {
+                            method: 'GET',
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        }).then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+                        .then(({ ok, data: all }) => {
+                            if (!ok || !all || !all.success) return;
+                            const lines = (all.results || []).slice(0, 10).map((row, i) => `${i+1}. ${row.username}: calls=${row.total_calls}, tokens=${row.tokens_total}`);
+                            alert(['Top usage', ...lines].join('\n'));
+                        }).catch(() => {});
+                    };
+                } else {
+                    apiUsageEl.onclick = null;
+                    apiUsageEl.style.cursor = 'default';
+                }
+            } else {
+                if (apiUsageEl) apiUsageEl.style.display = 'none';
+            }
+        }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; });
+    } catch (_) {}
+};

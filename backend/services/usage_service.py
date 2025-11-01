@@ -2,7 +2,7 @@ from typing import Optional, Dict, List
 from datetime import datetime
 
 from extensions import db
-from models import User, ApiUsage
+from models import User, ApiUsage, GameSession
 
 
 class UsageService:
@@ -29,14 +29,19 @@ class UsageService:
     def get_user_summary(self, username: str) -> Dict:
         user = self._get_user(username)
         if not user:
-            return { 'total_calls': 0, 'by_endpoint': {} }
+            return { 'total_calls': 0, 'by_endpoint': {}, 'tokens_total': 0, 'games_count': 0 }
         rows: List[ApiUsage] = ApiUsage.query.filter_by(user_id=user.id).all()
         by_endpoint = { r.endpoint: int(r.count or 0) for r in rows }
         total = sum(by_endpoint.values())
-        return {
-            'total_calls': int(total),
-            'by_endpoint': by_endpoint
-        }
+        # Aggregate tokens/games from sessions (best-effort)
+        try:
+            sess_rows: List[GameSession] = GameSession.query.filter_by(user_id=user.id).all()
+            tokens_total = sum(int(getattr(s, 'tokens_total') or 0) for s in sess_rows)
+            games_count = len(sess_rows)
+        except Exception:
+            tokens_total = 0
+            games_count = 0
+        return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count) }
 
     def get_all_summaries(self) -> List[Dict]:
         """Return usage summary for all users."""
@@ -49,7 +54,19 @@ class UsageService:
             entry['total_calls'] = int(entry['total_calls']) + int(r.count or 0)
 
         # Map to usernames
-        users = { u.id: u for u in User.query.filter(User.id.in_(per_user.keys())).all() }
+        users = { u.id: u for u in User.query.filter(User.id.in_(per_user.keys())).all() } if per_user else {}
+
+        # Include token totals/games per user
+        by_user_tokens: Dict[int, int] = {}
+        by_user_games: Dict[int, int] = {}
+        try:
+            sess_rows: List[GameSession] = GameSession.query.all()
+            for s in sess_rows:
+                by_user_tokens[s.user_id] = int(by_user_tokens.get(s.user_id, 0)) + int(getattr(s, 'tokens_total') or 0)
+                by_user_games[s.user_id] = int(by_user_games.get(s.user_id, 0)) + 1
+        except Exception:
+            pass
+
         result: List[Dict] = []
         for uid, data in per_user.items():
             u = users.get(uid)
@@ -57,9 +74,10 @@ class UsageService:
                 'username': (u.username if u else f'user:{uid}'),
                 'email': (u.email if u else None),
                 'total_calls': int(data['total_calls']),
-                'by_endpoint': data['by_endpoint']
+                'by_endpoint': data['by_endpoint'],
+                'tokens_total': int(by_user_tokens.get(uid, 0)),
+                'games_count': int(by_user_games.get(uid, 0)),
             })
         # Sort desc by total calls
         result.sort(key=lambda x: x['total_calls'], reverse=True)
         return result
-

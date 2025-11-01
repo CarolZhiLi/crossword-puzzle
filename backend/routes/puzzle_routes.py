@@ -3,6 +3,10 @@ from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
 from services.usage_service import UsageService
+from extensions import db
+from models import GameSession, User
+from utils.tokens import estimate_tokens
+from datetime import datetime
 
 
 puzzle_bp = Blueprint('puzzle', __name__)
@@ -27,6 +31,7 @@ def generate_crossword():
             f"Generate {word_count} one-word terms related to {topic}. "
             f"Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description."
         )
+        t0 = datetime.utcnow()
         results = generate_words(prompt)
 
         pairs = []
@@ -72,12 +77,51 @@ def generate_crossword():
             'grid_size': size
         }
 
-        # Optional usage tracking if user is authenticated
+        # Optional usage + token tracking if user is authenticated
         try:
             verify_jwt_in_request(optional=True)
             username = get_jwt_identity()
             if username:
                 usage.increment(username, '/api/generate-crossword')
+
+                # Compute rough token usage
+                prompt_tokens = estimate_tokens(prompt)
+                # Build a completion text approximation using parsed definitions
+                try:
+                    completion_text = '\n'.join([f"{w}: {definitions.get(w, '')}" for w in words])
+                except Exception:
+                    completion_text = ''
+                completion_tokens = estimate_tokens(completion_text)
+                total_tokens = prompt_tokens + completion_tokens
+
+                # Persist a game session snapshot (best-effort; ignore failures if table/perm missing)
+                try:
+                    user = User.query.filter_by(username=username).first()
+                    if user:
+                        sess = GameSession(
+                            user_id=user.id,
+                            topic=topic,
+                            difficulty=(data.get('difficulty') or 'easy'),
+                            model='gpt.newbio.net',
+                            tokens_prompt=prompt_tokens,
+                            tokens_completion=completion_tokens,
+                            tokens_total=total_tokens,
+                            words_count=len(words),
+                            placed_words=len(used_words),
+                            grid_size=size,
+                            words_json=None,
+                            definitions_json=None,
+                            grid_json=None,
+                            started_at=t0,
+                            finished_at=datetime.utcnow(),
+                            duration_ms=int(max(0, (datetime.utcnow() - t0).total_seconds() * 1000)),
+                            status='completed'
+                        )
+                        db.session.add(sess)
+                        db.session.commit()
+                except Exception:
+                    # Do not fail the API if we cannot record session
+                    db.session.rollback()
         except Exception:
             pass
 
