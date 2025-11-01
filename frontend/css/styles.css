@@ -273,6 +273,17 @@ body {
     background: #b23e97;
 }
 
+/* Info button (Definitions) */
+.btn-info {
+    background: #e2e8f0; /* slate-200 */
+    color: #1a202c;      /* gray-900 */
+}
+
+.btn-info:hover {
+    background: #cbd5e1; /* slate-300 */
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
 /* Main Game Area */
 .game-area {
     display: grid;
