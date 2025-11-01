@@ -1,0 +1,54 @@
+/* ============================================
+   LAYOUT
+   Main container and game area structure
+   ============================================ */
+
+.game-container {
+    width: 90%;
+    min-height: 100vh;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Main Game Area */
+.game-area {
+    display: grid;
+    grid-template-columns: 80fr 20fr;
+    align-items: stretch;
+    align-content: stretch;
+    flex: 1;
+    min-height: 0;
+    padding: 4px 16px 14px;
+    gap: 14px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+/* Collapsed definitions toggle */
+.game-area.defs-collapsed { 
+    grid-template-columns: 1fr; 
+}
+.game-area.defs-collapsed .clues-panel { 
+    display: none; 
+}
+
+.game-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.topic-difficulty {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.user-registration {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+

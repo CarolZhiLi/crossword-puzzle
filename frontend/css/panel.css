@@ -1,0 +1,177 @@
+/* ============================================
+   CLUE PANEL
+   Clue panel, clues list, and panel interactions
+   ============================================ */
+
+.clues-panel {
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    min-height: 0;
+    max-height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    align-self: stretch;
+}
+
+#allClues {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+    overflow-x: hidden;
+}
+
+.clues-close-btn {
+    display: none;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    border: 2px solid #e2e8f0;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: all 0.2s;
+    color: #4a5568;
+}
+
+.clues-close-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #4299e1;
+    color: #4299e1;
+    transform: scale(1.1);
+}
+
+.clues-toggle-btn {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    width: 64px;
+    height: 64px;
+    cursor: pointer;
+    align-items: center;
+    justify-content: center;
+    z-index: 998;
+    box-shadow: 0 6px 20px rgba(66, 153, 225, 0.5);
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.clues-toggle-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px rgba(66, 153, 225, 0.6);
+    background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+}
+
+.clues-toggle-btn:active {
+    transform: scale(0.95);
+}
+
+.clues-toggle-btn svg {
+    transition: transform 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.clues-panel.mobile-open + .clues-toggle-btn svg {
+    transform: rotate(180deg);
+}
+
+.clues-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.clues-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.clues-section {
+    margin-bottom: 25px;
+}
+
+.clues-section:last-child {
+    margin-bottom: 0;
+}
+
+.clues-title {
+    font-size: 2.0rem;
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 3px solid #e2e8f0;
+    text-align: center;
+}
+
+.clue-item {
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 5px solid #4299e1;
+    font-size: 1.8rem;
+    background: #e6f3ff;
+}
+
+.clue-item:hover {
+    background: #d9ecff;
+}
+
+.clue-item.active {
+    background: #bee3f8;
+    border-left-color: #4299e1;
+}
+
+.clue-number {
+    font-weight: bold;
+    color: #4a5568;
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+.clue-text {
+    color: #2d3748;
+    font-size: 1.35rem;
+}
+
+/* Definition popup shown when clicking numbered cell */
+.def-popup {
+    position: fixed;
+    background: rgba(255,255,255,0.98);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+    z-index: 3000;
+    max-width: min(340px, 86vw);
+    color: #1a202c;
+}
+
+.def-popup .num {
+    font-weight: 700;
+    margin-right: 6px;
+    color: #2b6cb0;
+}
+

@@ -1,0 +1,152 @@
+/* ============================================
+   BUTTONS
+   All button styles (regular, icon, large)
+   ============================================ */
+
+/* Regular Buttons */
+.btn {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1.5rem;
+    transition: all 0.2s;
+    width: 220px;
+}
+
+.btn-primary {
+    background: #1a73bc;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #b23e97;
+}
+
+.btn-info {
+    background: #148c8c;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #806cc0;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+}
+
+.btn-large {
+    padding: 14px 27px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    width: 300px;
+}
+
+.btn-success {
+    background: #3557a6;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #d3ce4d;
+}
+
+.btn-warning {
+    background: #34911a;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #dd6b20;
+}
+
+/* Mobile Icon Buttons */
+.mobile-action-icons {
+    display: none;
+    gap: 10px;
+    align-items: center;
+}
+
+.icon-btn {
+    background: #1a73bc;
+    border: none;
+    border-radius: 12px;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: white;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 59, 204, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.icon-btn:hover::before,
+.icon-btn:active::before {
+    opacity: 1;
+}
+
+.icon-btn svg {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.icon-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+}
+
+.icon-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Specific icon button colors */
+.icon-btn-hint {
+    background: #4facfe;
+}
+
+.icon-btn-hint:hover {
+    box-shadow: 0 6px 16px rgba(143, 136, 232, 0.5);
+}
+
+.icon-btn-check {
+    background: #34911a;
+}
+
+.icon-btn-check:hover {
+    box-shadow: 0 6px 16px rgba(28, 195, 9, 0.5);
+}
+
+.icon-btn-new {
+    background: #3182ce;
+}
+
+.icon-btn-new:hover {
+    box-shadow: 0 6px 16px rgba(97, 119, 231, 0.5);
+}
+
+.icon-btn-login {
+    background: #c33657;
+}
+
+.icon-btn-login:hover {
+    box-shadow: 0 6px 16px rgba(202, 90, 124, 0.5);
+}
+

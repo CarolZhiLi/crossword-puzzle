@@ -1,0 +1,523 @@
+/* ============================================
+   RESPONSIVE STYLES
+   All media queries organized by breakpoint
+   
+   Breakpoints:
+   - Desktop: > 1024px
+   - iPad: 769px - 1024px  
+   - Mobile: ≤ 768px
+   ============================================ */
+
+/* ============================================
+   DESKTOP (> 1024px)
+   ============================================ */
+@media (min-width: 1025px) {
+    /* Body and Layout */
+    body {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        /* Ensure body doesn't add extra space */
+        position: relative;
+    }
+    
+    html {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    .game-container {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        /* Ensure container doesn't exceed viewport */
+        box-sizing: border-box;
+        margin: 0 auto; /* Center container with auto margins */
+        padding: 0;
+        /* Account for width constraint */
+        width: 90%;
+        /* Prevent any margin/padding from causing overflow */
+        position: relative;
+    }
+    
+    .header-bar {
+        flex-shrink: 0;
+        flex-grow: 0;
+        /* Ensure header doesn't exceed its natural height */
+        min-height: 0;
+        margin: 0 !important; /* Override any base CSS margins */
+        margin-bottom: 0 !important;
+        box-sizing: border-box;
+        /* Padding is OK as it's included in box-sizing */
+    }
+    
+    .controls-bar {
+        flex-shrink: 0;
+        flex-grow: 0;
+        /* Ensure controls don't exceed their natural height */
+        min-height: 0;
+        margin: 0 !important; /* Override any base CSS margins */
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+        box-sizing: border-box;
+        /* Padding is OK as it's included in box-sizing */
+    }
+    
+    .game-area {
+        flex: 1 1 0%; /* Take remaining space, can shrink to 0 */
+        min-height: 0; /* Critical for flex shrinking */
+        overflow: hidden; /* No scrolling - fit within viewport */
+        /* Ensure grid items align properly at top and stretch to same height */
+        align-items: stretch; /* Stretch to same height */
+        align-content: stretch;
+        /* Remove padding that might offset alignment */
+        padding: 0 !important; /* Override any base CSS padding */
+        gap: 14px; /* Keep gap between grid and panel */
+        /* Ensure it fits within available space */
+        box-sizing: border-box;
+        /* Prevent any overflow */
+        max-height: none; /* Let flexbox handle the height */
+        margin: 0 !important; /* Override any base CSS margins */
+    }
+    
+    /* Crossword Grid */
+    .crossword-container {
+        min-height: 0; /* Critical for flex shrinking */
+        max-height: 100%; /* Cannot exceed parent */
+        overflow: hidden;
+        flex: 1 1 auto;
+        display: flex;
+        justify-content: center; /* Center grid horizontally */
+        align-items: flex-start; /* Align grid at top of container */
+        /* Ensure it stretches in grid to match panel height exactly */
+        align-self: stretch;
+        height: 100%;
+        /* Remove any margin/padding that might offset alignment */
+        margin: 0;
+        padding: 0;
+        /* Match panel's border-radius */
+        border-radius: 15px;
+        box-sizing: border-box;
+    }
+    
+    .crossword-grid {
+        /* JavaScript will set explicit dimensions for desktop to fit available space */
+        /* Allow JavaScript to override with inline styles */
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
+        margin: 0;
+        padding: 10px; /* Internal padding for grid cells */
+        box-sizing: border-box;
+        /* Ensure grid fits within container and can shrink */
+        flex-shrink: 1;
+        min-width: 0;
+        min-height: 0;
+    }
+    
+    /* Collapsed definitions toggle - Desktop only */
+    .game-area.defs-collapsed { 
+        grid-template-columns: 1fr; 
+    }
+    .game-area.defs-collapsed .clues-panel { 
+        display: none; 
+    }
+    
+    /* Clue panel matches grid height and scrolls internally */
+    .clues-panel {
+        height: 100%;
+        max-height: 100%; /* Cannot exceed parent */
+        min-height: 0; /* Critical for flex shrinking */
+        overflow: hidden;
+        align-self: stretch;
+        /* Perfect alignment with grid - same top and bottom edges */
+        margin: 0;
+        padding: 0;
+        /* Match grid container's border-radius for perfect alignment */
+        border-radius: 15px;
+        box-sizing: border-box;
+        /* Ensure it matches grid container height exactly and fits in viewport */
+        display: flex;
+        flex-direction: column;
+        /* Prevent overflow */
+        flex: 1 1 auto;
+    }
+    
+    .clues-panel #allClues {
+        /* Internal padding for scrollable content */
+        padding: 15px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        flex: 1;
+        min-height: 0;
+    }
+}
+
+/* Medium Desktop (1025px - 1200px) */
+@media (min-width: 1025px) and (max-width: 1200px) {
+    .game-area {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+    
+    .clues-panel {
+        order: -1;
+        max-height: 300px;
+    }
+}
+
+/* ============================================
+   IPAD & MOBILE (≤ 1024px)
+   ============================================ */
+@media (max-width: 1024px) {
+    /* Layout */
+    body {
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .game-container {
+        height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 0;
+    }
+    
+    .header-bar {
+        flex-wrap: wrap;
+        gap: 8px;
+        flex-shrink: 0;
+        --header-height: 90px;
+    }
+    
+    .game-title .logo {
+        height: 56px;
+    }
+    
+    /* Show mobile icons, hide desktop buttons */
+    .mobile-action-icons {
+        display: flex !important;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .controls-bar {
+        display: none !important;
+    }
+    
+    .btn-large,
+    #hintWordBtn,
+    #checkWordBtn,
+    #newGameBtn,
+    #definitionsBtn {
+        display: none !important;
+    }
+    
+    /* Game Area */
+    .game-area {
+        grid-template-columns: 1fr !important;
+        gap: 0;
+        padding: 0;
+        position: relative;
+        flex: 1 1 0%;
+        min-height: 0;
+        overflow-y: auto; /* Allow vertical scroll if needed */
+        overflow-x: auto; /* Allow horizontal scroll for grid */
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    /* Collapsed definitions - always overlay */
+    .game-area.defs-collapsed {
+        grid-template-columns: 1fr !important;
+    }
+    .game-area.defs-collapsed .clues-panel {
+        position: fixed !important;
+        right: -100%;
+    }
+    
+    /* Crossword Container */
+    .crossword-container {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        min-height: 0;
+        overflow: visible; /* Allow content to overflow for scrolling */
+        display: flex;
+        align-items: center; /* Center grid vertically */
+        justify-content: center; /* Center grid horizontally */
+        flex: 1;
+        /* Prevent container from shrinking grid */
+        min-width: fit-content;
+    }
+    
+    .crossword-grid {
+        /* Grid size is set by JavaScript based on viewport */
+        /* Allow JavaScript to set explicit dimensions */
+        margin: 0;
+        /* Maintain square aspect ratio */
+        aspect-ratio: 1 / 1;
+        /* Prevent grid from shrinking - maintain size set by JS */
+        flex-shrink: 0;
+        /* Grid can exceed container for scrolling */
+        min-width: 0;
+        min-height: 0;
+    }
+    
+    /* Clue Panel - Overlay Mode */
+    .clues-panel {
+        position: fixed !important;
+        top: var(--header-height, 90px);
+        right: -100%;
+        width: 80%;
+        max-width: 400px;
+        height: calc(100vh - var(--header-height, 90px));
+        max-height: none;
+        z-index: 2000;
+        transition: right 0.3s ease;
+        border-radius: 0;
+        padding: 15px 15px 0 15px;
+        order: 0;
+        display: flex !important;
+        flex-direction: column;
+        box-sizing: border-box;
+        overflow: hidden;
+        margin: 0;
+    }
+    
+    .clues-panel #allClues {
+        flex: 1;
+        overflow-y: auto;
+        min-height: 0;
+        padding-bottom: 15px;
+    }
+    
+    /* Close button hidden on iPad/Mobile - use definition icon to close */
+    .clues-close-btn {
+        display: none !important;
+    }
+    
+    .clues-panel.mobile-open {
+        right: 0;
+    }
+    
+    .clues-backdrop {
+        display: block;
+        top: var(--header-height, 90px);
+        height: calc(100vh - var(--header-height, 90px));
+    }
+    
+    /* Hide arrow toggle button - use definition icon instead */
+    .clues-toggle-btn {
+        display: none !important;
+    }
+    
+    /* Hide close button on iPad/Mobile */
+    .clues-close-btn {
+        display: none !important;
+    }
+}
+
+/* ============================================
+   IPAD ONLY (769px - 1024px)
+   ============================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+    /* No special iPad-only styles needed - uses same as mobile */
+}
+
+/* ============================================
+   MOBILE ONLY (≤ 768px)
+   ============================================ */
+@media (max-width: 768px) {
+    /* Body */
+    body {
+        overflow: auto;
+    }
+    
+    /* Header */
+    .header-bar {
+        padding: 8px 12px;
+        justify-content: space-between;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        --header-height: 90px;
+    }
+    
+    .header-left {
+        display: none;
+    }
+    
+    .header-center {
+        order: 1;
+        flex: 0 0 auto;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .header-right {
+        order: 2;
+        flex: 0 0 auto;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .mobile-action-icons {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+    
+    #timer {
+        font-size: 2.0rem;
+    }
+    
+    .desktop-only {
+        display: none !important;
+    }
+    
+    .mobile-only {
+        display: block;
+    }
+    
+    /* Game Area */
+    .controls-bar {
+        display: none;
+    }
+    
+    .game-area {
+        overflow-x: auto; /* Allow horizontal scroll for grid */
+        overflow-y: auto; /* Allow vertical scroll if needed */
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 0%;
+        height: 100%;
+        min-height: 0;
+    }
+    
+    .crossword-container {
+        width: 100%;
+        min-height: 100%; /* At least fill height */
+        height: auto; /* Allow height to grow with content */
+        padding: 0;
+        flex: 1;
+        min-width: fit-content; /* Allow container to expand with grid */
+        display: flex;
+        align-items: center; /* Center grid vertically */
+        justify-content: center; /* Center grid horizontally */
+        overflow: visible; /* Allow grid to overflow for scrolling */
+    }
+    
+    .crossword-grid {
+        /* Grid size is set by JavaScript based on viewport width */
+        /* Allow JavaScript to set explicit dimensions */
+        margin: 0;
+        /* Maintain square aspect ratio */
+        aspect-ratio: 1 / 1;
+        /* Prevent grid from shrinking - maintain size set by JS */
+        flex-shrink: 0;
+        /* Grid can exceed container for scrolling */
+        min-width: 0;
+        min-height: 0;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .grid-cell {
+        aspect-ratio: 1 / 1;
+    }
+    
+    .grid-cell input {
+        font-size: 1.1rem;
+    }
+    
+    /* Clue Panel - Mobile Specific */
+    .clues-toggle-btn {
+        display: none !important;
+    }
+    
+    .clues-panel {
+        top: 90px !important;
+        height: calc(100vh - 90px) !important;
+        max-height: calc(100vh - 90px) !important;
+        padding-bottom: 0 !important;
+    }
+    
+    .clues-panel #allClues {
+        max-height: none !important;
+    }
+    
+    .clues-backdrop {
+        top: 90px !important;
+        height: calc(100vh - 90px) !important;
+    }
+    
+    /* Auth Modal */
+    .auth-modal-content {
+        width: 95%;
+        height: 90vh;
+        margin: 20px;
+    }
+    
+    .auth-modal-body {
+        flex-direction: column;
+    }
+    
+    .auth-logo-section {
+        order: -1;
+        height: 200px;
+        padding: 20px;
+    }
+    
+    .auth-form-section {
+        padding: 30px 20px;
+    }
+    
+    .modal-logo {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .logo-container h3 {
+        font-size: 1.8rem;
+    }
+    
+    .logo-container p {
+        font-size: 0.9rem;
+    }
+    
+    .auth-form-header h2 {
+        font-size: 1.8rem;
+    }
+    
+    .form-actions .btn {
+        font-size: 1rem;
+        padding: 12px 16px;
+    }
+}
+

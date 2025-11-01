@@ -36,7 +36,7 @@ class AuthService:
         if existing:
             raise ValueError('Username or email already in use.')
 
-        user = User(username=username, email=email, password_hash=generate_password_hash(password))
+        user = User(username=username, email=email, password_hash=generate_password_hash(password, method='pbkdf2:sha256'))
         db.session.add(user)
         db.session.commit()
 
@@ -109,6 +109,6 @@ class AuthService:
         if not user:
             raise ValueError('Invalid or expired token.')
 
-        user.password_hash = generate_password_hash(password)
+        user.password_hash = generate_password_hash(password, method='pbkdf2:sha256')
         pr.used_at = datetime.utcnow()
         db.session.commit()

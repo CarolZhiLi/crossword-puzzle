@@ -1,0 +1,133 @@
+/* ============================================
+   CROSSWORD GRID
+   Grid container, cells, and grid styling
+   ============================================ */
+
+.crossword-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+    gap: 0;
+    min-height: 0;
+    min-width: 0;
+    align-self: stretch;
+}
+
+.crossword-grid {
+    display: grid;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+    gap: 4px;
+    background: #ffffff;
+    padding: 10px;
+    border-radius: 15px;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+    aspect-ratio: 1 / 1;
+}
+
+.grid-cell {
+    width: 100%;
+    height: 100%;
+    /* Wood color for word cells */
+    background: linear-gradient(135deg, #d4a574 0%, #c9a961 100%);
+    border: 3px solid #b8945f;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s;
+    aspect-ratio: 1 / 1;
+    /* Subtle shadow for wood effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.grid-cell.black {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    cursor: default;
+    /* Make black cells unclickable */
+    pointer-events: none;
+    /* Remove shadow for white cells */
+    box-shadow: none;
+}
+
+.grid-cell.active {
+    /* Keep wood color but with brighter highlight */
+    background: linear-gradient(135deg, #e6c895 0%, #d4b572 100%);
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.4), 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.grid-cell.highlighted {
+    /* Warmer wood tone for highlighted cells */
+    background: linear-gradient(135deg, #f5d5a6 0%, #e6c895 100%);
+    border-color: #f6ad55;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.grid-cell input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-size: clamp(14px, calc(var(--cell-size, 36px) * 0.6), 32px);
+    font-weight: bold;
+    color: #2d3748;
+    text-transform: uppercase;
+    line-height: 1;
+}
+
+.grid-cell input:focus {
+    outline: none;
+}
+
+.cell-number {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    font-size: clamp(9px, calc(var(--cell-size, 36px) * 0.28), 18px);
+    font-weight: bold;
+    color: #4a5568;
+    background: rgba(255,255,255,0.85);
+    padding: 0 3px;
+    border-radius: 4px;
+    cursor: pointer;
+    z-index: 2;
+    user-select: none;
+}
+
+.game-controls {
+    width: 100%;
+    margin: 6px 0 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.game-settings {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 14px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    flex-wrap: wrap;
+}
+

@@ -327,7 +327,17 @@ class AuthManager {
                 let errorMessage = t('registration_failed');
                 try {
                     const errorData = await res.json();
-                    errorMessage = errorData.error || errorMessage;
+                    // Extract meaningful error message (hide database technical errors from user)
+                    if (errorData.error) {
+                        const dbError = errorData.error.toLowerCase();
+                        if (dbError.includes('certificate verify failed') || dbError.includes('ssl') || dbError.includes('can\'t connect to mysql')) {
+                            errorMessage = 'Database connection error. Please contact administrator.';
+                        } else if (dbError.includes('username or email already in use')) {
+                            errorMessage = 'Username or email already in use. Please choose different credentials.';
+                        } else {
+                            errorMessage = errorData.error;
+                        }
+                    }
                 } catch (e) {
                     // If response isn't JSON, use status text
                     errorMessage = res.statusText || errorMessage;
@@ -337,7 +347,15 @@ class AuthManager {
 
             const data = await res.json();
             if (!data.success) {
-                throw new Error(data.error || t('registration_failed'));
+                // Extract meaningful error message (hide database technical errors from user)
+                let errorMessage = data.error || t('registration_failed');
+                const dbError = (errorMessage || '').toLowerCase();
+                if (dbError.includes('certificate verify failed') || dbError.includes('ssl') || dbError.includes('can\'t connect to mysql')) {
+                    errorMessage = 'Database connection error. Please contact administrator.';
+                } else if (dbError.includes('username or email already in use')) {
+                    errorMessage = 'Username or email already in use. Please choose different credentials.';
+                }
+                throw new Error(errorMessage);
             }
 
             if (data.access_token) {
