@@ -442,11 +442,25 @@ class AuthManager {
     updateUI() {
         const signInBtn = document.getElementById('signInBtn');
         const apiUsageEl = document.getElementById('apiUsage');
+        const adminLink = document.getElementById('adminLink');
         
         if (this.isAuthenticated) {
             signInBtn.textContent = t('logout');
             signInBtn.className = 'btn btn-success';
             signInBtn.onclick = () => this.signOut();
+
+            // Toggle Admin link visibility based on role
+            try {
+                let user = this.currentUser;
+                if (!user) {
+                    try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                }
+                if (user && user.role === 'admin' && adminLink) {
+                    adminLink.style.display = 'inline-block';
+                } else if (adminLink) {
+                    adminLink.style.display = 'none';
+                }
+            } catch (_) {}
 
             // Fetch and display usage for current user
             try {
@@ -498,6 +512,8 @@ class AuthManager {
             signInBtn.className = 'btn btn-primary';
             signInBtn.onclick = () => this.showSignInForm();
             if (apiUsageEl) apiUsageEl.style.display = 'none';
+            const adminLink = document.getElementById('adminLink');
+            if (adminLink) adminLink.style.display = 'none';
         }
     }
 
