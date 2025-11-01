@@ -427,6 +427,7 @@ export default class CrosswordGame {
         document.getElementById('mobileHintBtn')?.addEventListener('click', () => this.hintWord());
         document.getElementById('mobileCheckBtn')?.addEventListener('click', () => this.checkWord());
         document.getElementById('mobileNewGameBtn')?.addEventListener('click', () => this.newGame());
+        document.getElementById('mobileDefsBtn')?.addEventListener('click', () => this.openDefinitionsOverlay());
         document.getElementById('mobileSignInBtn')?.addEventListener('click', () => {
             const signInBtn = document.getElementById('signInBtn');
             if (signInBtn) signInBtn.click();
@@ -473,6 +474,16 @@ export default class CrosswordGame {
                 closeCluesPanel();
             }
         });
+
+        // Definitions overlay controls
+        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.openDefinitionsOverlay());
+        document.getElementById('defsCloseBtn')?.addEventListener('click', () => this.closeDefinitionsOverlay());
+        const defsOverlay = document.getElementById('defsOverlay');
+        if (defsOverlay) {
+            defsOverlay.addEventListener('click', (e) => {
+                if (e.target === defsOverlay) this.closeDefinitionsOverlay();
+            });
+        }
     }
 
     selectWord(wordNum) {
@@ -843,7 +854,8 @@ export default class CrosswordGame {
                 columns: this.solutionGrid[0] ? this.solutionGrid[0].length : 0,
                 words: Object.keys(this.words).length
             });
-            const defs = data.definitions || {};
+        const defs = data.definitions || {};
+        this.definitions = defs;
             const allCluesEl = document.getElementById('allClues');
             if (allCluesEl) {
                 // Combine all clues and sort by number
@@ -869,10 +881,42 @@ export default class CrosswordGame {
             try { this.markGameStartedSuccessfully(); } catch (_) {}
             // Refresh usage indicator (calls/tokens) for logged-in users
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
+            // Prepare definitions overlay list now that data is ready
+            try { this.renderDefinitionsOverlay(); } catch (_) {}
         }).catch(err => {
             console.error(err);
             alert(err.message || t('error_generating_puzzle'));
         });
+    }
+
+    renderDefinitionsOverlay() {
+        const list = document.getElementById('defsOverlayList');
+        if (!list || !this.words || !this.definitions) return;
+        const items = Object.entries(this.words)
+            .map(([n, w]) => ({ number: parseInt(n,10), word: w.word, def: this.definitions[w.word] || '' }))
+            .sort((a,b)=>a.number-b.number);
+        list.innerHTML = items.map(item => {
+            const safeWord = (item.word || '').toString();
+            const safeDef = (item.def || '').toString();
+            return `<div class="defs-item"><span class="defs-word">${item.number}. ${safeWord}</span><span class="defs-text">${safeDef}</span></div>`;
+        }).join('');
+    }
+
+    openDefinitionsOverlay() {
+        const overlay = document.getElementById('defsOverlay');
+        if (!overlay) return;
+        if (!this.definitions || !this.words) {
+            try { this.renderDefinitionsOverlay(); } catch(_) {}
+        }
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+    }
+
+    closeDefinitionsOverlay() {
+        const overlay = document.getElementById('defsOverlay');
+        if (!overlay) return;
+        overlay.classList.remove('show');
+        overlay.setAttribute('aria-hidden', 'true');
     }
 
     setupResponsiveGrid() {

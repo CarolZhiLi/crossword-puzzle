@@ -26,6 +26,77 @@ body {
     flex-direction: column;
 }
 
+/* Definitions Overlay */
+.defs-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000; /* above grid and panels */
+}
+
+.defs-overlay.show { display: flex; }
+
+.defs-card {
+    background: rgba(255,255,255,0.92);
+    border-radius: 16px;
+    width: min(720px, 92vw);
+    max-height: 82vh;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.defs-card h3 {
+    padding: 14px 16px;
+    margin: 0;
+    border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+.defs-list {
+    overflow: auto;
+    padding: 10px 14px 16px 14px;
+}
+
+.defs-item { padding: 6px 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
+.defs-item:last-child { border-bottom: none; }
+.defs-word { font-weight: 600; margin-right: 8px; }
+.defs-text { opacity: 0.9; }
+
+.defs-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #333;
+}
+
+@media (max-width: 768px) {
+    .defs-card { width: 96vw; max-height: 88vh; border-radius: 14px; }
+}
+
+/* Responsive layout tweaks */
+@media (max-width: 1024px) {
+    .header-bar { flex-wrap: wrap; gap: 8px; }
+    .game-title .logo { height: 56px; }
+}
+
+@media (max-width: 768px) {
+    body { overflow: hidden; }
+    .mobile-action-icons { display: flex; }
+    .desktop-only { display: none !important; }
+    .controls-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .controls-bar .btn { padding: 10px 12px; font-size: 14px; }
+}
+
 /* Header Bar */
 .header-bar {
     backdrop-filter: blur(10px);
