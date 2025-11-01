@@ -24,62 +24,9 @@ body {
     flex-direction: column;
 }
 
-/* Definitions Overlay */
-.defs-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.45);
-    backdrop-filter: blur(2px);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    z-index: 2000; /* above grid and panels */
-}
-
-.defs-overlay.show { display: flex; }
-
-.defs-card {
-    background: rgba(255,255,255,0.92);
-    border-radius: 16px;
-    width: min(720px, 92vw);
-    max-height: 82vh;
-    overflow: hidden;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.25);
-    display: flex;
-    flex-direction: column;
-    position: relative;
-}
-
-.defs-card h3 {
-    padding: 14px 16px;
-    margin: 0;
-    border-bottom: 1px solid rgba(0,0,0,0.08);
-}
-
-.defs-list {
-    overflow: auto;
-    padding: 10px 14px 16px 14px;
-}
-
-.defs-item { padding: 6px 0; border-bottom: 1px dashed rgba(0,0,0,0.08); }
-.defs-item:last-child { border-bottom: none; }
-.defs-word { font-weight: 600; margin-right: 8px; }
-.defs-text { opacity: 0.9; }
-
-.defs-close {
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    background: transparent;
-    border: none;
-    font-size: 22px;
-    cursor: pointer;
-    color: #333;
-}
-
-@media (max-width: 768px) {
-    .defs-card { width: 96vw; max-height: 88vh; border-radius: 14px; }
-}
+/* Collapsed definitions (toggle) */
+.game-area.defs-collapsed { grid-template-columns: 1fr; }
+.game-area.defs-collapsed .clues-panel { display: none; }
 
 /* Responsive layout tweaks */
 @media (max-width: 1024px) {
@@ -566,18 +513,20 @@ body {
     text-align: center;
 }
 
+
 .clue-item {
     padding: 15px;
     margin-bottom: 12px;
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    border-left: 5px solid transparent;
+    border-left: 5px solid #4299e1;
     font-size: 1.8rem;
+    background: #e6f3ff; /* use same vibe as first active row */
 }
 
 .clue-item:hover {
-    background: #f7fafc;
+    background: #d9ecff;
 }
 
 .clue-item.active {

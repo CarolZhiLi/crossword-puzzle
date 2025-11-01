@@ -427,7 +427,7 @@ export default class CrosswordGame {
         document.getElementById('mobileHintBtn')?.addEventListener('click', () => this.hintWord());
         document.getElementById('mobileCheckBtn')?.addEventListener('click', () => this.checkWord());
         document.getElementById('mobileNewGameBtn')?.addEventListener('click', () => this.newGame());
-        document.getElementById('mobileDefsBtn')?.addEventListener('click', () => this.openDefinitionsOverlay());
+        document.getElementById('mobileDefsBtn')?.addEventListener('click', () => this.toggleDefinitions());
         document.getElementById('mobileSignInBtn')?.addEventListener('click', () => {
             const signInBtn = document.getElementById('signInBtn');
             if (signInBtn) signInBtn.click();
@@ -474,6 +474,9 @@ export default class CrosswordGame {
                 closeCluesPanel();
             }
         });
+
+        // Desktop definitions button folds/unfolds existing list
+        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.toggleDefinitions());
 
         // Definitions overlay controls
         document.getElementById('definitionsBtn')?.addEventListener('click', () => this.openDefinitionsOverlay());
@@ -881,8 +884,8 @@ export default class CrosswordGame {
             try { this.markGameStartedSuccessfully(); } catch (_) {}
             // Refresh usage indicator (calls/tokens) for logged-in users
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
-            // Prepare definitions overlay list now that data is ready
-            try { this.renderDefinitionsOverlay(); } catch (_) {}
+            // Ensure definitions list visible by default on start
+            try { this.ensureDefinitionsVisible(); } catch (_) {}
         }).catch(err => {
             console.error(err);
             alert(err.message || t('error_generating_puzzle'));
@@ -1001,6 +1004,41 @@ export default class CrosswordGame {
             gridSize: this.gridSize,
             cellSize
         });
+    }
+
+    ensureDefinitionsVisible() {
+        const area = document.querySelector('.game-area');
+        if (area && area.classList.contains('defs-collapsed')) {
+            area.classList.remove('defs-collapsed');
+        }
+        const panel = document.getElementById('cluesPanel');
+        const backdrop = document.getElementById('cluesBackdrop');
+        if (window.innerWidth <= 768) {
+            if (panel) panel.classList.add('mobile-open');
+            if (backdrop) backdrop.classList.add('active');
+        } else {
+            if (panel) panel.classList.remove('mobile-open');
+            if (backdrop) backdrop.classList.remove('active');
+        }
+    }
+
+    toggleDefinitions() {
+        const area = document.querySelector('.game-area');
+        if (!area) return;
+        if (window.innerWidth > 768) {
+            area.classList.toggle('defs-collapsed');
+            return;
+        }
+        const panel = document.getElementById('cluesPanel');
+        const backdrop = document.getElementById('cluesBackdrop');
+        if (!panel || !backdrop) return;
+        if (panel.classList.contains('mobile-open')) {
+            panel.classList.remove('mobile-open');
+            backdrop.classList.remove('active');
+        } else {
+            panel.classList.add('mobile-open');
+            backdrop.classList.add('active');
+        }
     }
 
     applyI18nUI() {
