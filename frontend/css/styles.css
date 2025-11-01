@@ -392,6 +392,10 @@ body {
     font-size: clamp(9px, calc(var(--cell-size, 36px) * 0.28), 18px);
     font-weight: bold;
     color: #4a5568;
+    background: rgba(255,255,255,0.85);
+    padding: 0 3px;
+    border-radius: 4px;
+    cursor: pointer; /* allow clicking number for popup */
 }
 
 /* Clues Panel */
@@ -559,6 +563,24 @@ body {
     flex-shrink: 0;
     position: static;
     z-index: 10;
+}
+
+/* Definition popup shown when clicking numbered cell */
+.def-popup {
+    position: fixed;
+    background: rgba(255,255,255,0.98);
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border-radius: 10px;
+    padding: 10px 12px;
+    z-index: 3000;
+    max-width: min(340px, 86vw);
+    color: #1a202c;
+}
+.def-popup .num {
+    font-weight: 700;
+    margin-right: 6px;
+    color: #2b6cb0;
 }
 
 .btn-large {

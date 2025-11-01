@@ -204,6 +204,11 @@ export default class CrosswordGame {
                         const numberSpan = document.createElement('span');
                         numberSpan.className = 'cell-number';
                         numberSpan.textContent = number;
+                        numberSpan.dataset.wordNumber = String(number);
+                        numberSpan.addEventListener('click', (ev) => {
+                            ev.stopPropagation();
+                            this.showDefinitionPopup(String(number), cell);
+                        });
                         cell.appendChild(numberSpan);
                     }
                 }
@@ -890,6 +895,57 @@ export default class CrosswordGame {
             console.error(err);
             alert(err.message || t('error_generating_puzzle'));
         });
+    }
+
+    showDefinitionPopup(wordNum, anchorEl) {
+        try {
+            const info = this.words && this.words[wordNum];
+            if (!info) return;
+            const defMap = this.definitions || {};
+            const defText = defMap[info.word] || '';
+
+            let popup = document.getElementById('defPopup');
+            if (!popup) {
+                popup = document.createElement('div');
+                popup.id = 'defPopup';
+                popup.className = 'def-popup';
+                const num = document.createElement('span');
+                num.className = 'num';
+                const text = document.createElement('span');
+                text.className = 'text';
+                popup.appendChild(num);
+                popup.appendChild(text);
+                document.body.appendChild(popup);
+            }
+            popup.querySelector('.num').textContent = `${wordNum}.`;
+            popup.querySelector('.text').textContent = ` ${defText}`;
+
+            const rect = anchorEl.getBoundingClientRect();
+            const pad = 8;
+            let top = rect.bottom + pad;
+            let left = rect.left;
+            const vw = window.innerWidth || document.documentElement.clientWidth;
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+
+            popup.style.visibility = 'hidden';
+            popup.style.display = 'block';
+            const pw = popup.offsetWidth;
+            const ph = popup.offsetHeight;
+            if (left + pw + pad > vw) left = Math.max(pad, vw - pw - pad);
+            if (top + ph + pad > vh) top = Math.max(pad, rect.top - ph - pad);
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+            popup.style.visibility = 'visible';
+
+            const close = (e) => {
+                const target = e.target;
+                if (!popup.contains(target)) {
+                    try { popup.remove(); } catch (_) {}
+                    document.removeEventListener('click', close, true);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', close, true), 0);
+        } catch (_) {}
     }
 
     renderDefinitionsOverlay() {
