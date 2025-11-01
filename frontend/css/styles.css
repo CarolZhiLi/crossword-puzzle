@@ -275,12 +275,12 @@ body {
 
 /* Info button (Definitions) */
 .btn-info {
-    background: #e2e8f0; /* slate-200 */
-    color: #1a202c;      /* gray-900 */
+    background: #148c8c; /* slate-200 */
+    color: white;      /* gray-900 */
 }
 
 .btn-info:hover {
-    background: #cbd5e1; /* slate-300 */
+    background: #806cc0; /* slate-300 */
     box-shadow: 0 6px 16px rgba(0,0,0,0.12);
 }
 
