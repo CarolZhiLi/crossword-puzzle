@@ -1,6 +1,20 @@
 from extensions import db
 
 
+class ApiUsage(db.Model):
+    __tablename__ = 'api_usage'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    endpoint = db.Column(db.String(128), nullable=False)
+    count = db.Column(db.Integer, nullable=False, default=0)
+    last_used_at = db.Column(db.DateTime, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
+
+    user = db.relationship('User')
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'endpoint', name='uq_api_usage_user_endpoint'),
+    )
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

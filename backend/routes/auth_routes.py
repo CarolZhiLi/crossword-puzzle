@@ -12,12 +12,12 @@ service = AuthService()
 def register():
     try:
         data = request.get_json(force=True)
-        public_user, token = service.register(
+        public_user, token, usage = service.register(
             (data.get('username') or '').strip(),
             (data.get('email') or '').strip(),
             data.get('password') or ''
         )
-        return jsonify({'success': True, 'user': public_user, 'access_token': token}), 201
+        return jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token}), 201
     except ValueError as ve:
         return jsonify({'success': False, 'error': str(ve)}), 400
     except Exception as e:
@@ -28,11 +28,11 @@ def register():
 def login():
     try:
         data = request.get_json(force=True)
-        public_user, token = service.login(
+        public_user, token, usage = service.login(
             (data.get('username') or '').strip(),
             data.get('password') or ''
         )
-        return jsonify({'success': True, 'user': public_user, 'access_token': token}), 200
+        return jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token}), 200
     except ValueError as ve:
         # Differentiate invalid creds vs other validation
         msg = str(ve)
@@ -78,3 +78,4 @@ def reset_password():
         return jsonify({'success': False, 'error': str(ve)}), 400
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+

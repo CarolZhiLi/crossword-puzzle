@@ -10,11 +10,14 @@ from models import User, PasswordReset
 from utils.validators import is_valid_email, is_valid_password, is_valid_username
 from utils.security import gen_reset_token, hash_token, build_reset_link
 from services.email_service import EmailService
+from services.usage_service import UsageService
+from utils.security import is_admin_username
 
 
 class AuthService:
     def __init__(self):
         self.email = EmailService()
+        self.usage = UsageService()
 
     # --- Queries ---
     def find_user_by_identifier(self, identifier: str) -> Optional[User]:
@@ -38,7 +41,11 @@ class AuthService:
         db.session.commit()
 
         token = create_access_token(identity=username)
-        return {'username': username, 'email': email}, token
+        public = {'username': username, 'email': email}
+        if is_admin_username(username):
+            public['role'] = 'admin'
+        summary = self.usage.get_user_summary(username)
+        return public, token, summary
 
     def login(self, identifier: str, password: str) -> Tuple[dict, str]:
         if not identifier or not password:
@@ -47,13 +54,21 @@ class AuthService:
         if not user or not check_password_hash(user.password_hash, password):
             raise ValueError('Invalid credentials.')
         token = create_access_token(identity=user.username)
-        return {'username': user.username, 'email': user.email}, token
+        public = {'username': user.username, 'email': user.email}
+        if is_admin_username(user.username):
+            public['role'] = 'admin'
+        summary = self.usage.get_user_summary(user.username)
+        return public, token, summary
 
     def me(self, username: str) -> Optional[dict]:
         user = User.query.filter_by(username=username).first()
         if not user:
             return None
-        return {'username': user.username, 'email': user.email}
+        info = {'username': user.username, 'email': user.email}
+        if is_admin_username(user.username):
+            info['role'] = 'admin'
+        info['usage'] = self.usage.get_user_summary(user.username)
+        return info
 
     def forgot_password(self, identifier: str) -> None:
         if not identifier:

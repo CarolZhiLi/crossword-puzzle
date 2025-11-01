@@ -807,9 +807,14 @@ export default class CrosswordGame {
         // Fetch and render new puzzle
         const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
         const mapped = diffMap[difficulty] || 'easy';
+            const headers = { 'Content-Type': 'application/json' };
+            try {
+                const token = localStorage.getItem('token');
+                if (token) headers['Authorization'] = `Bearer ${token}`;
+            } catch (_) {}
             fetch(`${window.API_BASE}/api/generate-crossword`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers,
             body: JSON.stringify({ topic, difficulty: mapped })
         }).then(r => r.json().then(data => ({ ok: r.ok, data }))).then(({ ok, data }) => {
             if (!ok || !data.success) throw new Error(data.error || 'Failed to generate puzzle');

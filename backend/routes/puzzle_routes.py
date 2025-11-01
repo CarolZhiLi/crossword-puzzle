@@ -1,9 +1,12 @@
 from flask import Blueprint, request as flask_request, jsonify
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
+from services.usage_service import UsageService
 
 
 puzzle_bp = Blueprint('puzzle', __name__)
+usage = UsageService()
 
 DIFF_LEVELS = {
     'easy': 10,
@@ -68,6 +71,15 @@ def generate_crossword():
             'placed_words': len(used_words),
             'grid_size': size
         }
+
+        # Optional usage tracking if user is authenticated
+        try:
+            verify_jwt_in_request(optional=True)
+            username = get_jwt_identity()
+            if username:
+                usage.increment(username, '/api/generate-crossword')
+        except Exception:
+            pass
 
         return jsonify(response)
     except Exception as e:

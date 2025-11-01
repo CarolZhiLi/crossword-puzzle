@@ -244,6 +244,15 @@ class AuthManager {
             this.isAuthenticated = true;
             this.updateUI();
             this.closeModal();
+            // Show usage if provided
+            try {
+                const apiUsageEl = document.getElementById('apiUsage');
+                const total = Number((data.usage && data.usage.total_calls) || 0);
+                if (apiUsageEl && Number.isFinite(total)) {
+                    apiUsageEl.textContent = `API used: ${total}`;
+                    apiUsageEl.style.display = 'inline-block';
+                }
+            } catch (_) {}
             this.showMessage(t('welcome_back', { username: this.currentUser.username }), 'success');
         } catch (err) {
             this.showMessage(err.message, 'error');
@@ -308,6 +317,14 @@ class AuthManager {
             this.isAuthenticated = true;
             this.updateUI();
             this.closeModal();
+            try {
+                const apiUsageEl = document.getElementById('apiUsage');
+                const total = Number((data.usage && data.usage.total_calls) || 0);
+                if (apiUsageEl && Number.isFinite(total)) {
+                    apiUsageEl.textContent = `API used: ${total}`;
+                    apiUsageEl.style.display = 'inline-block';
+                }
+            } catch (_) {}
             this.showMessage(t('account_created_welcome', { username: this.currentUser.username }), 'success');
         } catch (err) {
             this.showMessage(err.message, 'error');
@@ -384,15 +401,62 @@ class AuthManager {
 
     updateUI() {
         const signInBtn = document.getElementById('signInBtn');
+        const apiUsageEl = document.getElementById('apiUsage');
         
         if (this.isAuthenticated) {
             signInBtn.textContent = t('logout');
             signInBtn.className = 'btn btn-success';
             signInBtn.onclick = () => this.signOut();
+
+            // Fetch and display usage for current user
+            try {
+                const token = localStorage.getItem('token');
+                if (token && apiUsageEl) {
+                    fetch(`${window.API_BASE}/api/usage/me`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json().then(data => ({ ok: r.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (ok && data && data.success && data.usage) {
+                            const total = Number(data.usage.total_calls || 0);
+                            apiUsageEl.textContent = `API used: ${total}`;
+                            apiUsageEl.style.display = 'inline-block';
+                            // Admin: make clickable to view all usage
+                            try {
+                                let user = null;
+                                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                                if (user && user.role === 'admin') {
+                                    apiUsageEl.style.cursor = 'pointer';
+                                    apiUsageEl.title = 'Click to view usage by user';
+                                    apiUsageEl.onclick = () => {
+                                        fetch(`${window.API_BASE}/api/usage/all`, {
+                                            method: 'GET',
+                                            headers: { 'Authorization': `Bearer ${token}` }
+                                        }).then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+                                        .then(({ ok, data: all }) => {
+                                            if (!ok || !all || !all.success) return;
+                                            const lines = (all.results || []).slice(0, 10).map((row, i) => `${i+1}. ${row.username}: ${row.total_calls}`);
+                                            alert(['Top usage', ...lines].join('\n'));
+                                        }).catch(() => {});
+                                    };
+                                } else {
+                                    apiUsageEl.onclick = null;
+                                    apiUsageEl.style.cursor = 'default';
+                                }
+                            } catch (_) {}
+                        } else {
+                            if (apiUsageEl) apiUsageEl.style.display = 'none';
+                        }
+                    }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; });
+                } else if (apiUsageEl) {
+                    apiUsageEl.style.display = 'none';
+                }
+            } catch (_) {}
         } else {
             signInBtn.textContent = t('login');
             signInBtn.className = 'btn btn-primary';
             signInBtn.onclick = () => this.showSignInForm();
+            if (apiUsageEl) apiUsageEl.style.display = 'none';
         }
     }
 

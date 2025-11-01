@@ -6,3 +6,7 @@ backend/.venv/
 backend/certs/*.pem
 !backend/.env.example
 !backend/certs/README.md
+
+# Python cache directories
+__pycache__/
+backend/instance/
