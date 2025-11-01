@@ -7,20 +7,18 @@
 body {
     font-family:'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
     background: linear-gradient(135deg, #667eea43 0%, #f3f5e1 100%);
-    height: 100vh;
+    min-height: 100vh;
     margin: 0;
     padding: 0;
     color: #333;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    overflow: auto; /* allow page to scroll */
+    display: block; /* avoid centering entire page; let content flow */
 }
 
 .game-container {
     width: 90%;
-    height: 100vh;
-    margin: 0;
+    min-height: 100vh; /* allow growth */
+    margin: 0 auto; /* center container */
     padding: 0;
     display: flex;
     flex-direction: column;
@@ -90,7 +88,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    body { overflow: hidden; }
+    body { overflow: auto; }
     .mobile-action-icons { display: flex; }
     .desktop-only { display: none !important; }
     .controls-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
@@ -336,10 +334,10 @@ body {
     align-content: stretch;
     flex: 1;
     min-height: 0;
-    max-height: 100%;
+    /* let it grow and allow scrolling of page */
     padding: 4px 16px 14px;
     gap: 14px;
-    overflow: hidden;
+    overflow: visible;
 }
 
 /* Crossword Grid */
@@ -352,7 +350,7 @@ body {
     height: 100%;
     max-height: 100%;
     padding: 0;
-    overflow: hidden;
+    overflow: visible;
     position: relative;
     z-index: 1;
     gap: 0;
@@ -385,15 +383,10 @@ body {
     background: #ffffff;
     padding: 10px;
     border-radius: 15px;
-    /* Override any inline styles from JavaScript */
-    width: 100% !important;
-    max-width: none !important;
-    height: 100% !important;
-    max-height: none !important;
-    flex: 1;
-    overflow: hidden;
+    /* allow JS to set width/height for square fit */
+    overflow: visible;
     box-sizing: border-box;
-    /* Ensure square aspect ratio */
+    /* keep square if JS sizing fails */
     aspect-ratio: 1 / 1;
 }
 
