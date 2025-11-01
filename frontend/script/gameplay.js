@@ -931,13 +931,18 @@ export default class CrosswordGame {
 
         delete gridContainer.dataset.resizeAttempts;
 
-        gridContainer.style.width = `${maxDimension}px`;
-        gridContainer.style.height = `${maxDimension}px`;
-        gridContainer.style.maxWidth = `${maxDimension}px`;
-        gridContainer.style.maxHeight = `${maxDimension}px`;
-        gridContainer.style.margin = '0 auto';
+        // Remove fixed size constraints - let CSS handle the responsive layout
+        // gridContainer.style.width = `${maxDimension}px`;
+        // gridContainer.style.height = `${maxDimension}px`;
+        // gridContainer.style.maxWidth = `${maxDimension}px`;
+        // gridContainer.style.maxHeight = `${maxDimension}px`;
+        // gridContainer.style.margin = '0 auto';
 
-        const cellSize = maxDimension / this.gridSize;
+        // Calculate cell size for font sizing (still useful for CSS variables)
+        const cellSize = Math.min(
+            (parent.clientWidth - 20) / this.gridSize,
+            availableHeight / this.gridSize
+        );
         if (Number.isFinite(cellSize) && cellSize > 0) {
             gridContainer.style.setProperty('--cell-size', `${cellSize}px`);
         } else {

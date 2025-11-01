@@ -227,8 +227,22 @@ class AuthManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password }) // backend accepts username or email
             });
+
+            // Check if response is ok before trying to parse JSON
+            if (!res.ok) {
+                let errorMessage = t('login_failed');
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // If response isn't JSON, use status text
+                    errorMessage = res.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
             const data = await res.json();
-            if (!res.ok || !data.success) {
+            if (!data.success) {
                 throw new Error(data.error || t('login_failed'));
             }
 
@@ -255,7 +269,13 @@ class AuthManager {
             } catch (_) {}
             this.showMessage(t('welcome_back', { username: this.currentUser.username }), 'success');
         } catch (err) {
-            this.showMessage(err.message, 'error');
+            // Provide more specific error messages
+            let errorMessage = err.message;
+            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Network request failed')) {
+                errorMessage = 'Unable to connect to server. Please make sure the backend server is running on ' + window.API_BASE;
+            }
+            this.showMessage(errorMessage, 'error');
+            console.error('Login error:', err);
         }
     }
 
@@ -301,8 +321,22 @@ class AuthManager {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, email, password })
             });
+
+            // Check if response is ok before trying to parse JSON
+            if (!res.ok) {
+                let errorMessage = t('registration_failed');
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // If response isn't JSON, use status text
+                    errorMessage = res.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
             const data = await res.json();
-            if (!res.ok || !data.success) {
+            if (!data.success) {
                 throw new Error(data.error || t('registration_failed'));
             }
 
@@ -327,7 +361,13 @@ class AuthManager {
             } catch (_) {}
             this.showMessage(t('account_created_welcome', { username: this.currentUser.username }), 'success');
         } catch (err) {
-            this.showMessage(err.message, 'error');
+            // Provide more specific error messages
+            let errorMessage = err.message;
+            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Network request failed')) {
+                errorMessage = 'Unable to connect to server. Please make sure the backend server is running on ' + window.API_BASE;
+            }
+            this.showMessage(errorMessage, 'error');
+            console.error('Registration error:', err);
         }
     }
 

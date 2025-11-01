@@ -87,34 +87,92 @@ body {
 /* Mobile Icon Buttons */
 .mobile-action-icons {
     display: none;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
 }
 
 .icon-btn {
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #e2e8f0;
-    border-radius: 8px;
-    padding: 8px;
+    background:#1a73bc;
+    border: none;
+    border-radius: 12px;
+    padding: 0;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
-    color: #4a5568;
-    width: 40px;
-    height: 40px;
+    transition: all 0.3s ease;
+    color: white;
+    width: 56px;
+    height: 56px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.icon-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(26, 59, 204, 0.2);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.icon-btn:hover::before,
+.icon-btn:active::before {
+    opacity: 1;
+}
+
+.icon-btn svg {
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .icon-btn:hover {
-    background: rgba(255, 255, 255, 1);
-    border-color: #4299e1;
-    color: #4299e1;
-    transform: scale(1.1);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
 }
 
 .icon-btn:active {
-    transform: scale(0.95);
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Specific icon button colors */
+.icon-btn-hint {
+    background:#4facfe;
+}
+
+.icon-btn-hint:hover {
+    box-shadow: 0 6px 16px rgba(143, 136, 232, 0.5);
+}
+
+.icon-btn-check {
+    background:#34911a;
+}
+
+.icon-btn-check:hover {
+    box-shadow: 0 6px 16px rgba(28, 195, 9, 0.5);
+}
+
+.icon-btn-new {
+    background:#3182ce;
+}
+
+.icon-btn-new:hover {
+    box-shadow: 0 6px 16px rgba(97, 119, 231, 0.5);
+}
+
+.icon-btn-login {
+    background:#c33657;
+}
+
+.icon-btn-login:hover {
+    box-shadow: 0 6px 16px rgba(202, 90, 124, 0.5);
 }
 
 .desktop-only {
@@ -221,13 +279,12 @@ body {
     align-items: stretch;
     width: 100%;
     height: 100%;
-    min-height: 0;
     max-height: 100%;
-    padding: 8px;
+    padding: 0;
     overflow: hidden;
     position: relative;
     z-index: 1;
-    gap: 12px;
+    gap: 0;
 }
 
 .game-controls {
@@ -251,21 +308,22 @@ body {
 
 .crossword-grid {
     display: grid;
-    grid-template-columns: repeat(15, 1fr);
-    grid-template-rows: repeat(15, 1fr);
-    gap: 2px;
+    grid-template-columns: repeat(20, 1fr);
+    grid-template-rows: repeat(20, 1fr);
+    gap: 4px;
     background: #ffffff;
     padding: 10px;
     border-radius: 15px;
-    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    max-height: 100%;
-    min-width: 0;
-    min-height: 0;
+    /* Override any inline styles from JavaScript */
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
     flex: 1;
     overflow: hidden;
+    box-sizing: border-box;
+    /* Ensure square aspect ratio */
+    aspect-ratio: 1 / 1;
 }
 
 .grid-cell {
@@ -554,7 +612,7 @@ body {
     }
 
     #timer {
-        font-size: 1.8rem;
+        font-size: 2.0rem;
     }
 
     .game-area {
