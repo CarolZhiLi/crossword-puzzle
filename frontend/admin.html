@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Usage</title>
+  <link rel="icon" type="image/png" href="./assets/crossythink_logo.png">
+  <link rel="stylesheet" href="./css/styles.css">
+  <style>
+    .admin-container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+    .admin-header { display:flex; align-items:center; justify-content: space-between; margin-bottom: 16px; }
+    .admin-actions { display:flex; gap: 8px; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th, .table td { border: 1px solid #ddd; padding: 8px; font-size: 14px; }
+    .table th { background: #f6f6f6; text-align: left; }
+    .muted { color: #666; font-size: 12px; }
+    .badge { padding: 2px 6px; border-radius: 4px; background: #eef; }
+    .input { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .btn { padding: 6px 10px; border-radius: 4px; border: 1px solid #ccc; cursor:pointer; background:#fff; }
+    .btn-primary { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <div class="admin-header">
+      <h2>Admin - Usage Monitor</h2>
+      <div class="admin-actions">
+        <input id="searchBox" class="input" placeholder="Search username/email" />
+        <button id="refreshBtn" class="btn">Refresh</button>
+        <button id="exportBtn" class="btn">Export CSV</button>
+        <a href="./gameplay.html" class="btn">Back</a>
+      </div>
+    </div>
+    <div class="muted">Shows per-user API calls and token totals (approx.).</div>
+    <table class="table" id="usageTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Calls</th>
+          <th>Tokens</th>
+          <th>Games</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>window.API_BASE = window.API_BASE || 'http://localhost:5050';</script>
+  <script src="./script/admin.js"></script>
+</body>
+</html>
+

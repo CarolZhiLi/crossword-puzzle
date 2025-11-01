@@ -537,7 +537,7 @@ class AuthManager {
 
 // Initialize auth manager when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new AuthManager();
+    const mgr=new AuthManager(); try { const link=document.getElementById('adminLink'); let u=null; try{u=JSON.parse(localStorage.getItem('user')||'null');}catch(_){}; if (u && u.role==='admin' && link) link.style.display='inline-block'; else if (link) link.style.display='none'; } catch(_){};
 });
 
 // Expose a small helper to refresh usage indicator after actions (e.g., new game)
@@ -586,3 +586,4 @@ window.refreshUsageIndicator = function () {
         }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; });
     } catch (_) {}
 };
+
