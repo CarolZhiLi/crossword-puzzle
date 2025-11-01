@@ -407,6 +407,8 @@ body {
     padding: 0 3px;
     border-radius: 4px;
     cursor: pointer; /* allow clicking number for popup */
+    z-index: 2;      /* above the cell input */
+    user-select: none;
 }
 
 /* Clues Panel */
