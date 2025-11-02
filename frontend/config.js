@@ -9,7 +9,7 @@
 
 (function() {
   // Production API URL - UPDATE THIS with your Render backend URL after deployment
-  const PRODUCTION_API_URL = 'https://your-render-backend.onrender.com';
+  const PRODUCTION_API_URL = 'https://crossythink-backend.onrender.com';
   
   // Only set if not already set and we're in production
   if (!window.API_BASE) {
