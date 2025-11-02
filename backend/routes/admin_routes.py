@@ -120,23 +120,31 @@ def reset_usage():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
-    if username in ('*', 'all', ''):
-        # Reset all usage counts
-        try:
-            ApiUsage.query.delete()
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'error': str(e)}), 500
-        return jsonify({'success': True, 'reset': 'all'})
-    # Reset single user
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    # Instead of DELETE (which may be denied), set counts to 0 via UPDATE
     try:
-        ApiUsage.query.filter_by(user_id=user.id).delete()
+        if username in ('*', 'all', ''):
+            updated = ApiUsage.query.update({
+                ApiUsage.count: 0,
+                ApiUsage.last_used_at: db.func.current_timestamp()
+            })
+            db.session.commit()
+            return jsonify({'success': True, 'reset': 'all', 'rows': int(updated or 0)})
+
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        updated = ApiUsage.query.filter_by(user_id=user.id).update({
+            ApiUsage.count: 0,
+            ApiUsage.last_used_at: db.func.current_timestamp()
+        })
         db.session.commit()
-        return jsonify({'success': True, 'reset': username})
+        return jsonify({'success': True, 'reset': username, 'rows': int(updated or 0)})
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'error': str(e)}), 500
+        # Provide clearer guidance if UPDATE is also denied
+        msg = str(e)
+        if '1142' in msg and 'command denied' in msg.lower():
+            return jsonify({'success': False, 'error': 'Database permission denied for UPDATE on api_usage. Grant UPDATE or perform reset with DB admin.'}), 500
+        return jsonify({'success': False, 'error': msg}), 500

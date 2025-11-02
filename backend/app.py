@@ -23,7 +23,8 @@ def create_app() -> Flask:
     # Init extensions
     db.init_app(app)
     jwt.init_app(app)
-    CORS(app)
+    # Allow Authorization headers for cross-origin requests (frontend served on different port)
+    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')

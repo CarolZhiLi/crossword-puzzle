@@ -55,6 +55,12 @@
       method: 'GET',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
+    if (res.status === 401) {
+      try { localStorage.removeItem('token'); } catch(_) {}
+      alert('Session expired or not authorized. Please log in as admin.');
+      window.location.href = './gameplay.html';
+      return;
+    }
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load');
     state.rows = data.results || [];

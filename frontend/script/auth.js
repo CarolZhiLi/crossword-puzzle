@@ -8,6 +8,18 @@ class AuthManager {
         this.currentUser = null;
         this.isAuthenticated = false;
         this.setupEventListeners();
+        // Hydrate auth state from localStorage on page load
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                this.isAuthenticated = true;
+                try { this.currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                this.updateUI();
+                try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
+            } else {
+                this.updateUI();
+            }
+        } catch (_) { this.updateUI(); }
     }
 
     setupEventListeners() {
@@ -270,6 +282,7 @@ class AuthManager {
                     apiUsageEl.style.display = 'inline-block';
                 }
             } catch (_) {}
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
             this.showMessage(t('welcome_back', { username: this.currentUser.username }), 'success');
         } catch (err) {
             // Provide more specific error messages
@@ -380,6 +393,7 @@ class AuthManager {
                     apiUsageEl.style.display = 'inline-block';
                 }
             } catch (_) {}
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
             this.showMessage(t('account_created_welcome', { username: this.currentUser.username }), 'success');
         } catch (err) {
             // Provide more specific error messages
