@@ -3,6 +3,8 @@ from datetime import datetime
 
 from extensions import db
 from models import User, ApiUsage, GameSession
+from models import AppSetting
+from constants import DEFAULT_FREE_CALLS_LIMIT
 
 
 class UsageService:
@@ -47,7 +49,13 @@ class UsageService:
         # Fallback tokens approximation per game if tokens_total is 0 but we have games
         if tokens_total == 0 and games_count > 0:
             tokens_total = int(games_count * 1000)  # coarse approx
-        return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count) }
+        # Read free calls limit to include for UI
+        try:
+            s = AppSetting.query.filter_by(key='FREE_CALLS_LIMIT').first()
+            free_limit = int((s.value if s else str(DEFAULT_FREE_CALLS_LIMIT)) or str(DEFAULT_FREE_CALLS_LIMIT))
+        except Exception:
+            free_limit = DEFAULT_FREE_CALLS_LIMIT
+        return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count), 'free_limit': int(free_limit) }
 
     def get_all_summaries(self) -> List[Dict]:
         """Return usage summary for all users."""

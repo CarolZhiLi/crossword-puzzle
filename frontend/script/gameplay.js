@@ -898,15 +898,8 @@ export default class CrosswordGame {
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
             // Ensure definitions list visible by default on start
             try { this.ensureDefinitionsVisible(); } catch (_) {}
-            // Show free-calls notification if maxed
-            try {
-                const f = data.free || {};
-                if (f && typeof f.limit !== 'undefined') {
-                    if (Number(f.remaining || 0) <= 0) {
-                        alert(`You have used your ${f.limit} free API calls. Service will continue.`);
-                    }
-                }
-            } catch (_) {}
+            // Update header banner instead of alert
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
         }).catch(err => {
             console.error(err);
             alert(err.message || t('error_generating_puzzle'));

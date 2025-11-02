@@ -29,3 +29,14 @@
 
 /* Responsive styles - ALL media queries */
 @import url('./responsive.css');
+/* Usage + Free banner styles */
+.api-usage { font-weight: 600; }
+.free-banner {
+    font-weight: 600;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: #e6fffa; /* teal-50 */
+    color: #234e52;      /* teal-900 */
+    border: 1px solid #b2f5ea; /* teal-200 */
+}
+.free-banner.maxed { background: #fff5f5; color: #742a2a; border-color: #fed7d7; }

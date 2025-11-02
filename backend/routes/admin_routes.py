@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from extensions import db
 from models import User, UserRole, AppSetting, UserQuota, ApiUsage
+from constants import DEFAULT_DAILY_FREE_LIMIT, DEFAULT_FREE_CALLS_LIMIT
 from utils.security import is_admin_username
 
 
@@ -30,12 +31,10 @@ def get_settings():
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     settings = { s.key: s.value for s in AppSetting.query.all() }
-    # Default daily free limit = 3 if not present
     if 'DAILY_FREE_LIMIT' not in settings:
-        settings['DAILY_FREE_LIMIT'] = '3'
-    # Default total free calls = 20
+        settings['DAILY_FREE_LIMIT'] = str(DEFAULT_DAILY_FREE_LIMIT)
     if 'FREE_CALLS_LIMIT' not in settings:
-        settings['FREE_CALLS_LIMIT'] = '20'
+        settings['FREE_CALLS_LIMIT'] = str(DEFAULT_FREE_CALLS_LIMIT)
     return jsonify({'success': True, 'settings': settings})
 
 

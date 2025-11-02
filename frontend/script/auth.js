@@ -463,6 +463,7 @@ class AuthManager {
     updateUI() {
         const signInBtn = document.getElementById('signInBtn');
         const apiUsageEl = document.getElementById('apiUsage');
+        const freeBanner = document.getElementById('freeBanner');
         const adminLink = document.getElementById('adminLink');
         
         if (this.isAuthenticated) {
@@ -497,6 +498,19 @@ class AuthManager {
                             const tokens = Number(data.usage.tokens_total || 0);
                             apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
                             apiUsageEl.style.display = 'inline-block';
+                            // Free calls banner
+                            try {
+                                const by = data.usage.by_endpoint || {};
+                                const usedGen = Number(by['/api/generate-crossword'] || 0);
+                                const limit = Number(data.usage.free_limit || (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
+                                const remaining = Math.max(0, limit - usedGen);
+                                if (freeBanner) {
+                                    const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || `Remaining free calls: ${remaining}`;
+                                    freeBanner.textContent = text;
+                                    freeBanner.style.display = 'inline-block';
+                                    if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+                                }
+                            } catch (_) {}
                             // Admin: make clickable to view all usage
                             try {
                                 let user = null;
@@ -522,10 +536,12 @@ class AuthManager {
                             } catch (_) {}
                         } else {
                             if (apiUsageEl) apiUsageEl.style.display = 'none';
+                            if (freeBanner) freeBanner.style.display = 'none';
                         }
                     }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; });
                 } else if (apiUsageEl) {
                     apiUsageEl.style.display = 'none';
+                    if (freeBanner) freeBanner.style.display = 'none';
                 }
             } catch (_) {}
         } else {
@@ -533,6 +549,7 @@ class AuthManager {
             signInBtn.className = 'btn btn-primary';
             signInBtn.onclick = () => this.showSignInForm();
             if (apiUsageEl) apiUsageEl.style.display = 'none';
+            if (freeBanner) freeBanner.style.display = 'none';
             const adminLink = document.getElementById('adminLink');
             if (adminLink) adminLink.style.display = 'none';
         }
@@ -581,9 +598,11 @@ document.addEventListener('DOMContentLoaded', () => {
 window.refreshUsageIndicator = function () {
     try {
         const apiUsageEl = document.getElementById('apiUsage');
+        const freeBanner = document.getElementById('freeBanner');
         const token = localStorage.getItem('token');
         if (!apiUsageEl || !token) {
             if (apiUsageEl) apiUsageEl.style.display = 'none';
+            if (freeBanner) freeBanner.style.display = 'none';
             return;
         }
         fetch(`${window.API_BASE}/api/usage/me`, {
@@ -596,6 +615,19 @@ window.refreshUsageIndicator = function () {
                 const tokens = Number(data.usage.tokens_total || 0);
                 apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
                 apiUsageEl.style.display = 'inline-block';
+                // Update free banner
+                try {
+                    const by = data.usage.by_endpoint || {};
+                    const usedGen = Number(by['/api/generate-crossword'] || 0);
+                    const limit = Number(data.usage.free_limit || (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
+                    const remaining = Math.max(0, limit - usedGen);
+                    if (freeBanner) {
+                        const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || `Remaining free calls: ${remaining}`;
+                        freeBanner.textContent = text;
+                        freeBanner.style.display = 'inline-block';
+                        if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+                    }
+                } catch (_) {}
                 // Re-wire admin click each refresh idempotently
                 let user = null;
                 try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
@@ -619,8 +651,9 @@ window.refreshUsageIndicator = function () {
                 }
             } else {
                 if (apiUsageEl) apiUsageEl.style.display = 'none';
+                if (freeBanner) freeBanner.style.display = 'none';
             }
-        }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; });
+        }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; if (freeBanner) freeBanner.style.display = 'none'; });
     } catch (_) {}
 };
 
