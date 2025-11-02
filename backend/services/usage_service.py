@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from extensions import db
 from models import User, ApiUsage, GameSession, UserDailyReset
@@ -49,13 +49,37 @@ class UsageService:
         # Fallback tokens approximation per game if tokens_total is 0 but we have games
         if tokens_total == 0 and games_count > 0:
             tokens_total = int(games_count * 1000)  # coarse approx
-        # Read free calls limit to include for UI
+        # Daily free calls (server local midnight)
         try:
-            s = AppSetting.query.filter_by(key='FREE_CALLS_LIMIT').first()
-            free_limit = int((s.value if s else str(DEFAULT_FREE_CALLS_LIMIT)) or str(DEFAULT_FREE_CALLS_LIMIT))
+            s = AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first()
+            daily_limit = int((s.value if s else str(DEFAULT_DAILY_FREE_LIMIT)) or str(DEFAULT_DAILY_FREE_LIMIT))
         except Exception:
-            free_limit = DEFAULT_FREE_CALLS_LIMIT
-        return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count), 'free_limit': int(free_limit) }
+            daily_limit = DEFAULT_DAILY_FREE_LIMIT
+        # Count today's sessions after any reset marker
+        try:
+            now = datetime.now()
+            start = datetime(now.year, now.month, now.day, 0, 0, 0)
+            end = start + timedelta(days=1)
+            sess_rows_today: List[GameSession] = GameSession.query.filter(
+                GameSession.user_id == user.id,
+                GameSession.started_at >= start,
+                GameSession.started_at < end
+            ).all()
+            # Apply reset marker
+            reset_row = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
+            used_today = 0
+            for srow in sess_rows_today:
+                if reset_row and srow.started_at <= reset_row.reset_at:
+                    continue
+                used_today += 1
+        except Exception:
+            used_today = 0
+        daily_info = {
+            'limit': int(daily_limit),
+            'used': int(used_today),
+            'remaining': max(0, int(daily_limit) - int(used_today))
+        }
+        return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count), 'daily': daily_info }
 
     def get_all_summaries(self, range_opt: str = 'all') -> List[Dict]:
         """Return usage summary for all users.

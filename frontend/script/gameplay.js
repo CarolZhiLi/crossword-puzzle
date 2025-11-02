@@ -898,7 +898,7 @@ export default class CrosswordGame {
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
             // Ensure definitions list visible by default on start
             try { this.ensureDefinitionsVisible(); } catch (_) {}
-            // Update header banner instead of alert
+            // Update header banner (daily limit info) instead of alert
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
         }).catch(err => {
             console.error(err);

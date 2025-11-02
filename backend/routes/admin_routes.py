@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from extensions import db
 from models import User, UserRole, AppSetting, UserQuota, ApiUsage
-from constants import DEFAULT_DAILY_FREE_LIMIT, DEFAULT_FREE_CALLS_LIMIT
+from constants import DEFAULT_DAILY_FREE_LIMIT
 from utils.security import is_admin_username
 
 
@@ -33,8 +33,7 @@ def get_settings():
     settings = { s.key: s.value for s in AppSetting.query.all() }
     if 'DAILY_FREE_LIMIT' not in settings:
         settings['DAILY_FREE_LIMIT'] = str(DEFAULT_DAILY_FREE_LIMIT)
-    if 'FREE_CALLS_LIMIT' not in settings:
-        settings['FREE_CALLS_LIMIT'] = str(DEFAULT_FREE_CALLS_LIMIT)
+    # total free calls limit is deprecated; only daily limit is used
     return jsonify({'success': True, 'settings': settings})
 
 
@@ -54,15 +53,7 @@ def update_settings():
         else:
             s.value = val
         changed['DAILY_FREE_LIMIT'] = val
-    if 'FREE_CALLS_LIMIT' in data:
-        val = str(max(0, int(data['FREE_CALLS_LIMIT'])))
-        s = AppSetting.query.filter_by(key='FREE_CALLS_LIMIT').first()
-        if not s:
-            s = AppSetting(key='FREE_CALLS_LIMIT', value=val)
-            db.session.add(s)
-        else:
-            s.value = val
-        changed['FREE_CALLS_LIMIT'] = val
+    # ignore FREE_CALLS_LIMIT (deprecated)
     db.session.commit()
     return jsonify({'success': True, 'changed': changed})
 

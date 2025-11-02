@@ -512,12 +512,11 @@ class AuthManager {
                             const tokens = Number(data.usage.tokens_total || 0);
                             apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
                             apiUsageEl.style.display = 'inline-block';
-                            // Free calls banner
+                            // Daily free calls banner
                             try {
-                                const by = data.usage.by_endpoint || {};
-                                const usedGen = Number(by['/api/generate-crossword'] || 0);
-                                const limit = Number(data.usage.free_limit || (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
-                                const remaining = Math.max(0, limit - usedGen);
+                                const daily = data.usage.daily || {};
+                                const limit = Number(daily.limit ?? (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
+                                const remaining = Number(daily.remaining ?? Math.max(0, limit - Number(daily.used || 0)));
                                 if (freeBanner) {
                                     const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || `Remaining free calls: ${remaining}`;
                                     freeBanner.textContent = text;
@@ -629,12 +628,11 @@ window.refreshUsageIndicator = function () {
                 const tokens = Number(data.usage.tokens_total || 0);
                 apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
                 apiUsageEl.style.display = 'inline-block';
-                // Update free banner
+                // Update daily banner
                 try {
-                    const by = data.usage.by_endpoint || {};
-                    const usedGen = Number(by['/api/generate-crossword'] || 0);
-                    const limit = Number(data.usage.free_limit || (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
-                    const remaining = Math.max(0, limit - usedGen);
+                    const daily = data.usage.daily || {};
+                    const limit = Number(daily.limit ?? (window.APP_CONSTANTS?.FREE_CALLS_LIMIT_DEFAULT || 20));
+                    const remaining = Number(daily.remaining ?? Math.max(0, limit - Number(daily.used || 0)));
                     if (freeBanner) {
                         const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || `Remaining free calls: ${remaining}`;
                         freeBanner.textContent = text;

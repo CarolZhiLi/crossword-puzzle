@@ -6,7 +6,7 @@ from services.usage_service import UsageService
 from extensions import db
 from models import GameSession, User, UserRole, UserQuota, AppSetting, ApiUsage
 from utils.tokens import estimate_tokens
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 puzzle_bp = Blueprint('puzzle', __name__)
@@ -82,23 +82,36 @@ def generate_crossword():
             verify_jwt_in_request(optional=True)
             username = get_jwt_identity()
             if username:
-                # Determine user and free calls info (total free limit, non-blocking)
                 user = User.query.filter_by(username=username).first()
-                # Total free calls limit (default 20). Admins get the same free limit but are not blocked anyway
-                s = AppSetting.query.filter_by(key='FREE_CALLS_LIMIT').first()
-                free_limit = int((s.value if s else '20') or '20')
-                used_before = 0
-                if user:
-                    row = ApiUsage.query.filter_by(user_id=user.id, endpoint='/api/generate-crossword').first()
-                    used_before = int((row.count if row else 0) or 0)
-                # Increment usage
+                # Increment usage first
                 usage.increment(username, '/api/generate-crossword')
-                used_after = used_before + 1
-                response['free'] = {
-                    'limit': free_limit,
+
+                # Compute daily info (server local midnight): sessions today + 1 (including this request)
+                daily_limit = int((AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first() or type('X',(object,),{'value':'20'})()).value)
+                used_today_before = 0
+                if user:
+                    now = datetime.now()
+                    start = datetime(now.year, now.month, now.day, 0, 0, 0)
+                    end = start + timedelta(days=1)
+                    q = GameSession.query.filter(
+                        GameSession.user_id == user.id,
+                        GameSession.started_at >= start,
+                        GameSession.started_at < end
+                    )
+                    # Apply reset marker if any
+                    try:
+                        from models import UserDailyReset
+                        rr = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
+                        if rr is not None:
+                            q = q.filter(GameSession.started_at > rr.reset_at)
+                    except Exception:
+                        pass
+                    used_today_before = q.count()
+                used_after = used_today_before + 1
+                response['daily'] = {
+                    'limit': daily_limit,
                     'used': used_after,
-                    'remaining': max(0, free_limit - used_after),
-                    'maxed': used_after >= free_limit
+                    'remaining': max(0, daily_limit - used_after)
                 }
 
                 # Compute rough token usage
