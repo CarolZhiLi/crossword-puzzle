@@ -33,6 +33,9 @@ def get_settings():
     # Default daily free limit = 3 if not present
     if 'DAILY_FREE_LIMIT' not in settings:
         settings['DAILY_FREE_LIMIT'] = '3'
+    # Default total free calls = 20
+    if 'FREE_CALLS_LIMIT' not in settings:
+        settings['FREE_CALLS_LIMIT'] = '20'
     return jsonify({'success': True, 'settings': settings})
 
 
@@ -52,6 +55,15 @@ def update_settings():
         else:
             s.value = val
         changed['DAILY_FREE_LIMIT'] = val
+    if 'FREE_CALLS_LIMIT' in data:
+        val = str(max(0, int(data['FREE_CALLS_LIMIT'])))
+        s = AppSetting.query.filter_by(key='FREE_CALLS_LIMIT').first()
+        if not s:
+            s = AppSetting(key='FREE_CALLS_LIMIT', value=val)
+            db.session.add(s)
+        else:
+            s.value = val
+        changed['FREE_CALLS_LIMIT'] = val
     db.session.commit()
     return jsonify({'success': True, 'changed': changed})
 
