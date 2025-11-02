@@ -71,6 +71,7 @@
     const search = document.getElementById('searchBox');
     const refresh = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
+    const resetBtn = document.getElementById('resetCallsBtn');
     if (search) search.addEventListener('input', () => applyFilter(state));
     if (refresh) refresh.addEventListener('click', () => loadData(state).catch(err => alert(err.message)));
     if (exportBtn) exportBtn.addEventListener('click', () => {
@@ -87,6 +88,23 @@
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     });
+    if (resetBtn) resetBtn.addEventListener('click', async () => {
+      const who = prompt('Enter username to reset calls (or * for all):', '*');
+      if (who === null) return;
+      try {
+        const res = await fetch(`${window.API_BASE}/api/admin/usage/reset`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
+          body: JSON.stringify({ username: who })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Reset failed');
+        alert('Reset OK');
+        loadData(state).catch(()=>{});
+      } catch (e) {
+        alert(e.message || 'Reset failed');
+      }
+    });
   }
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -97,4 +115,3 @@
     loadData(state).catch(err => alert(err.message));
   });
 })();
-

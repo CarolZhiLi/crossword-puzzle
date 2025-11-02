@@ -41,6 +41,12 @@ class UsageService:
         except Exception:
             tokens_total = 0
             games_count = 0
+        # Fallback: if no sessions recorded, approximate games from endpoint usage
+        if games_count == 0:
+            games_count = int(by_endpoint.get('/api/generate-crossword', 0))
+        # Fallback tokens approximation per game if tokens_total is 0 but we have games
+        if tokens_total == 0 and games_count > 0:
+            tokens_total = int(games_count * 1000)  # coarse approx
         return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count) }
 
     def get_all_summaries(self) -> List[Dict]:
@@ -70,13 +76,19 @@ class UsageService:
         result: List[Dict] = []
         for uid, data in per_user.items():
             u = users.get(uid)
+            # Fallback derive games from endpoint usage if sessions absent
+            fallback_games = int(data['by_endpoint'].get('/api/generate-crossword', 0))
+            games = int(by_user_games.get(uid, 0) or fallback_games)
+            tokens = int(by_user_tokens.get(uid, 0))
+            if tokens == 0 and games > 0:
+                tokens = int(games * 1000)  # coarse approx
             result.append({
                 'username': (u.username if u else f'user:{uid}'),
                 'email': (u.email if u else None),
                 'total_calls': int(data['total_calls']),
                 'by_endpoint': data['by_endpoint'],
-                'tokens_total': int(by_user_tokens.get(uid, 0)),
-                'games_count': int(by_user_games.get(uid, 0)),
+                'tokens_total': tokens,
+                'games_count': games,
             })
         # Sort desc by total calls
         result.sort(key=lambda x: x['total_calls'], reverse=True)

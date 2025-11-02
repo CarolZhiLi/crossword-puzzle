@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from extensions import db
-from models import User, UserRole, AppSetting, UserQuota
+from models import User, UserRole, AppSetting, UserQuota, ApiUsage
 from utils.security import is_admin_username
 
 
@@ -101,3 +101,31 @@ def set_user_quota():
     db.session.commit()
     return jsonify({'success': True})
 
+
+@admin_bp.route('/admin/usage/reset', methods=['POST'])
+@jwt_required()
+def reset_usage():
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
+    if username in ('*', 'all', ''):
+        # Reset all usage counts
+        try:
+            ApiUsage.query.delete()
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'error': str(e)}), 500
+        return jsonify({'success': True, 'reset': 'all'})
+    # Reset single user
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+    try:
+        ApiUsage.query.filter_by(user_id=user.id).delete()
+        db.session.commit()
+        return jsonify({'success': True, 'reset': username})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
