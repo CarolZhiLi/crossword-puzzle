@@ -79,6 +79,7 @@
         /* Ensure grid items align properly at top and stretch to same height */
         align-items: stretch; /* Stretch to same height */
         align-content: stretch;
+        justify-content: center; /* Center the two columns as a unit */
         /* Remove padding that might offset alignment */
         padding: 0 !important; /* Override any base CSS padding */
         gap: 0; /* No visual gap between grid and definitions on desktop */
@@ -87,6 +88,8 @@
         /* Prevent any overflow */
         max-height: none; /* Let flexbox handle the height */
         margin: 0 !important; /* Override any base CSS margins */
+        /* Make columns shrink to content width so no extra blank space */
+        grid-template-columns: max-content minmax(340px, 28%);
     }
     
     /* Crossword Grid */
@@ -101,6 +104,7 @@
         /* Ensure it stretches in grid to match panel height exactly */
         align-self: stretch;
         height: 100%;
+        width: auto; /* shrink to grid size to remove inner blank area */
         /* Remove any margin/padding that might offset alignment */
         margin: 0;
         padding: 0;
@@ -171,8 +175,8 @@
 /* Medium Desktop (1025px - 1200px) */
 @media (min-width: 1025px) and (max-width: 1200px) {
     .game-area {
-        grid-template-columns: 80fr 20fr; /* keep side-by-side on medium desktop */
-        gap: 0; /* no gap between grid and definitions */
+        grid-template-columns: max-content minmax(320px, 30%); /* content-driven width */
+        gap: 0;
     }
 }
 
