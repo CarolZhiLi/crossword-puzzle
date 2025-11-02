@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from extensions import db
 from models import User, ApiUsage, GameSession, UserDailyReset
 from models import AppSetting
-from constants import DEFAULT_FREE_CALLS_LIMIT
+from constants import DEFAULT_DAILY_FREE_LIMIT
 
 
 class UsageService:
@@ -147,3 +147,4 @@ class UsageService:
         # Sort desc by total calls
         result.sort(key=lambda x: x['total_calls'], reverse=True)
         return result
+

@@ -17,58 +17,14 @@ export default class CrosswordGame {
         this.applyI18nUI();
     }
 
-    // ---- Free play gating helpers ----
+    // ---- Backend-only gating: frontend no-ops ----
     isAuthenticated() {
-        return !!localStorage.getItem('token');
+        try { return !!localStorage.getItem('token'); } catch (_) { return false; }
     }
 
-    getCurrentUsername() {
-        try {
-            const u = JSON.parse(localStorage.getItem('user') || 'null');
-            return u && u.username ? u.username : null;
-        } catch (_) { return null; }
-    }
-
-    getTodayKey(prefix) {
-        const d = new Date();
-        const day = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-        const iso = day.toISOString().slice(0, 10);
-        return `${prefix}_${iso}`;
-    }
-
-    canStartGame() {
-        if (!this.isAuthenticated()) {
-            const used = localStorage.getItem('guestPlayed') === 'true';
-            if (used) {
-                alert(t('guest_free_over'));
-                // Open sign-in modal via header button
-                document.getElementById('signInBtn')?.click();
-                return false;
-            }
-            return true; // allow the one free play
-        }
-
-        const username = this.getCurrentUsername() || 'user';
-        const key = this.getTodayKey(`plays_${username}`);
-        const count = parseInt(localStorage.getItem(key) || '0', 10);
-        if (count >= 10) {
-            alert(t('user_daily_limit'));
-            return false;
-        }
-        return true;
-    }
-
-    markGameStartedSuccessfully() {
-        if (!this.isAuthenticated()) {
-            // consume the one-time guest play after success
-            localStorage.setItem('guestPlayed', 'true');
-            return;
-        }
-        const username = this.getCurrentUsername() || 'user';
-        const key = this.getTodayKey(`plays_${username}`);
-        const count = parseInt(localStorage.getItem(key) || '0', 10);
-        localStorage.setItem(key, String((isNaN(count) ? 0 : count) + 1));
-    }
+    // Frontend no longer tracks plays; server enforces limits
+    canStartGame() { return true; }
+    markGameStartedSuccessfully() { /* no-op: server records usage */ }
 
     normalizeGrid(grid) {
         if (!grid || !grid.length || !grid[0]) {
@@ -819,16 +775,7 @@ export default class CrosswordGame {
         // Start new timer
         this.startTimer();
         
-        // Enforce free-play limits before generating a new puzzle
-        if (!this.canStartGame()) {
-            return;
-        }
-        // Immediately consume the guest free play to prevent multiple attempts
-        try {
-            if (!this.isAuthenticated() && localStorage.getItem('guestPlayed') !== 'true') {
-                localStorage.setItem('guestPlayed', 'true');
-            }
-        } catch (_) {}
+        // Frontend does not enforce daily limits; backend is the source of truth
 
         // Fetch and render new puzzle
         const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
@@ -842,8 +789,15 @@ export default class CrosswordGame {
             method: 'POST',
             headers,
             body: JSON.stringify({ topic, difficulty: mapped })
-        }).then(r => r.json().then(data => ({ ok: r.ok, data }))).then(({ ok, data }) => {
-            if (!ok || !data.success) throw new Error(data.error || 'Failed to generate puzzle');
+        }).then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data }))).then(({ ok, status, data }) => {
+            if (!ok) {
+                if (status === 429 && data && data.daily) {
+                    const msg = (window.t ? t('user_daily_limit') : 'Daily free limit reached.');
+                    alert(msg);
+                    return;
+                }
+                throw new Error(data && data.error ? data.error : 'Failed to generate puzzle');
+            }
 
             const normalized = this.normalizeGrid(data.grid || []);
             this.solutionGrid = normalized.grid;

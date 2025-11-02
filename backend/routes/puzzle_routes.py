@@ -7,6 +7,7 @@ from extensions import db
 from models import GameSession, User, UserRole, UserQuota, AppSetting, ApiUsage
 from utils.tokens import estimate_tokens
 from datetime import datetime, timedelta
+from constants import DEFAULT_DAILY_FREE_LIMIT
 
 
 puzzle_bp = Blueprint('puzzle', __name__)
@@ -26,6 +27,57 @@ def generate_crossword():
 
         topic = data.get('topic', 'JavaScript')
         word_count = DIFF_LEVELS.get((data.get('difficulty', 'easy') or 'easy').lower(), 10)
+
+        # Enforce per-user daily free limit (DB-based); guests are not enforced
+        try:
+            verify_jwt_in_request(optional=True)
+            username = get_jwt_identity()
+            user = User.query.filter_by(username=username).first() if username else None
+            if user:
+                # Determine limit: per-user quota overrides global setting
+                try:
+                    uq = UserQuota.query.filter_by(user_id=user.id).first()
+                except Exception:
+                    uq = None
+                if uq and isinstance(getattr(uq, 'daily_limit', None), int):
+                    daily_limit = int(uq.daily_limit)
+                else:
+                    s = AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first()
+                    try:
+                        daily_limit = int((s.value if s else str(DEFAULT_DAILY_FREE_LIMIT)) or str(DEFAULT_DAILY_FREE_LIMIT))
+                    except Exception:
+                        daily_limit = DEFAULT_DAILY_FREE_LIMIT
+
+                # Count today's sessions (server-local midnight) after any reset marker
+                now = datetime.now()
+                start = datetime(now.year, now.month, now.day, 0, 0, 0)
+                end = start + timedelta(days=1)
+                q = GameSession.query.filter(
+                    GameSession.user_id == user.id,
+                    GameSession.started_at >= start,
+                    GameSession.started_at < end
+                )
+                try:
+                    from models import UserDailyReset
+                    rr = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
+                    if rr is not None:
+                        q = q.filter(GameSession.started_at > rr.reset_at)
+                except Exception:
+                    pass
+                used_today_before = q.count()
+                if used_today_before >= daily_limit:
+                    return jsonify({
+                        'success': False,
+                        'error': 'Daily free limit reached',
+                        'daily': {
+                            'limit': int(daily_limit),
+                            'used': int(used_today_before),
+                            'remaining': 0
+                        }
+                    }), 429
+        except Exception:
+            # If anything fails here, do not block puzzle generation
+            pass
 
         prompt = (
             f"Generate {word_count} one-word terms related to {topic}. "

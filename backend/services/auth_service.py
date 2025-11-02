@@ -11,7 +11,6 @@ from utils.validators import is_valid_email, is_valid_password, is_valid_usernam
 from utils.security import gen_reset_token, hash_token, build_reset_link
 from services.email_service import EmailService
 from services.usage_service import UsageService
-from utils.security import is_admin_username
 from models import UserRole
 
 
@@ -52,8 +51,6 @@ class AuthService:
                 role = ur.role if ur else None
         except Exception:
             role = None
-        if not role and is_admin_username(username):
-            role = 'admin'
         if role:
             public['role'] = role
         summary = self.usage.get_user_summary(username)
@@ -73,8 +70,6 @@ class AuthService:
             role = ur.role if ur else None
         except Exception:
             role = None
-        if not role and is_admin_username(user.username):
-            role = 'admin'
         if role:
             public['role'] = role
         summary = self.usage.get_user_summary(user.username)
@@ -91,8 +86,6 @@ class AuthService:
             role = ur.role if ur else None
         except Exception:
             role = None
-        if not role and is_admin_username(user.username):
-            role = 'admin'
         if role:
             info['role'] = role
         info['usage'] = self.usage.get_user_summary(user.username)

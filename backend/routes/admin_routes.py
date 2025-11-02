@@ -4,7 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
 from models import User, UserRole, AppSetting, UserQuota, ApiUsage
 from constants import DEFAULT_DAILY_FREE_LIMIT
-from utils.security import is_admin_username
+ 
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -17,9 +17,9 @@ def require_admin() -> User | None:
     user = User.query.filter_by(username=username).first()
     if not user:
         return None
-    # Check DB role first
+    # Check DB role only
     ur = UserRole.query.filter_by(user_id=user.id).first()
-    role = ur.role if ur else ('admin' if is_admin_username(username) else 'user')
+    role = ur.role if ur else None
     if role != 'admin':
         return None
     return user

@@ -1,0 +1,626 @@
+// API_BASE is set by config.js - only set here if not already defined
+if (typeof window !== 'undefined' && !window.API_BASE) {
+  window.API_BASE = 'http://localhost:5050';
+}
+
+class AuthManager {
+    constructor() {
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        this.setupEventListeners();
+        // Hydrate auth state from localStorage on page load
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                this.isAuthenticated = true;
+                try { this.currentUser = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                this.updateUI();
+                try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
+            } else {
+                this.updateUI();
+            }
+        } catch (_) { this.updateUI(); }
+    }
+
+    setupEventListeners() {
+        // Log In button click handler
+        document.getElementById('signInBtn').addEventListener('click', () => {
+            this.showSignInForm();
+        });
+
+        // Close modal handlers
+        document.addEventListener('click', (e) => {
+            // if (e.target.classList.contains('auth-modal')) {
+            //     this.closeModal();
+            // }
+            if (e.target.classList.contains('close-btn')) {
+                this.closeModal();
+            }
+        });
+
+        // Form submission handlers
+        document.addEventListener('submit', (e) => {
+            if (e.target.id === 'signInFormElement') {
+                e.preventDefault();
+                this.handleSignIn();
+            }
+            if (e.target.id === 'registerFormElement') {
+                e.preventDefault();
+                this.handleRegister();
+            }
+            if (e.target.id === 'forgotPasswordFormElement') {
+                e.preventDefault();
+                this.handleForgotPassword();
+            }
+        });
+
+        // Switch between forms
+        document.addEventListener('click', (e) => {
+            if (e.target.id === 'switchToRegister') {
+                this.showRegisterForm();
+            }
+            if (e.target.id === 'switchToSignIn') {
+                this.showSignInForm();
+            }
+            if (e.target.classList.contains('forgot-password')) {
+                e.preventDefault();
+                this.showForgotPasswordForm();
+            }
+        });
+    }
+
+    showSignInForm() {
+        this.createModal('signIn');
+    }
+
+    showRegisterForm() {
+        this.createModal('register');
+    }
+
+    createModal(type = 'signIn') {
+        // Remove existing modal if any
+        const existingModal = document.querySelector('.auth-modal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+
+        const modal = document.createElement('div');
+        modal.className = 'auth-modal';
+        modal.innerHTML = this.getModalHTML(type);
+        
+        document.body.appendChild(modal);
+        
+        // Add animation
+        setTimeout(() => {
+            modal.classList.add('show');
+        }, 10);
+    }
+
+    getModalHTML(type) {
+        if (type === 'signIn') {
+            return `
+                <div class="auth-modal-content">
+                    <button class="close-btn">&times;</button>
+                    <div class="auth-modal-body">
+                        <div class="auth-form-section">
+                            <div class="auth-form-header">
+                                <h2>${t('signin_title')}</h2>
+                            </div>
+                            <form id="signInFormElement" class="auth-form">
+                                <div class="form-group">
+                                    <label for="signInUsername">${t('username_or_email')}</label>
+                                    <input type="text" id="signInUsername" name="username" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="signInPassword">${t('password')}</label>
+                                    <input type="password" id="signInPassword" name="password" required>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">${t('login')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToRegister">${t('create_account')}</button>
+                                </div>
+                                <div class="auth-links">
+                                    <a href="#" class="forgot-password">${t('forgot_password_link')}</a>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="auth-logo-section">
+                            <div class="logo-container">
+                                <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('brand_tagline')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (type === 'register') {
+            return `
+                <div class="auth-modal-content">
+                    <button class="close-btn">&times;</button>
+                    <div class="auth-modal-body">
+                        <div class="auth-form-section">
+                            <div class="auth-form-header">
+                                <h2>${t('register_title')}</h2>
+                            </div>
+                            <form id="registerFormElement" class="auth-form">
+                                <div class="form-group">
+                                    <label for="registerUsername">${t('username')}</label>
+                                    <input type="text" id="registerUsername" name="username" required minlength="6" maxlength="12" pattern="^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,12}$" title="6-12 characters, letters and numbers, must include both">
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerEmail">${t('email')}</label>
+                                    <input type="email" id="registerEmail" name="email" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="registerPassword">${t('password')}</label>
+                                    <input type="password" id="registerPassword" name="password" required minlength="6" maxlength="15" title="6-15 characters">
+                                </div>
+                                <div class="form-group">
+                                    <label for="confirmPassword">${t('confirm_password')}</label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">${t('create_account')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">${t('already_have_account')}</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="auth-logo-section">
+                            <div class="logo-container">
+                                <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('brand_tagline')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (type === 'forgot') {
+            return `
+                <div class="auth-modal-content">
+                    <button class="close-btn">&times;</button>
+                    <div class="auth-modal-body">
+                        <div class="auth-form-section">
+                            <div class="auth-form-header">
+                                <h2>${t('forgot_title')}</h2>
+                                <p>${t('forgot_instructions')}</p>
+                            </div>
+                            <form id="forgotPasswordFormElement" class="auth-form">
+                                <div class="form-group">
+                                    <label for="forgotIdentifier">${t('email_or_username')}</label>
+                                    <input type="text" id="forgotIdentifier" name="identifier" required>
+                                </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-primary">${t('send_reset_link')}</button>
+                                    <button type="button" class="btn btn-secondary" id="switchToSignIn">${t('back_to_signin')}</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="auth-logo-section">
+                            <div class="logo-container">
+                                <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="modal-logo">
+                                <h3>${t('brand_name')}</h3>
+                                <p>${t('reset_right_panel')}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            return '';
+        }
+    }
+
+    closeModal() {
+        const modal = document.querySelector('.auth-modal');
+        if (modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.remove();
+            }, 300);
+        }
+    }
+
+    async handleSignIn() {
+        const form = document.getElementById('signInFormElement');
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const password = formData.get('password');
+
+        // Simple validation
+        if (!username || !password) {
+            this.showMessage(t('fill_all_fields'), 'error');
+            return;
+        }
+
+        this.showMessage(t('signing_in'), 'info');
+
+        try {
+            const res = await fetch(`${window.API_BASE}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }) // backend accepts username or email
+            });
+
+            // Check if response is ok before trying to parse JSON
+            if (!res.ok) {
+                let errorMessage = t('login_failed');
+                try {
+                    const errorData = await res.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch (e) {
+                    // If response isn't JSON, use status text
+                    errorMessage = res.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await res.json();
+            if (!data.success) {
+                throw new Error(data.error || t('login_failed'));
+            }
+
+            // Persist token and user for later use
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+            }
+            if (data.user) {
+                try { localStorage.setItem('user', JSON.stringify(data.user)); } catch (_) {}
+            }
+
+            this.currentUser = data.user;
+            this.isAuthenticated = true;
+            this.updateUI();
+            this.closeModal();
+            // Show usage if provided
+            try {
+                const apiUsageEl = document.getElementById('apiUsage');
+                const total = Number((data.usage && data.usage.total_calls) || 0);
+                if (apiUsageEl && Number.isFinite(total)) {
+                    apiUsageEl.textContent = `API used: ${total}`;
+                    apiUsageEl.style.display = 'inline-block';
+                }
+            } catch (_) {}
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
+            this.showMessage(t('welcome_back', { username: this.currentUser.username }), 'success');
+        } catch (err) {
+            // Provide more specific error messages
+            let errorMessage = err.message;
+            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Network request failed')) {
+                errorMessage = 'Unable to connect to server. Please make sure the backend server is running on ' + window.API_BASE;
+            }
+            this.showMessage(errorMessage, 'error');
+            console.error('Login error:', err);
+        }
+    }
+
+    async handleRegister() {
+        const form = document.getElementById('registerFormElement');
+        const formData = new FormData(form);
+        const username = formData.get('username');
+        const email = formData.get('email');
+        const password = formData.get('password');
+        const confirmPassword = formData.get('confirmPassword');
+
+        // Frontend Validation
+        if (!username || !email || !password || !confirmPassword) {
+            this.showMessage(t('all_fields_required'), 'error');
+            return;
+        }
+
+        if (!this.validateUsername(username)) {
+            this.showMessage(t('username_requirements'), 'error');
+            return;
+        }
+
+        if (!this.validateEmail(email)) {
+            this.showMessage(t('invalid_email'), 'error');
+            return;
+        }
+
+        if (!this.validatePassword(password)) {
+            this.showMessage(t('password_requirements'), 'error');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            this.showMessage(t('passwords_no_match'), 'error');
+            return;
+        }
+
+        this.showMessage(t('creating_account'), 'info');
+
+        try {
+            const res = await fetch(`${window.API_BASE}/api/auth/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            });
+
+            // Check if response is ok before trying to parse JSON
+            if (!res.ok) {
+                let errorMessage = t('registration_failed');
+                try {
+                    const errorData = await res.json();
+                    // Extract meaningful error message (hide database technical errors from user)
+                    if (errorData.error) {
+                        const dbError = errorData.error.toLowerCase();
+                        if (dbError.includes('certificate verify failed') || dbError.includes('ssl') || dbError.includes('can\'t connect to mysql')) {
+                            errorMessage = 'Database connection error. Please contact administrator.';
+                        } else if (dbError.includes('username or email already in use')) {
+                            errorMessage = 'Username or email already in use. Please choose different credentials.';
+                        } else {
+                            errorMessage = errorData.error;
+                        }
+                    }
+                } catch (e) {
+                    // If response isn't JSON, use status text
+                    errorMessage = res.statusText || errorMessage;
+                }
+                throw new Error(errorMessage);
+            }
+
+            const data = await res.json();
+            if (!data.success) {
+                // Extract meaningful error message (hide database technical errors from user)
+                let errorMessage = data.error || t('registration_failed');
+                const dbError = (errorMessage || '').toLowerCase();
+                if (dbError.includes('certificate verify failed') || dbError.includes('ssl') || dbError.includes('can\'t connect to mysql')) {
+                    errorMessage = 'Database connection error. Please contact administrator.';
+                } else if (dbError.includes('username or email already in use')) {
+                    errorMessage = 'Username or email already in use. Please choose different credentials.';
+                }
+                throw new Error(errorMessage);
+            }
+
+            if (data.access_token) {
+                localStorage.setItem('token', data.access_token);
+            }
+            if (data.user) {
+                try { localStorage.setItem('user', JSON.stringify(data.user)); } catch (_) {}
+            }
+
+            this.currentUser = data.user;
+            this.isAuthenticated = true;
+            this.updateUI();
+            this.closeModal();
+            try {
+                const apiUsageEl = document.getElementById('apiUsage');
+                const total = Number((data.usage && data.usage.total_calls) || 0);
+                if (apiUsageEl && Number.isFinite(total)) {
+                    apiUsageEl.textContent = `API used: ${total}`;
+                    apiUsageEl.style.display = 'inline-block';
+                }
+            } catch (_) {}
+            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
+            this.showMessage(t('account_created_welcome', { username: this.currentUser.username }), 'success');
+        } catch (err) {
+            // Provide more specific error messages
+            let errorMessage = err.message;
+            if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError') || err.message.includes('Network request failed')) {
+                errorMessage = 'Unable to connect to server. Please make sure the backend server is running on ' + window.API_BASE;
+            }
+            this.showMessage(errorMessage, 'error');
+            console.error('Registration error:', err);
+        }
+    }
+
+    validateCredentials(username, password) {
+        // Mock validation - in real app, this would check against database
+        const validUsers = {
+            'admin': 'password123',
+            'user': 'password123',
+            'test': 'test123'
+        };
+        return validUsers[username] === password;
+    }
+
+    // Frontend validators matching backend rules
+    validateUsername(username) {
+        if (!username) return false;
+        if (username.length < 6 || username.length > 12) return false;
+        const alnum = /^[A-Za-z0-9]+$/;
+        if (!alnum.test(username)) return false;
+        const hasLetter = /[A-Za-z]/.test(username);
+        const hasDigit = /\d/.test(username);
+        return hasLetter && hasDigit;
+    }
+
+    validateEmail(email) {
+        if (!email) return false;
+        const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return pattern.test(email);
+    }
+
+    validatePassword(password) {
+        if (!password) return false;
+        return password.length >= 6 && password.length <= 15;
+    }
+
+    showForgotPasswordForm() {
+        this.createModal('forgot');
+    }
+
+    async handleForgotPassword() {
+        const form = document.getElementById('forgotPasswordFormElement');
+        const formData = new FormData(form);
+        const identifier = formData.get('identifier');
+
+        if (!identifier) {
+            this.showMessage(t('enter_email_or_username'), 'error');
+            return;
+        }
+
+        this.showMessage(t('sending_reset_link'), 'info');
+        try {
+            const payload = this.validateEmail(identifier)
+                ? { email: identifier }
+                : { username: identifier };
+
+            const res = await fetch(`${window.API_BASE}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || t('reset_failed'));
+            }
+            this.showMessage(t('reset_link_generic_ok'), 'success');
+        } catch (err) {
+            // Still show generic success to avoid enumeration
+            this.showMessage(t('reset_link_generic_ok'), 'success');
+        }
+    }
+
+    updateUI() {
+        const signInBtn = document.getElementById('signInBtn');
+        const apiUsageEl = document.getElementById('apiUsage');
+        const freeBanner = document.getElementById('freeBanner');
+        const adminLink = document.getElementById('adminLink');
+        
+        if (this.isAuthenticated) {
+            signInBtn.textContent = t('logout');
+            signInBtn.className = 'btn btn-success';
+            signInBtn.onclick = () => this.signOut();
+
+            // Toggle Admin link visibility based on role
+            try {
+                let user = this.currentUser;
+                if (!user) {
+                    try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch (_) {}
+                }
+                if (user && user.role === 'admin' && adminLink) {
+                    adminLink.style.display = 'inline-block';
+                } else if (adminLink) {
+                    adminLink.style.display = 'none';
+                }
+            } catch (_) {}
+
+            // Fetch and display usage for current user
+            try {
+                const token = localStorage.getItem('token');
+                if (token && apiUsageEl) {
+                    fetch(`${window.API_BASE}/api/usage/me`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json().then(data => ({ ok: r.ok, data })))
+                    .then(({ ok, data }) => {
+                        if (ok && data && data.success && data.usage) {
+                            const totalCalls = Number(data.usage.total_calls || 0);
+                            const tokens = Number(data.usage.tokens_total || 0);
+                            apiUsageEl.textContent = `Calls: ${totalCalls}  Tokens: ${tokens}`;
+                            apiUsageEl.style.display = 'inline-block';
+                            // Daily free calls banner (backend-driven only)
+                            try {
+                                const daily = (data && data.usage && data.usage.daily) ? data.usage.daily : null;
+                                if (daily && typeof daily.limit === 'number' && typeof daily.remaining === 'number') {
+                                    const text = (window.STRINGS?.en?.free_remaining?.(daily.remaining)) || `Remaining free calls: ${daily.remaining}`;
+                                    if (freeBanner && remaining !== null && limit !== null) {
+    const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || Remaining free calls: ;
+    freeBanner.textContent = text;
+    freeBanner.style.display = 'inline-block';
+    if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+} else if (freeBanner) {
+    freeBanner.style.display = 'none';
+}
+        messageDiv.textContent = message;
+        
+        const modal = document.querySelector('.auth-modal-content');
+        if (modal) {
+            modal.insertBefore(messageDiv, modal.firstChild);
+        }
+
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, 3000);
+    }
+}
+
+// Initialize auth manager when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    const mgr=new AuthManager(); try { const link=document.getElementById('adminLink'); let u=null; try{u=JSON.parse(localStorage.getItem('user')||'null');}catch(_){}; if (u && u.role==='admin' && link) link.style.display='inline-block'; else if (link) link.style.display='none'; } catch(_){};
+});
+
+// Expose a small helper to refresh usage indicator after actions (e.g., new game)
+window.refreshUsageIndicator = function () {
+    try {
+        const apiUsageEl = document.getElementById('apiUsage');
+        const freeBanner = document.getElementById('freeBanner');
+        const token = localStorage.getItem('token');
+        if (!apiUsageEl || !token) {
+            if (apiUsageEl) apiUsageEl.style.display = 'none';
+            if (freeBanner && remaining !== null && limit !== null) {
+    const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || Remaining free calls: ;
+    freeBanner.textContent = text;
+    freeBanner.style.display = 'inline-block';
+    if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+} else if (freeBanner) {
+    freeBanner.style.display = 'none';
+}
+                apiUsageEl.style.display = 'inline-block';
+                // Update daily banner
+                try {
+                    const daily = data.usage.daily || {};
+                    const limit = (daily && typeof daily.limit === "number") ? daily.limit : null;
+                    const remaining = (daily && typeof daily.remaining === "number") ? daily.remaining : null;
+                    if (freeBanner && remaining !== null && limit !== null) {
+    const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || Remaining free calls: ;
+    freeBanner.textContent = text;
+    freeBanner.style.display = 'inline-block';
+    if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+} else if (freeBanner) {
+    freeBanner.style.display = 'none';
+}`n                        freeBanner.textContent = text;`n                        freeBanner.style.display = "inline-block";`n                        if (remaining <= 0) freeBanner.classList.add("maxed"); else freeBanner.classList.remove("maxed");`n                    } else if (freeBanner && remaining !== null && limit !== null) {
+    const text = (window.STRINGS?.en?.free_remaining?.(remaining)) || Remaining free calls: ;
+    freeBanner.textContent = text;
+    freeBanner.style.display = 'inline-block';
+    if (remaining <= 0) freeBanner.classList.add('maxed'); else freeBanner.classList.remove('maxed');
+} else if (freeBanner) {
+    freeBanner.style.display = 'none';
+}
+                                }
+                } catch (_) {}
+                // Re-wire admin click if role is admin (DB-sourced)
+                let isAdmin = false;
+                try {
+                    const rme = fetch(`${window.API_BASE}/api/auth/me`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(r => r.json());
+                    rme.then(me => {
+                        isAdmin = !!(me && me.success && me.user && me.user.role === 'admin');
+                        try {
+                            if (isAdmin) {
+                                apiUsageEl.style.cursor = 'pointer';
+                                apiUsageEl.title = 'Click to view usage by user';
+                                apiUsageEl.onclick = () => {
+                                    fetch(`${window.API_BASE}/api/usage/all`, {
+                                        method: 'GET',
+                                        headers: { 'Authorization': `Bearer ${token}` }
+                                    }).then(r => r.json().then(d => ({ ok: r.ok, data: d })))
+                                    .then(({ ok, data: all }) => {
+                                        if (!ok || !all || !all.success) return;
+                                        const lines = (all.results || []).slice(0, 10).map((row, i) => `${i+1}. ${row.username}: calls=${row.total_calls}, tokens=${row.tokens_total}`);
+                                        alert(['Top usage', ...lines].join('\n'));
+                                    }).catch(() => {});
+                                };
+                            } else {
+                                apiUsageEl.onclick = null;
+                                apiUsageEl.style.cursor = 'default';
+                            }
+                        } catch (_) {}
+                    }).catch(() => {});
+                } catch (_) {}
+            } else {
+                if (apiUsageEl) apiUsageEl.style.display = 'none';
+                if (freeBanner) freeBanner.style.display = 'none';
+            }
+        }).catch(() => { if (apiUsageEl) apiUsageEl.style.display = 'none'; if (freeBanner) freeBanner.style.display = 'none'; });
+    } catch (_) {}
+};
+
