@@ -2,7 +2,7 @@ from typing import Optional, Dict, List
 from datetime import datetime
 
 from extensions import db
-from models import User, ApiUsage, GameSession
+from models import User, ApiUsage, GameSession, UserDailyReset
 from models import AppSetting
 from constants import DEFAULT_FREE_CALLS_LIMIT
 
@@ -57,9 +57,11 @@ class UsageService:
             free_limit = DEFAULT_FREE_CALLS_LIMIT
         return { 'total_calls': int(total), 'by_endpoint': by_endpoint, 'tokens_total': int(tokens_total), 'games_count': int(games_count), 'free_limit': int(free_limit) }
 
-    def get_all_summaries(self) -> List[Dict]:
-        """Return usage summary for all users."""
-        # Fetch all usage rows and aggregate per user
+    def get_all_summaries(self, range_opt: str = 'all') -> List[Dict]:
+        """Return usage summary for all users.
+        range_opt: 'all' | 'today' (UTC)
+        """
+        # Fetch all usage rows and aggregate per user (all-time calls)
         rows: List[ApiUsage] = ApiUsage.query.all()
         per_user: Dict[int, Dict] = {}
         for r in rows:
@@ -73,20 +75,40 @@ class UsageService:
         # Include token totals/games per user
         by_user_tokens: Dict[int, int] = {}
         by_user_games: Dict[int, int] = {}
-        try:
-            sess_rows: List[GameSession] = GameSession.query.all()
-            for s in sess_rows:
-                by_user_tokens[s.user_id] = int(by_user_tokens.get(s.user_id, 0)) + int(getattr(s, 'tokens_total') or 0)
-                by_user_games[s.user_id] = int(by_user_games.get(s.user_id, 0)) + 1
-        except Exception:
-            pass
+        if range_opt == 'today':
+            # Today counts: from midnight UTC, and after any reset markers
+            try:
+                today = datetime.utcnow().date()
+                sess_rows: List[GameSession] = GameSession.query.filter(db.func.date(GameSession.started_at) == today).all()
+                # Build reset map: user_id -> reset_at
+                reset_rows: List[UserDailyReset] = UserDailyReset.query.filter_by(date=today).all()
+                reset_map = { r.user_id: r.reset_at for r in reset_rows }
+                for s in sess_rows:
+                    ra = reset_map.get(s.user_id)
+                    if ra and s.started_at <= ra:
+                        continue
+                    by_user_tokens[s.user_id] = int(by_user_tokens.get(s.user_id, 0)) + int(getattr(s, 'tokens_total') or 0)
+                    by_user_games[s.user_id] = int(by_user_games.get(s.user_id, 0)) + 1
+            except Exception:
+                pass
+        else:
+            try:
+                sess_rows: List[GameSession] = GameSession.query.all()
+                for s in sess_rows:
+                    by_user_tokens[s.user_id] = int(by_user_tokens.get(s.user_id, 0)) + int(getattr(s, 'tokens_total') or 0)
+                    by_user_games[s.user_id] = int(by_user_games.get(s.user_id, 0)) + 1
+            except Exception:
+                pass
 
         result: List[Dict] = []
         for uid, data in per_user.items():
             u = users.get(uid)
-            # Fallback derive games from endpoint usage if sessions absent
+            # Fallback derive games from endpoint usage if sessions absent (all-time only)
             fallback_games = int(data['by_endpoint'].get('/api/generate-crossword', 0))
-            games = int(by_user_games.get(uid, 0) or fallback_games)
+            if range_opt == 'today':
+                games = int(by_user_games.get(uid, 0))
+            else:
+                games = int(by_user_games.get(uid, 0) or fallback_games)
             tokens = int(by_user_tokens.get(uid, 0))
             if tokens == 0 and games > 0:
                 tokens = int(games * 1000)  # coarse approx

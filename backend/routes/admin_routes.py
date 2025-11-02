@@ -148,3 +148,45 @@ def reset_usage():
         if '1142' in msg and 'command denied' in msg.lower():
             return jsonify({'success': False, 'error': 'Database permission denied for UPDATE on api_usage. Grant UPDATE or perform reset with DB admin.'}), 500
         return jsonify({'success': False, 'error': msg}), 500
+
+
+@admin_bp.route('/admin/usage/reset-today', methods=['POST'])
+@jwt_required()
+def reset_usage_today():
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    from datetime import datetime
+    from models import UserDailyReset
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
+    now = datetime.utcnow()
+    today = now.date()
+
+    try:
+        if username in ('*', 'all', ''):
+            # Set/reset marker for all known users present in ApiUsage table
+            user_ids = [r.user_id for r in ApiUsage.query.with_entities(ApiUsage.user_id).distinct()]
+            for uid in user_ids:
+                row = UserDailyReset.query.filter_by(user_id=uid, date=today).first()
+                if not row:
+                    row = UserDailyReset(user_id=uid, date=today, reset_at=now)
+                    db.session.add(row)
+                else:
+                    row.reset_at = now
+            db.session.commit()
+            return jsonify({'success': True, 'reset_today': 'all', 'users': len(user_ids)})
+
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        row = UserDailyReset.query.filter_by(user_id=user.id, date=today).first()
+        if not row:
+            row = UserDailyReset(user_id=user.id, date=today, reset_at=now)
+            db.session.add(row)
+        else:
+            row.reset_at = now
+        db.session.commit()
+        return jsonify({'success': True, 'reset_today': username})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500

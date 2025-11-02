@@ -72,6 +72,19 @@ class UserQuota(db.Model):
     user = db.relationship('User')
 
 
+class UserDailyReset(db.Model):
+    __tablename__ = 'user_daily_resets'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    date = db.Column(db.Date, nullable=False, index=True)
+    reset_at = db.Column(db.DateTime, nullable=False, server_default=db.func.current_timestamp())
+    __table_args__ = (
+        db.UniqueConstraint('user_id', 'date', name='uq_user_daily_reset'),
+    )
+
+    user = db.relationship('User')
+
+
 class User(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)

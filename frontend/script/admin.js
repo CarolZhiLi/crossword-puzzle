@@ -51,7 +51,8 @@
   }
 
   async function loadData(state) {
-    const res = await fetch(`${window.API_BASE}/api/usage/all`, {
+    const q = state.range === 'today' ? '?range=today' : '';
+    const res = await fetch(`${window.API_BASE}/api/usage/all${q}`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
@@ -78,6 +79,8 @@
     const refresh = document.getElementById('refreshBtn');
     const exportBtn = document.getElementById('exportBtn');
     const resetBtn = document.getElementById('resetCallsBtn');
+    const resetTodayBtn = document.getElementById('resetTodayBtn');
+    const rangeSelect = document.getElementById('rangeSelect');
     if (search) search.addEventListener('input', () => applyFilter(state));
     if (refresh) refresh.addEventListener('click', () => loadData(state).catch(err => alert(err.message)));
     if (exportBtn) exportBtn.addEventListener('click', () => {
@@ -111,12 +114,33 @@
         alert(e.message || 'Reset failed');
       }
     });
+    if (resetTodayBtn) resetTodayBtn.addEventListener('click', async () => {
+      const who = prompt('Enter username to reset TODAY calls (or * for all):', '*');
+      if (who === null) return;
+      try {
+        const res = await fetch(`${window.API_BASE}/api/admin/usage/reset-today`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
+          body: JSON.stringify({ username: who })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Reset today failed');
+        alert('Reset today OK');
+        loadData(state).catch(()=>{});
+      } catch (e) {
+        alert(e.message || 'Reset today failed');
+      }
+    });
+    if (rangeSelect) rangeSelect.addEventListener('change', () => {
+      state.range = rangeSelect.value === 'today' ? 'today' : 'all';
+      loadData(state).catch(()=>{});
+    });
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const auth = ensureAdmin();
     if (!auth) return;
-    const state = { token: auth.token, rows: [] };
+    const state = { token: auth.token, rows: [], range: 'all' };
     bindUI(state);
     loadData(state).catch(err => alert(err.message));
   });

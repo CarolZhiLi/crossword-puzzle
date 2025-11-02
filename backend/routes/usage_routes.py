@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from services.usage_service import UsageService
@@ -23,6 +23,8 @@ def all_usage():
     username = get_jwt_identity()
     if not is_admin_username(username):
         return jsonify({ 'success': False, 'error': 'Forbidden' }), 403
-    results = usage.get_all_summaries()
+    range_opt = (request.args.get('range') or 'all').strip().lower()
+    if range_opt not in ('all','today'):
+        range_opt = 'all'
+    results = usage.get_all_summaries(range_opt)
     return jsonify({ 'success': True, 'results': results })
-

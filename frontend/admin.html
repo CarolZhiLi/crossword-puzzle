@@ -26,9 +26,14 @@
       <h2>Admin - Usage Monitor</h2>
       <div class="admin-actions">
         <input id="searchBox" class="input" placeholder="Search username/email" />
+        <select id="rangeSelect" class="input">
+          <option value="all" selected>All time</option>
+          <option value="today">Today</option>
+        </select>
         <button id="refreshBtn" class="btn">Refresh</button>
         <button id="exportBtn" class="btn">Export CSV</button>
         <button id="resetCallsBtn" class="btn btn-warning">Reset Calls</button>
+        <button id="resetTodayBtn" class="btn btn-warning">Reset Today</button>
         <a href="./gameplay.html" class="btn">Back</a>
       </div>
     </div>
