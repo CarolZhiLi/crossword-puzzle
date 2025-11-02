@@ -81,7 +81,7 @@
         align-content: stretch;
         /* Remove padding that might offset alignment */
         padding: 0 !important; /* Override any base CSS padding */
-        gap: 14px; /* Keep gap between grid and panel */
+        gap: 0; /* No visual gap between grid and definitions on desktop */
         /* Ensure it fits within available space */
         box-sizing: border-box;
         /* Prevent any overflow */
@@ -127,9 +127,15 @@
     /* Collapsed definitions toggle - Desktop only */
     .game-area.defs-collapsed { 
         grid-template-columns: 1fr; 
+        justify-items: center; /* center grid horizontally when definitions are folded */
     }
     .game-area.defs-collapsed .clues-panel { 
         display: none; 
+    }
+    .game-area.defs-collapsed .crossword-container {
+        width: auto; /* allow intrinsic sizing so centering takes effect */
+        margin: 0 auto; /* ensure centering in the single-column layout */
+        justify-content: center; /* keep grid centered inside container */
     }
     
     /* Clue panel matches grid height and scrolls internally */
@@ -165,13 +171,8 @@
 /* Medium Desktop (1025px - 1200px) */
 @media (min-width: 1025px) and (max-width: 1200px) {
     .game-area {
-        grid-template-columns: 1fr;
-        gap: 25px;
-    }
-    
-    .clues-panel {
-        order: -1;
-        max-height: 300px;
+        grid-template-columns: 80fr 20fr; /* keep side-by-side on medium desktop */
+        gap: 0; /* no gap between grid and definitions */
     }
 }
 
