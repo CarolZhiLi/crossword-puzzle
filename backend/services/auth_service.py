@@ -12,6 +12,7 @@ from utils.security import gen_reset_token, hash_token, build_reset_link
 from services.email_service import EmailService
 from services.usage_service import UsageService
 from utils.security import is_admin_username
+from models import UserRole
 
 
 class AuthService:
@@ -42,8 +43,19 @@ class AuthService:
 
         token = create_access_token(identity=username)
         public = {'username': username, 'email': email}
-        if is_admin_username(username):
-            public['role'] = 'admin'
+        # Determine role from DB role mapping or env
+        role = None
+        try:
+            db_user = User.query.filter_by(username=username).first()
+            if db_user:
+                ur = UserRole.query.filter_by(user_id=db_user.id).first()
+                role = ur.role if ur else None
+        except Exception:
+            role = None
+        if not role and is_admin_username(username):
+            role = 'admin'
+        if role:
+            public['role'] = role
         summary = self.usage.get_user_summary(username)
         return public, token, summary
 
@@ -55,8 +67,16 @@ class AuthService:
             raise ValueError('Invalid credentials.')
         token = create_access_token(identity=user.username)
         public = {'username': user.username, 'email': user.email}
-        if is_admin_username(user.username):
-            public['role'] = 'admin'
+        role = None
+        try:
+            ur = UserRole.query.filter_by(user_id=user.id).first()
+            role = ur.role if ur else None
+        except Exception:
+            role = None
+        if not role and is_admin_username(user.username):
+            role = 'admin'
+        if role:
+            public['role'] = role
         summary = self.usage.get_user_summary(user.username)
         return public, token, summary
 
@@ -65,8 +85,16 @@ class AuthService:
         if not user:
             return None
         info = {'username': user.username, 'email': user.email}
-        if is_admin_username(user.username):
-            info['role'] = 'admin'
+        role = None
+        try:
+            ur = UserRole.query.filter_by(user_id=user.id).first()
+            role = ur.role if ur else None
+        except Exception:
+            role = None
+        if not role and is_admin_username(user.username):
+            role = 'admin'
+        if role:
+            info['role'] = role
         info['usage'] = self.usage.get_user_summary(user.username)
         return info
 

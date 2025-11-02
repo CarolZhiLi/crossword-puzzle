@@ -1,4 +1,4 @@
-﻿// API_BASE is set by config.js - use window.API_BASE
+// API_BASE is set by config.js - use window.API_BASE
 export default class CrosswordGame {
     constructor() {
         this.currentWord = null;
@@ -1258,4 +1258,5 @@ export default class CrosswordGame {
 }
 
 // (moved to module entry)
+
 

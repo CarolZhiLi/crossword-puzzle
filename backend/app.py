@@ -8,6 +8,7 @@ from config import build_config
 from routes.auth_routes import auth_bp
 from routes.puzzle_routes import puzzle_bp
 from routes.usage_routes import usage_bp
+from routes.admin_routes import admin_bp
 
 
 def create_app() -> Flask:
@@ -28,6 +29,7 @@ def create_app() -> Flask:
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(puzzle_bp, url_prefix='/api')
     app.register_blueprint(usage_bp, url_prefix='/api')
+    app.register_blueprint(admin_bp, url_prefix='/api')
 
     # Create tables on first run (opt-in)
     # Set DB_AUTO_CREATE=true in backend/.env to enable automatic table creation.

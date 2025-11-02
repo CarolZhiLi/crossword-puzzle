@@ -4,7 +4,7 @@ from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
 from services.usage_service import UsageService
 from extensions import db
-from models import GameSession, User
+from models import GameSession, User, UserRole, UserQuota, AppSetting
 from utils.tokens import estimate_tokens
 from datetime import datetime
 
@@ -32,6 +32,39 @@ def generate_crossword():
             f"Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description."
         )
         t0 = datetime.utcnow()
+        # Before generation, enforce daily limit for authenticated non-admin users
+        try:
+            verify_jwt_in_request(optional=True)
+            current_user = get_jwt_identity()
+            if current_user:
+                u = User.query.filter_by(username=current_user).first()
+                # Determine role
+                role = None
+                if u:
+                    ur = UserRole.query.filter_by(user_id=u.id).first()
+                    role = ur.role if ur else None
+                is_admin = (role == 'admin')
+                if not is_admin:
+                    # Resolve limit: per-user quota or global setting DAILY_FREE_LIMIT (default 3)
+                    limit = None
+                    if u:
+                        uq = UserQuota.query.filter_by(user_id=u.id).first()
+                        if uq:
+                            limit = int(uq.daily_limit or 0)
+                    if limit is None:
+                        s = AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first()
+                        limit = int((s.value if s else '3') or '3')
+                    # Count sessions today
+                    if u and limit is not None and limit >= 0:
+                        today = datetime.utcnow().date()
+                        used = GameSession.query.filter(
+                            GameSession.user_id == u.id,
+                            db.func.date(GameSession.started_at) == today
+                        ).count()
+                        if used >= limit:
+                            return jsonify({'success': False, 'error': 'Daily usage limit reached'}), 429
+        except Exception:
+            pass
         results = generate_words(prompt)
 
         pairs = []
