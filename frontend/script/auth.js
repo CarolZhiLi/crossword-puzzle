@@ -1,4 +1,7 @@
-window.API_BASE = window.API_BASE || 'http://localhost:5050';
+// API_BASE is set by config.js - only set here if not already defined
+if (typeof window !== 'undefined' && !window.API_BASE) {
+  window.API_BASE = 'http://localhost:5050';
+}
 
 class AuthManager {
     constructor() {

@@ -10,3 +10,5 @@ backend/certs/*.pem
 # Python cache directories
 __pycache__/
 backend/instance/
+
+*.md

@@ -1,5 +1,4 @@
-﻿const API_BASE = 'http://localhost:5050';
-
+﻿// API_BASE is set by config.js - use window.API_BASE
 export default class CrosswordGame {
     constructor() {
         this.currentWord = null;
