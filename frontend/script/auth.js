@@ -252,4 +252,17 @@ class AuthManager {
   }
 }
 
-document.addEventListener('DOMContentLoaded', () => { try { window.__auth = new AuthManager(); } catch(_) {} });
+document.addEventListener('DOMContentLoaded', () => {
+  try { window.__auth = new AuthManager(); } catch(_) {}
+});
+
+// Expose a lightweight global refresher so other pages (e.g., gameplay)
+// can update Calls/Tokens/Remaining without a full page reload.
+// gameplay.js already calls window.refreshUsageIndicator() after a game.
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    window.refreshUsageIndicator = () => {
+      try { window.__auth?.refreshAuthState(); } catch (_) {}
+    };
+  } catch (_) {}
+});
