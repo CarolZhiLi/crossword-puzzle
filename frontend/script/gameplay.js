@@ -27,6 +27,7 @@ export default class CrosswordGame {
         this.startTimer();
         this.gridSizing.setupResponsiveGrid();
         this.applyI18nUI();
+        this.setupAnimationVideo();
     }
 
     // ---- Backend-only gating: frontend no-ops ----
@@ -49,8 +50,13 @@ export default class CrosswordGame {
         // Use solution grid shape; if not loaded yet, skip rendering
         if (!this.solutionGrid || !this.solutionGrid.length) {
             this.grid = [];
+            // Show animation when grid is empty
+            this.showAnimationVideo();
             return;
         }
+        
+        // Hide animation when grid is being created
+        this.hideAnimationVideo();
 
         // Set grid template based on current solution grid size
         this.gridSize = this.solutionGrid.length;
@@ -634,8 +640,8 @@ export default class CrosswordGame {
         // Reset timer display
         this.updateTimer();
         
-        // Reinitialize empty grid
-        this.initializeGrid();
+        // Show animation again since grid is now empty
+        this.showAnimationVideo();
     }
 
     startTimer() {
@@ -694,6 +700,46 @@ export default class CrosswordGame {
     }
 
 
+
+    setupAnimationVideo() {
+        // Animation will be shown/hidden by initializeGrid and hideAnimationVideo
+        // This method is just for initial setup if needed
+    }
+
+    showAnimationVideo() {
+        const video = document.getElementById('introAnimation');
+        const container = document.getElementById('animationContainer');
+        
+        if (!video || !container) return;
+        
+        // Show animation container
+        container.style.display = 'flex';
+        container.classList.remove('hidden');
+        
+        // Try to play video (autoplay may be blocked)
+        video.play().catch(() => {
+            // Autoplay blocked, video will play on user interaction
+            console.log('Video autoplay was blocked');
+        });
+    }
+
+    hideAnimationVideo() {
+        const video = document.getElementById('introAnimation');
+        const container = document.getElementById('animationContainer');
+        
+        if (!video || !container) return;
+        
+        // Pause video
+        video.pause();
+        
+        // Hide container with fade out
+        container.classList.add('hidden');
+        
+        // Remove from display after transition
+        setTimeout(() => {
+            container.style.display = 'none';
+        }, 500);
+    }
 
     applyI18nUI() {
         try {

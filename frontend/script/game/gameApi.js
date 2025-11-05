@@ -7,6 +7,11 @@ export class GameApi {
     }
 
     startGame() {
+        // Hide animation video when starting a game
+        if (this.game.hideAnimationVideo) {
+            this.game.hideAnimationVideo();
+        }
+        
         const topic = document.getElementById('topicSelect').value;
         const difficulty = document.getElementById('difficultySelect').value;
         
@@ -15,15 +20,12 @@ export class GameApi {
         // Reset game state
         this.game.currentWord = null;
         this.game.currentDirection = 'across';
-        this.game.startTime = Date.now();
         
-        // Clear any existing timer
+        // Clear any existing timer (but don't start new one yet - wait for grid to be displayed)
         if (this.game.timerInterval) {
             clearInterval(this.game.timerInterval);
+            this.game.timerInterval = null;
         }
-        
-        // Start new timer
-        this.game.startTimer();
         
         // Frontend does not enforce daily limits; backend is the source of truth
 
@@ -96,12 +98,17 @@ export class GameApi {
                 });
             });
             this.game.initializeGrid();
+            
+            // Start timer only after grid is displayed
+            this.game.startTime = Date.now();
+            this.game.startTimer();
+            
             // Count this successful start toward free-play limits
             try { this.game.markGameStartedSuccessfully(); } catch (_) {}
             // Refresh usage indicator (calls/tokens) for logged-in users
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
             // Ensure definitions list visible by default on start
-            try { this.game.ensureDefinitionsVisible(); } catch (_) {}
+            try { this.game.definitions.ensureDefinitionsVisible(); } catch (_) {}
             // Update header banner (daily limit info) instead of alert
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
         }).catch(err => {

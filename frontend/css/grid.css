@@ -36,6 +36,8 @@
     overflow: hidden;
     box-sizing: border-box;
     aspect-ratio: 1 / 1;
+    position: relative;
+    z-index: 2;
 }
 
 .grid-cell {
