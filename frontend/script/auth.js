@@ -189,7 +189,20 @@ class AuthManager {
     return '';
   }
 
-  closeModal() { const m = document.querySelector('.auth-modal'); if (!m) return; m.classList.remove('show'); setTimeout(() => m.remove(), 250); }
+  closeModal() { 
+    const m = document.querySelector('.auth-modal'); 
+    if (!m) return; 
+    m.classList.remove('show'); 
+    setTimeout(() => {
+      m.remove();
+      // If user is not authenticated after closing modal, clear the game
+      if (!this.isAuthenticated && window.__game) {
+        try {
+          window.__game.clearGame();
+        } catch(_) {}
+      }
+    }, 250); 
+  }
 
   showMessage(msg, type='info') {
     const content = document.querySelector('.auth-modal-content'); if (!content) return;
@@ -248,7 +261,14 @@ class AuthManager {
 
   signOut() {
     try { localStorage.removeItem('token'); localStorage.removeItem('user'); } catch(_) {}
-    this.currentUser = null; this.isAuthenticated = false; this.updateUI();
+    this.currentUser = null; this.isAuthenticated = false; 
+    // Clear the game when user logs out
+    if (window.__game) {
+      try {
+        window.__game.clearGame();
+      } catch(_) {}
+    }
+    this.updateUI();
   }
 }
 
