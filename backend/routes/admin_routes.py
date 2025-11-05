@@ -181,3 +181,6 @@ def reset_usage_today():
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+ 
