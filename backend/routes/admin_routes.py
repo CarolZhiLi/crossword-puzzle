@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from extensions import db
-from models import User, UserRole, AppSetting, UserQuota, ApiUsage
+from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset
 from constants import DEFAULT_DAILY_FREE_LIMIT
  
 
@@ -183,4 +183,41 @@ def reset_usage_today():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
- 
+
+@admin_bp.route('/admin/users/delete', methods=['POST'])
+@jwt_required()
+def delete_user_and_related():
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    data = request.get_json(silent=True) or {}
+    username = (data.get('username') or '').strip()
+    if not username:
+        return jsonify({'success': False, 'error': 'Username is required'}), 400
+
+    user = User.query.filter_by(username=username).first()
+    if not user:
+        return jsonify({'success': False, 'error': 'User not found'}), 404
+
+    # Do not allow deleting admin users
+    ur = UserRole.query.filter_by(user_id=user.id).first()
+    if ur and ur.role == 'admin':
+        return jsonify({'success': False, 'error': 'not enough privilege to delete an admin'}), 403
+
+    try:
+        deleted = {}
+        deleted['api_usage'] = ApiUsage.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        deleted['game_sessions'] = GameSession.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        deleted['password_resets'] = PasswordReset.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        deleted['user_daily_resets'] = UserDailyReset.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        deleted['user_roles'] = UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        deleted['user_quotas'] = UserQuota.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+        # finally remove the user record itself
+        deleted['users'] = User.query.filter_by(id=user.id).delete(synchronize_session=False) or 0
+        db.session.commit()
+        return jsonify({'success': True, 'deleted': deleted})
+    except Exception as e:
+        db.session.rollback()
+        msg = str(e)
+        if '1142' in msg and 'denied' in msg.lower():
+            return jsonify({'success': False, 'error': 'Database permission denied for DELETE on one or more tables. Use admin DB user or adjust grants.'}), 500
+        return jsonify({'success': False, 'error': msg}), 500

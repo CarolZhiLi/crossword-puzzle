@@ -1,6 +1,6 @@
 import os
 import ssl
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse, quote
 
 
 def build_config() -> dict:
@@ -19,66 +19,49 @@ def build_config() -> dict:
         db_port = os.getenv('DB_PORT', '3306')
         db_name = os.getenv('DB_NAME', 'crswd')
         if db_user and db_password and db_name:
-            database_url = f"mysql+pymysql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            # If DB_USER equals the admin DB username, use ADMIN_PASSWORD
+            admin_user = os.getenv('DB_ADMIN') or os.getenv('DB_ADMIN_USER')
+            admin_password = os.getenv('ADMIN_PASSWORD')
+            use_admin = bool(admin_user and admin_password and db_user == admin_user)
+            user = admin_user if use_admin else db_user
+            pwd = admin_password if use_admin else db_password
+            database_url = f"mysql+pymysql://{user}:{pwd}@{db_host}:{db_port}/{db_name}"
         else:
             # Fallback to SQLite in-memory if nothing provided (developer convenience)
             database_url = 'sqlite:///crossythink.db'
+
+    # If a full DATABASE_URL is provided and targets the admin DB user, replace password with ADMIN_PASSWORD
+    try:
+        parsed = urlparse(database_url)
+        if parsed.scheme.lower().startswith('mysql'):
+            admin_user = os.getenv('DB_ADMIN') or os.getenv('DB_ADMIN_USER')
+            admin_password = os.getenv('ADMIN_PASSWORD')
+            if admin_user and admin_password and parsed.username == admin_user:
+                host = parsed.hostname or ''
+                port = f":{parsed.port}" if parsed.port else ''
+                auth = f"{admin_user}:{quote(admin_password, safe='')}@"
+                new_netloc = f"{auth}{host}{port}"
+                database_url = urlunparse(parsed._replace(netloc=new_netloc))
+    except Exception:
+        pass
 
     engine_options = { 'pool_pre_ping': True }
     # Only apply SSL to MySQL connections
     if str(database_url).lower().startswith('mysql'):
         ssl_mode = (os.getenv('DB_SSL_MODE') or '').strip().upper()
         insecure = (os.getenv('DB_SSL_INSECURE') or '').strip().lower() == 'true'
-        ssl_ca = os.getenv('DB_SSL_CA')
-        # Decide which DB username is used for this connection
-        conn_user = None
-        if database_url:
-            try:
-                parsed = urlparse(database_url)
-                conn_user = parsed.username
-            except Exception:
-                conn_user = None
-        if not conn_user:
-            conn_user = os.getenv('DB_USER')
-        admin_user = os.getenv('DB_ADMIN') or os.getenv('DB_ADMIN_USER')
-        use_ca_for_this_user = bool(admin_user and conn_user and conn_user == admin_user)
 
-        # Per-user insecure allowlist
-        insecure_users = [u.strip() for u in (os.getenv('DB_SSL_INSECURE_USERS') or '').split(',') if u.strip()]
-        insecure_for_user = bool(conn_user and conn_user in insecure_users)
-
-        ctx = None
         if ssl_mode == 'REQUIRED':
-            # Build SSL context
-            if insecure or insecure_for_user:
-                ctx = ssl.create_default_context()
-                ctx.check_hostname = False
-                ctx.verify_mode = ssl.CERT_NONE
+            # Enable TLS; no custom CA handling
+            if insecure:
+                engine_options['connect_args'] = {
+                    'ssl': {'cert_reqs': ssl.CERT_NONE}
+                }
             else:
-                cafile = None
-                # Only apply custom CA file for admin connections (or if forced by env)
-                force_ca = (os.getenv('DB_SSL_FORCE_CA') or '').strip().lower() == 'true'
-                if ssl_ca and (use_ca_for_this_user or force_ca):
-                    ca_path = ssl_ca
-                    # Resolve relative paths robustly whether app is started at repo root or backend/
-                    if not os.path.isabs(ca_path) and not os.path.exists(ca_path):
-                        base = os.path.dirname(os.path.abspath(__file__))
-                        candidate = os.path.join(base, ca_path)
-                        if os.path.exists(candidate):
-                            ca_path = candidate
-                        else:
-                            norm = ca_path.replace('\\', '/')
-                            if norm.startswith('backend/'):
-                                alt = os.path.join(base, norm.split('/', 1)[1])
-                                if os.path.exists(alt):
-                                    ca_path = alt
-                    if os.path.exists(ca_path):
-                        cafile = ca_path
-                # If we have a CA file, use it; otherwise use system trust store
-                ctx = ssl.create_default_context(cafile=cafile) if cafile else ssl.create_default_context()
-
-            # PyMySQL accepts an SSLContext via 'ssl'
-            engine_options['connect_args'] = { 'ssl': ctx }
+                # TLS enabled with library defaults (may not verify cert)
+                engine_options['connect_args'] = {
+                    'ssl': {}
+                }
 
     cfg['SQLALCHEMY_DATABASE_URI'] = database_url
     cfg['SQLALCHEMY_ENGINE_OPTIONS'] = engine_options

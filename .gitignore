@@ -12,3 +12,4 @@ __pycache__/
 backend/instance/
 
 *.md
+backend/__pycache__/
