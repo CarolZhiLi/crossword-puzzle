@@ -9,6 +9,7 @@ export default class CrosswordGame {
         this.solutionGrid = [];
         this.grid = [];
         this.words = {};
+        this.customTopic = '';
         
         this.initializeGrid();
         this.setupEventListeners();
@@ -616,6 +617,10 @@ export default class CrosswordGame {
                         <option value="Animals">${t('topic_animals') || 'Animals'}</option>
                         <option value="General">${t('topic_custom') || 'Customize'}</option>
                     </select>
+                    <div id="customThemeRow" style="display:none; margin-top:8px; width:100%;">
+                        <input id="customThemeInput" type="text" class="dropdown" style="width:100%;"
+                               placeholder="Enter a theme (e.g., Space, Cooking, NBA)" />
+                    </div>
                     <select id="modalDifficultySelect" class="dropdown">
                         <option value="Easy">${t('diff_easy') || 'Easy'}</option>
                         <option value="Medium">${t('diff_medium') || 'Medium'}</option>
@@ -632,6 +637,8 @@ export default class CrosswordGame {
         const topicSelect = document.getElementById('topicSelect');
         const difficultySelect = document.getElementById('difficultySelect');
         const modalTopicSelect = document.getElementById('modalTopicSelect');
+        const customThemeRow = document.getElementById('customThemeRow');
+        const customThemeInput = document.getElementById('customThemeInput');
         const modalDifficultySelect = document.getElementById('modalDifficultySelect');
         
         if (topicSelect && modalTopicSelect) {
@@ -640,18 +647,30 @@ export default class CrosswordGame {
         if (difficultySelect && modalDifficultySelect) {
             modalDifficultySelect.value = difficultySelect.value;
         }
-        
+
         // Add event listeners
         modal.querySelector('.game-modal-close').addEventListener('click', () => {
             this.closeGameModal();
         });
-        
+
         modal.addEventListener('click', (e) => {
             if (e.target.classList.contains('game-modal')) {
                 this.closeGameModal();
             }
         });
-        
+
+        // Toggle custom theme input visibility
+        const syncCustomVisibility = () => {
+            if (!customThemeRow) return;
+            const show = modalTopicSelect && modalTopicSelect.value === 'General';
+            customThemeRow.style.display = show ? 'block' : 'none';
+            if (show && this.customTopic) customThemeInput.value = this.customTopic;
+        };
+        if (modalTopicSelect) {
+            modalTopicSelect.addEventListener('change', syncCustomVisibility);
+            syncCustomVisibility();
+        }
+
         document.getElementById('modalStartGameBtn').addEventListener('click', () => {
             // Sync values to main dropdowns
             if (topicSelect && modalTopicSelect) {
@@ -660,7 +679,16 @@ export default class CrosswordGame {
             if (difficultySelect && modalDifficultySelect) {
                 difficultySelect.value = modalDifficultySelect.value;
             }
-            
+            // Capture custom theme if needed
+            if (modalTopicSelect && modalTopicSelect.value === 'General') {
+                const entered = (customThemeInput?.value || '').trim();
+                if (!entered) {
+                    alert('Please enter a theme.');
+                    return;
+                }
+                this.customTopic = entered;
+            }
+
             this.closeGameModal();
             this.startGame();
         });
@@ -757,9 +785,9 @@ export default class CrosswordGame {
     }
 
     startGame() {
-        const topic = document.getElementById('topicSelect').value;
+        let topic = document.getElementById('topicSelect').value;
         const difficulty = document.getElementById('difficultySelect').value;
-        
+
         console.log(`Starting new game with topic: ${topic}, difficulty: ${difficulty}`);
         
         // Reset game state
@@ -776,6 +804,13 @@ export default class CrosswordGame {
         this.startTimer();
         
         // Frontend does not enforce daily limits; backend is the source of truth
+
+        // Use custom theme when "Customize" selected
+        if (topic === 'General') {
+            const entered = (this.customTopic || '').trim();
+            if (!entered) { alert('Please enter a theme.'); return; }
+            topic = entered;
+        }
 
         // Fetch and render new puzzle
         const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
