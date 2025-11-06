@@ -52,3 +52,88 @@
     align-items: center;
 }
 
+/* Animation Video Container - shown in crossword container when empty */
+.animation-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    z-index: 3;
+    transition: opacity 0.5s ease-out;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+.animation-container.hidden {
+    opacity: 0;
+    pointer-events: none;
+    display: none;
+}
+
+.intro-video {
+    width: 50%;
+    height: 50%;
+    object-fit: cover; /* Crop video to fit container */
+    object-position: center; /* Center the crop */
+}
+
+/* Responsive adjustments for mobile and iPad - scale video to fit game area exactly */
+@media (max-width: 1024px) {
+    /* Disable horizontal scroll when video is showing */
+    .game-area:has(.animation-container:not(.hidden)) {
+        overflow-x: hidden !important;
+    }
+    
+    .animation-container {
+        /* Container fits exactly within crossword-container and centers content */
+        width: 90%;
+        height: 100%;
+        max-width: 100%;
+        max-height: 100%;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .intro-video {
+        /* Scale video and center it vertically and horizontally */
+        width: 100%;
+        height: 100%;
+        object-fit: cover; /* Fill the container, cropping if needed */
+        object-position: center center;
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Disable horizontal scroll when video is showing */
+    .game-area:has(.animation-container:not(.hidden)) {
+        overflow-x: hidden !important;
+    }
+    
+    .animation-container {
+        /* Container fits exactly within crossword-container on mobile */
+        width: 74%;
+        height: 100%;
+        align-items: left;
+        justify-content: left;
+    }
+    
+    .intro-video {
+        /* Scale video to fit container width and height exactly and center it */
+        width: 70%;
+        height: 70%;
+        max-width: 70%;
+        max-height: 70%;
+        object-fit: cover; /* Fill the container, cropping if needed */
+        object-position: center center;
+        display: block;
+    }
+}
+

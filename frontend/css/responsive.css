@@ -77,19 +77,21 @@
         min-height: 0; /* Critical for flex shrinking */
         overflow: hidden; /* No scrolling - fit within viewport */
         /* Ensure grid items align properly at top and stretch to same height */
-        align-items: stretch; /* Stretch to same height */
+        align-items: stretch; /* Stretch both columns to same height */
         align-content: stretch;
-        justify-content: center; /* Center the two columns as a unit */
+        justify-content: stretch; /* Stretch columns to fill space */
         /* Remove padding that might offset alignment */
         padding: 0 !important; /* Override any base CSS padding */
-        gap: 0; /* No visual gap between grid and definitions on desktop */
+        gap: 14px; /* Gap between grid and definitions on desktop */
         /* Ensure it fits within available space */
         box-sizing: border-box;
         /* Prevent any overflow */
         max-height: none; /* Let flexbox handle the height */
         margin: 0 !important; /* Override any base CSS margins */
-        /* Make columns shrink to content width so no extra blank space */
-        grid-template-columns: max-content minmax(340px, 28%);
+        /* Use 80fr/20fr split to fill the entire space */
+        grid-template-columns: 80fr 20fr;
+        /* Ensure children stretch to fill height */
+        grid-auto-rows: 1fr;
     }
     
     /* Crossword Grid */
@@ -97,14 +99,13 @@
         min-height: 0; /* Critical for flex shrinking */
         max-height: 100%; /* Cannot exceed parent */
         overflow: hidden;
-        flex: 1 1 auto;
         display: flex;
         justify-content: center; /* Center grid horizontally */
-        align-items: flex-start; /* Align grid at top of container */
+        align-items: center; /* Center grid vertically */
         /* Ensure it stretches in grid to match panel height exactly */
         align-self: stretch;
         height: 100%;
-        width: auto; /* shrink to grid size to remove inner blank area */
+        width: 100%; /* Take full width of the 80fr column */
         /* Remove any margin/padding that might offset alignment */
         margin: 0;
         padding: 0;
@@ -145,8 +146,11 @@
     /* Clue panel matches grid height and scrolls internally */
     .clues-panel {
         height: 100%;
+        width: 100%; /* Take full width of the 20fr column */
         max-height: 100%; /* Cannot exceed parent */
+        max-width: 100%; /* Cannot exceed parent */
         min-height: 0; /* Critical for flex shrinking */
+        box-sizing: border-box;
         overflow: hidden;
         align-self: stretch;
         /* Perfect alignment with grid - same top and bottom edges */
@@ -154,12 +158,9 @@
         padding: 0;
         /* Match grid container's border-radius for perfect alignment */
         border-radius: 15px;
-        box-sizing: border-box;
         /* Ensure it matches grid container height exactly and fits in viewport */
         display: flex;
         flex-direction: column;
-        /* Prevent overflow */
-        flex: 1 1 auto;
     }
     
     .clues-panel #allClues {
@@ -267,7 +268,6 @@
         overflow: visible; /* Allow content to overflow for scrolling */
         display: flex;
         align-items: center; /* Center grid vertically */
-        justify-content: center; /* Center grid horizontally */
         flex: 1;
         /* Prevent container from shrinking grid */
         min-width: fit-content;

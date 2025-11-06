@@ -1,4 +1,10 @@
-// API_BASE is set by config.js - use window.API_BASE
+﻿// API_BASE is set by config.js - use window.API_BASE
+import { GridUtils } from './game/gridUtils.js';
+import { GridSizing } from './game/gridSizing.js';
+import { InputHandler } from './game/inputHandler.js';
+import { GameApi } from './game/gameApi.js';
+import { Definitions } from './game/definitions.js';
+
 export default class CrosswordGame {
     constructor() {
         this.currentWord = null;
@@ -11,11 +17,18 @@ export default class CrosswordGame {
         this.words = {};
         this.customTopic = '';
         
+        // Initialize helper modules
+        this.gridSizing = new GridSizing(this);
+        this.inputHandler = new InputHandler(this);
+        this.gameApi = new GameApi(this);
+        this.definitions = new Definitions(this);
+        
         this.initializeGrid();
         this.setupEventListeners();
         this.startTimer();
-        this.setupResponsiveGrid();
+        this.gridSizing.setupResponsiveGrid();
         this.applyI18nUI();
+        this.setupAnimationVideo();
     }
 
     // ---- Backend-only gating: frontend no-ops ----
@@ -28,93 +41,7 @@ export default class CrosswordGame {
     markGameStartedSuccessfully() { /* no-op: server records usage */ }
 
     normalizeGrid(grid) {
-        if (!grid || !grid.length || !grid[0]) {
-            return { grid: [], size: 0, offset: { row: 0, col: 0 } };
-        }
-
-        const isEmptyCell = (val) => {
-            if (val === null || val === undefined) return true;
-            if (typeof val === 'string') {
-                return val.trim() === '';
-            }
-            return false;
-        };
-
-        const totalRows = grid.length;
-        const totalCols = grid[0].length;
-
-        const rowEmpty = (idx) => grid[idx].every(isEmptyCell);
-        const colEmpty = (idx) => grid.every(row => isEmptyCell(row[idx]));
-
-        let top = 0;
-        let bottom = totalRows - 1;
-        let left = 0;
-        let right = totalCols - 1;
-
-        while (top <= bottom && rowEmpty(top)) top++;
-        while (bottom >= top && rowEmpty(bottom)) bottom--;
-        while (left <= right && colEmpty(left)) left++;
-        while (right >= left && colEmpty(right)) right--;
-
-        if (top > bottom || left > right) {
-            // No meaningful content; return a minimal 1x1 grid
-            return {
-                grid: [['']],
-                size: 1,
-                offset: { row: 0, col: 0 }
-            };
-        }
-
-        const trimmed = [];
-        for (let r = top; r <= bottom; r++) {
-            trimmed.push(grid[r].slice(left, right + 1));
-        }
-
-        const basePadding = 1; // ensure at least one empty layer around the puzzle
-        let padTop = basePadding;
-        let padBottom = basePadding;
-        let padLeft = basePadding;
-        let padRight = basePadding;
-
-        const trimmedRows = trimmed.length;
-        const trimmedCols = trimmed[0].length;
-
-        let paddedRows = trimmedRows + basePadding * 2;
-        let paddedCols = trimmedCols + basePadding * 2;
-
-        const targetSize = Math.max(paddedRows, paddedCols);
-        if (paddedRows < targetSize) {
-            const extraRows = targetSize - paddedRows;
-            const addTop = Math.floor(extraRows / 2);
-            const addBottom = extraRows - addTop;
-            padTop += addTop;
-            padBottom += addBottom;
-            paddedRows = targetSize;
-        }
-        if (paddedCols < targetSize) {
-            const extraCols = targetSize - paddedCols;
-            const addLeft = Math.floor(extraCols / 2);
-            const addRight = extraCols - addLeft;
-            padLeft += addLeft;
-            padRight += addRight;
-            paddedCols = targetSize;
-        }
-
-        const normalized = Array.from({ length: paddedRows }, () => new Array(paddedCols).fill(''));
-        for (let r = 0; r < trimmedRows; r++) {
-            for (let c = 0; c < trimmedCols; c++) {
-                normalized[r + padTop][c + padLeft] = trimmed[r][c];
-            }
-        }
-
-        return {
-            grid: normalized,
-            size: targetSize,
-            offset: {
-                row: padTop - top,
-                col: padLeft - left
-            }
-        };
+        return GridUtils.normalizeGrid(grid);
     }
 
     initializeGrid() {
@@ -124,8 +51,12 @@ export default class CrosswordGame {
         // Use solution grid shape; if not loaded yet, skip rendering
         if (!this.solutionGrid || !this.solutionGrid.length) {
             this.grid = [];
+            // Show animation when grid is empty
+            this.showAnimationVideo();
             return;
         }
+        
+        // Keep video visible - will hide after grid is fully rendered
 
         // Set grid template based on current solution grid size
         this.gridSize = this.solutionGrid.length;
@@ -150,8 +81,8 @@ export default class CrosswordGame {
                     const input = document.createElement('input');
                     input.type = 'text';
                     input.maxLength = 1;
-                    input.addEventListener('input', (e) => this.handleInput(e, row, col));
-                    input.addEventListener('keydown', (e) => this.handleKeyDown(e, row, col));
+                    input.addEventListener('input', (e) => this.inputHandler.handleInput(e, row, col));
+                    input.addEventListener('keydown', (e) => this.inputHandler.handleKeyDown(e, row, col));
                     cell.appendChild(input);
                     
                     // Add cell numbers
@@ -163,7 +94,7 @@ export default class CrosswordGame {
                         numberSpan.dataset.wordNumber = String(number);
                         numberSpan.addEventListener('click', (ev) => {
                             ev.stopPropagation();
-                            this.showDefinitionPopup(String(number), cell);
+                            this.definitions.showDefinitionPopup(String(number), cell);
                         });
                         cell.appendChild(numberSpan);
                     }
@@ -178,7 +109,15 @@ export default class CrosswordGame {
             }
         }
 
-        this.adjustGridSize();
+        this.gridSizing.adjustGridSize();
+        
+        // Hide animation after grid is fully created and rendered
+        // Use requestAnimationFrame to ensure it happens after DOM update
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                this.hideAnimationVideo();
+            });
+        });
     }
 
     isBlackCell(row, col) {
@@ -275,86 +214,6 @@ export default class CrosswordGame {
         });
     }
 
-    handleInput(event, row, col) {
-        const value = event.target.value.toUpperCase();
-        event.target.value = value;
-        
-        // Auto-advance to next cell
-        if (value && this.currentWord) {
-            this.moveToNextCell(row, col);
-        }
-    }
-
-    handleKeyDown(event, row, col) {
-        if (event.key === 'Backspace' && !event.target.value) {
-            this.moveToPreviousCell(row, col);
-        } else if (event.key === 'ArrowRight' || event.key === 'ArrowLeft' || 
-                  event.key === 'ArrowUp' || event.key === 'ArrowDown') {
-            event.preventDefault();
-            this.handleArrowKeys(event.key, row, col);
-        }
-    }
-
-    moveToNextCell(row, col) {
-        if (!this.currentWord) return;
-        
-        const word = this.words[this.currentWord];
-        const [startRow, startCol] = word.start;
-        
-        let nextRow = row;
-        let nextCol = col;
-        
-        if (this.currentDirection === 'across') {
-            nextCol = col + 1;
-            if (nextCol >= startCol + word.length) return;
-        } else {
-            nextRow = row + 1;
-            if (nextRow >= startRow + word.length) return;
-        }
-        
-        const nextCell = this.grid[nextRow][nextCol];
-        if (nextCell && !nextCell.classList.contains('black')) {
-            const input = nextCell.querySelector('input');
-            if (input) {
-                input.focus();
-            }
-        }
-    }
-
-    moveToPreviousCell(row, col) {
-        if (!this.currentWord) return;
-        
-        const word = this.words[this.currentWord];
-        const [startRow, startCol] = word.start;
-        
-        let prevRow = row;
-        let prevCol = col;
-        
-        if (this.currentDirection === 'across') {
-            prevCol = col - 1;
-            if (prevCol < startCol) return;
-        } else {
-            prevRow = row - 1;
-            if (prevRow < startRow) return;
-        }
-        
-        const prevCell = this.grid[prevRow][prevCol];
-        if (prevCell && !prevCell.classList.contains('black')) {
-            const input = prevCell.querySelector('input');
-            if (input) {
-                input.focus();
-            }
-        }
-    }
-
-    handleArrowKeys(key, row, col) {
-        // Toggle direction or move to next/previous word
-        if (key === 'ArrowRight' || key === 'ArrowDown') {
-            this.moveToNextCell(row, col);
-        } else if (key === 'ArrowLeft' || key === 'ArrowUp') {
-            this.moveToPreviousCell(row, col);
-        }
-    }
 
     setupEventListeners() {
         // Clue click handlers
@@ -376,7 +235,7 @@ export default class CrosswordGame {
 
         // Start game button handler
         document.getElementById('startGameBtn')?.addEventListener('click', () => {
-            this.startGame();
+            this.gameApi.startGame();
         });
 
         // Control button handlers
@@ -391,7 +250,7 @@ export default class CrosswordGame {
         document.getElementById('mobileHintBtn')?.addEventListener('click', () => this.hintWord());
         document.getElementById('mobileCheckBtn')?.addEventListener('click', () => this.checkWord());
         document.getElementById('mobileNewGameBtn')?.addEventListener('click', () => this.newGame());
-        document.getElementById('mobileDefsBtn')?.addEventListener('click', () => this.toggleDefinitions());
+        document.getElementById('mobileDefsBtn')?.addEventListener('click', () => this.definitions.toggleDefinitions());
         document.getElementById('mobileSignInBtn')?.addEventListener('click', () => {
             const signInBtn = document.getElementById('signInBtn');
             if (signInBtn) signInBtn.click();
@@ -438,22 +297,22 @@ export default class CrosswordGame {
                 closeCluesPanel();
             }
             // Sync panel height with grid on all screen sizes
-            this.syncPanelHeightWithGrid();
+            this.gridSizing.syncPanelHeightWithGrid();
         });
         
         // Sync panel height with grid on initial load (all screen sizes)
-        this.syncPanelHeightWithGrid();
+        this.gridSizing.syncPanelHeightWithGrid();
 
         // Desktop definitions button folds/unfolds existing list
-        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.toggleDefinitions());
+        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.definitions.toggleDefinitions());
 
         // Definitions overlay controls
-        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.openDefinitionsOverlay());
-        document.getElementById('defsCloseBtn')?.addEventListener('click', () => this.closeDefinitionsOverlay());
+        document.getElementById('definitionsBtn')?.addEventListener('click', () => this.definitions.openDefinitionsOverlay());
+        document.getElementById('defsCloseBtn')?.addEventListener('click', () => this.definitions.closeDefinitionsOverlay());
         const defsOverlay = document.getElementById('defsOverlay');
         if (defsOverlay) {
             defsOverlay.addEventListener('click', (e) => {
-                if (e.target === defsOverlay) this.closeDefinitionsOverlay();
+                if (e.target === defsOverlay) this.definitions.closeDefinitionsOverlay();
             });
         }
     }
@@ -690,7 +549,7 @@ export default class CrosswordGame {
             }
 
             this.closeGameModal();
-            this.startGame();
+            this.gameApi.startGame();
         });
         
         // Add animation
@@ -724,6 +583,41 @@ export default class CrosswordGame {
             this.startTime = Date.now();
             this.updateTimer();
         }
+    }
+
+    clearGame() {
+        // Stop timer
+        this.stopTimer();
+        
+        // Clear game state
+        this.currentWord = null;
+        this.currentDirection = 'across';
+        this.startTime = Date.now();
+        this.solutionGrid = [];
+        this.grid = [];
+        this.words = {};
+        this.definitionsData = {};
+        
+        // Clear grid display
+        const gridContainer = document.getElementById('crosswordGrid');
+        if (gridContainer) {
+            gridContainer.innerHTML = '';
+        }
+        
+        // Clear clues
+        const allCluesEl = document.getElementById('allClues');
+        if (allCluesEl) {
+            allCluesEl.innerHTML = '';
+        }
+        
+        // Clear selections
+        this.clearSelections();
+        
+        // Reset timer display
+        this.updateTimer();
+        
+        // Show animation again since grid is now empty
+        this.showAnimationVideo();
     }
 
     startTimer() {
@@ -783,437 +677,70 @@ export default class CrosswordGame {
             alert(t('grid_size_changed', { size: newGridSize, difficulty }));
         }
     }
-
-    startGame() {
-        let topic = document.getElementById('topicSelect').value;
-        const difficulty = document.getElementById('difficultySelect').value;
-
-        console.log(`Starting new game with topic: ${topic}, difficulty: ${difficulty}`);
-        
-        // Reset game state
-        this.currentWord = null;
-        this.currentDirection = 'across';
-        this.startTime = Date.now();
-        
-        // Clear any existing timer
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-        }
-        
-        // Start new timer
-        this.startTimer();
-        
-        // Frontend does not enforce daily limits; backend is the source of truth
-
-        // Use custom theme when "Customize" selected
-        if (topic === 'General') {
-            const entered = (this.customTopic || '').trim();
-            if (!entered) { alert('Please enter a theme.'); return; }
-            topic = entered;
-        }
-
-        // Fetch and render new puzzle
-        const diffMap = { 'Easy': 'easy', 'Medium': 'medium', 'Hard': 'hard', 'Expert': 'hard' };
-        const mapped = diffMap[difficulty] || 'easy';
-            const headers = { 'Content-Type': 'application/json' };
-            try {
-                const token = localStorage.getItem('token');
-                if (token) headers['Authorization'] = `Bearer ${token}`;
-            } catch (_) {}
-            fetch(`${window.API_BASE}/api/generate-crossword`, {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ topic, difficulty: mapped })
-        }).then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data }))).then(({ ok, status, data }) => {
-            if (!ok) {
-                if (status === 429 && data && data.daily) {
-                    const msg = (window.t ? t('user_daily_limit') : 'Daily free limit reached.');
-                    alert(msg);
-                    return;
-                }
-                throw new Error(data && data.error ? data.error : 'Failed to generate puzzle');
-            }
-
-            const normalized = this.normalizeGrid(data.grid || []);
-            this.solutionGrid = normalized.grid;
-            this.gridSize = normalized.size || (this.solutionGrid ? this.solutionGrid.length : 0) || 15;
-            this.words = {};
-            const rowOffset = normalized.offset?.row ?? 0;
-            const colOffset = normalized.offset?.col ?? 0;
-
-            let num = 1;
-            (data.words || []).forEach(item => {
-                const d = (item.direction || '').toString().toLowerCase();
-                const dir = (d === 'h' || d === 'horizontal' || d === 'across') ? 'across' : 'down';
-                const startRow = (item.row ?? 0) + rowOffset;
-                const startCol = (item.col ?? 0) + colOffset;
-                const start = [startRow, startCol];
-                const word = (item.word || '').toUpperCase();
-                this.words[num] = { word, start, direction: dir, length: item.length || word.length };
-                num++;
-            });
-            console.info('Crossword loaded', {
-                gridSize: this.gridSize,
-                rows: this.solutionGrid.length,
-                columns: this.solutionGrid[0] ? this.solutionGrid[0].length : 0,
-                words: Object.keys(this.words).length
-            });
-        const defs = data.definitions || {};
-        this.definitions = defs;
-            const allCluesEl = document.getElementById('allClues');
-            if (allCluesEl) {
-                // Combine all clues and sort by number
-                const allClues = Object.entries(this.words)
-                    .map(([n, w]) => ({
-                        number: parseInt(n, 10),
-                        word: n,
-                        text: defs[w.word] || ''
-                    }))
-                    .sort((a, b) => a.number - b.number)
-                    .map(item => `<div class="clue-item" data-word="${item.word}"><span class="clue-number">${item.word}.</span><span class="clue-text">${item.text}</span></div>`)
-                    .join('');
-                allCluesEl.innerHTML = allClues;
-            }
-            document.querySelectorAll('.clue-item').forEach(item => {
-                item.addEventListener('click', () => {
-                    const wordNum = item.dataset.word;
-                    this.selectWord(wordNum);
-                });
-            });
-            this.initializeGrid();
-            // Count this successful start toward free-play limits
-            try { this.markGameStartedSuccessfully(); } catch (_) {}
-            // Refresh usage indicator (calls/tokens) for logged-in users
-            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
-            // Ensure definitions list visible by default on start
-            try { this.ensureDefinitionsVisible(); } catch (_) {}
-            // Update header banner (daily limit info) instead of alert
-            try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
-        }).catch(err => {
-            console.error(err);
-            alert(err.message || t('error_generating_puzzle'));
-        });
-    }
-
-    showDefinitionPopup(wordNum, anchorEl) {
-        try {
-            const info = this.words && this.words[wordNum];
-            if (!info) return;
-            const defMap = this.definitions || {};
-            const defText = defMap[info.word] || '';
-
-            let popup = document.getElementById('defPopup');
-            if (!popup) {
-                popup = document.createElement('div');
-                popup.id = 'defPopup';
-                popup.className = 'def-popup';
-                const num = document.createElement('span');
-                num.className = 'num';
-                const text = document.createElement('span');
-                text.className = 'text';
-                popup.appendChild(num);
-                popup.appendChild(text);
-                document.body.appendChild(popup);
-            }
-            popup.querySelector('.num').textContent = `${wordNum}.`;
-            popup.querySelector('.text').textContent = ` ${defText}`;
-
-            const rect = anchorEl.getBoundingClientRect();
-            const pad = 8;
-            let top = rect.bottom + pad;
-            let left = rect.left;
-            const vw = window.innerWidth || document.documentElement.clientWidth;
-            const vh = window.innerHeight || document.documentElement.clientHeight;
-
-            popup.style.visibility = 'hidden';
-            popup.style.display = 'block';
-            const pw = popup.offsetWidth;
-            const ph = popup.offsetHeight;
-            if (left + pw + pad > vw) left = Math.max(pad, vw - pw - pad);
-            if (top + ph + pad > vh) top = Math.max(pad, rect.top - ph - pad);
-            popup.style.left = `${left}px`;
-            popup.style.top = `${top}px`;
-            popup.style.visibility = 'visible';
-
-            const close = (e) => {
-                const target = e.target;
-                if (!popup.contains(target)) {
-                    try { popup.remove(); } catch (_) {}
-                    document.removeEventListener('click', close, true);
-                }
-            };
-            setTimeout(() => document.addEventListener('click', close, true), 0);
-        } catch (_) {}
-    }
-
-    renderDefinitionsOverlay() {
-        const list = document.getElementById('defsOverlayList');
-        if (!list || !this.words || !this.definitions) return;
-        const items = Object.entries(this.words)
-            .map(([n, w]) => ({ number: parseInt(n,10), word: w.word, def: this.definitions[w.word] || '' }))
-            .sort((a,b)=>a.number-b.number);
-        list.innerHTML = items.map(item => {
-            const safeWord = (item.word || '').toString();
-            const safeDef = (item.def || '').toString();
-            return `<div class="defs-item"><span class="defs-word">${item.number}. ${safeWord}</span><span class="defs-text">${safeDef}</span></div>`;
-        }).join('');
-    }
-
-    openDefinitionsOverlay() {
-        const overlay = document.getElementById('defsOverlay');
-        if (!overlay) return;
-        if (!this.definitions || !this.words) {
-            try { this.renderDefinitionsOverlay(); } catch(_) {}
-        }
-        overlay.classList.add('show');
-        overlay.setAttribute('aria-hidden', 'false');
-    }
-
-    closeDefinitionsOverlay() {
-        const overlay = document.getElementById('defsOverlay');
-        if (!overlay) return;
-        overlay.classList.remove('show');
-        overlay.setAttribute('aria-hidden', 'true');
-    }
-
-    setupResponsiveGrid() {
-        // Handle window resize to maintain grid responsiveness
-        window.addEventListener('resize', () => {
-            this.adjustGridSize();
-        });
-        
-        // Initial adjustment
-        this.adjustGridSize();
-    }
-
-    adjustGridSize() {
-        const gridContainer = document.getElementById('crosswordGrid');
-        if (!gridContainer || !this.gridSize) {
-            return;
-        }
-
-        const parent = gridContainer.parentElement;
-        if (!parent) {
-            return;
-        }
-
-        const headerBar = document.querySelector('.header-bar');
-        const controlsBar = document.querySelector('.controls-bar');
-        const topControls = document.querySelector('.game-controls');
-        const gameArea = document.querySelector('.game-area');
-
-        const windowHeight = window.innerHeight;
-        const headerHeight = headerBar ? headerBar.getBoundingClientRect().height : 0;
-        const controlsHeight = controlsBar ? controlsBar.getBoundingClientRect().height : 0;
-        const topControlsHeight = topControls ? topControls.offsetHeight : 0;
-        let topControlsGap = 0;
-        if (topControls) {
-            const styles = window.getComputedStyle(topControls);
-            topControlsGap =
-                parseFloat(styles.marginTop || '0') +
-                parseFloat(styles.marginBottom || '0');
-        }
-        
-        // For desktop: use the actual game-area height (calculated by flexbox)
-        let availableHeight;
-        if (window.innerWidth >= 1025 && gameArea) {
-            // Desktop: use actual game-area height
-            availableHeight = gameArea.getBoundingClientRect().height;
-        } else {
-            // Mobile/iPad: calculate from window height
-            const verticalPadding = 40; // breathing room so the grid never touches edges
-            availableHeight = Math.max(
-                0,
-                windowHeight - headerHeight - controlsHeight - topControlsHeight - topControlsGap - verticalPadding
-            );
-        }
-
-        const availableWidth = Math.max(0, parent.clientWidth - 20);
-        const maxDimension = Math.min(availableWidth, availableHeight);
-
-        const attempts = Number(gridContainer.dataset.resizeAttempts || 0);
-        if (!Number.isFinite(maxDimension) || maxDimension <= 0) {
-            if (attempts < 5) {
-                gridContainer.dataset.resizeAttempts = attempts + 1;
-                requestAnimationFrame(() => this.adjustGridSize());
-            } else {
-                delete gridContainer.dataset.resizeAttempts;
-            }
-            return;
-        }
-
-        delete gridContainer.dataset.resizeAttempts;
-
-        // For desktop: set grid size to fit available space
-        // Calculate available space accounting for grid's internal padding and gap
-        const gridPadding = 20; // 10px padding * 2
-        const gridGap = 4 * (this.gridSize - 1); // gap between cells
-        const gridInternalSpace = gridPadding + gridGap;
-        
-        let calculatedGridSize = 0;
-        let cellSize = 0;
-        
-        // Only adjust on desktop (>= 1025px)
-        if (window.innerWidth >= 1025) {
-            // Account for game-area gap (14px) - grid takes 80% of space, so gap affects available width
-            // Grid is in 80fr column, panel is 20fr column, gap is 14px
-            // Available width is approximately 80% of container width minus gap
-            const gameArea = document.querySelector('.game-area');
-            const gameAreaGap = gameArea ? parseFloat(window.getComputedStyle(gameArea).gap) || 14 : 14;
-            
-            // Available space for the grid itself (excluding padding/gaps)
-            // Parent is crossword-container, which is in the 80fr column
-            const gridAvailableWidth = parent.clientWidth - gridInternalSpace;
-            const gridAvailableHeight = availableHeight - gridInternalSpace;
-            
-            // Use the smaller dimension to maintain square aspect ratio
-            calculatedGridSize = Math.min(gridAvailableWidth, gridAvailableHeight);
-            
-            // Ensure grid doesn't exceed available space
-            calculatedGridSize = Math.max(0, calculatedGridSize);
-            
-            // Set grid dimensions to fit available space
-            if (Number.isFinite(calculatedGridSize) && calculatedGridSize > 0) {
-                const totalGridSize = calculatedGridSize + gridInternalSpace;
-                gridContainer.style.width = `${totalGridSize}px`;
-                gridContainer.style.height = `${totalGridSize}px`;
-                gridContainer.style.maxWidth = `${totalGridSize}px`;
-                gridContainer.style.maxHeight = `${totalGridSize}px`;
-                
-                // Calculate cell size for font sizing
-                cellSize = calculatedGridSize / this.gridSize;
-            }
-        } else {
-            // iPad/Mobile sizing
-            const isMobile = window.innerWidth <= 768;
-            
-            if (isMobile) {
-                // Mobile: Use same cell size as iPad (based on 800px reference width)
-                // This makes cells larger and requires horizontal scrolling
-                const ipadReferenceWidth = 800; // Reference iPad width for consistent cell size
-                const ipadGridSize = ipadReferenceWidth - gridInternalSpace;
-                cellSize = ipadGridSize / this.gridSize;
-                
-                // Calculate grid size based on cell size (will be larger than viewport)
-                calculatedGridSize = cellSize * this.gridSize;
-                
-                // Set grid dimensions - grid will be larger than mobile viewport
-                const totalGridSize = calculatedGridSize + gridInternalSpace;
-                gridContainer.style.width = `${totalGridSize}px`;
-                gridContainer.style.height = `${totalGridSize}px`;
-                gridContainer.style.minWidth = `${totalGridSize}px`;
-                gridContainer.style.minHeight = `${totalGridSize}px`;
-                // Allow horizontal scrolling
-                gridContainer.style.maxWidth = 'none';
-                gridContainer.style.maxHeight = 'none';
-            } else {
-                // iPad: size grid based on viewport width
-                const viewportWidth = window.innerWidth;
-                
-                // Grid should use full width, which will determine cell size
-                calculatedGridSize = viewportWidth - gridInternalSpace;
-                
-                // Set grid dimensions
-                const totalGridSize = calculatedGridSize + gridInternalSpace;
-                gridContainer.style.width = `${totalGridSize}px`;
-                gridContainer.style.height = `${totalGridSize}px`;
-                gridContainer.style.minWidth = `${totalGridSize}px`;
-                gridContainer.style.minHeight = `${totalGridSize}px`;
-                gridContainer.style.maxWidth = 'none';
-                gridContainer.style.maxHeight = 'none';
-                
-                // Calculate cell size based on grid size
-                cellSize = calculatedGridSize / this.gridSize;
-            }
-        }
-        
-        if (Number.isFinite(cellSize) && cellSize > 0) {
-            gridContainer.style.setProperty('--cell-size', `${cellSize}px`);
-        } else {
-            gridContainer.style.removeProperty('--cell-size');
-        }
-        
-        // Sync panel height with grid after sizing (all screen sizes)
-        requestAnimationFrame(() => {
-            this.syncPanelHeightWithGrid();
-        });
-        
-        console.debug('Crossword sizing', {
-            containerWidth: parent.clientWidth,
-            availableHeight,
-            gridAvailableWidth: window.innerWidth >= 1025 ? (parent.clientWidth - gridInternalSpace) : 'N/A',
-            gridAvailableHeight: window.innerWidth >= 1025 ? (availableHeight - gridInternalSpace) : 'N/A',
-            calculatedGridSize: window.innerWidth >= 1025 ? calculatedGridSize : 'N/A',
-            gridSize: this.gridSize,
-            cellSize
-        });
-    }
-
-    ensureDefinitionsVisible() {
-        const area = document.querySelector('.game-area');
-        if (area && area.classList.contains('defs-collapsed')) {
-            area.classList.remove('defs-collapsed');
-        }
-        const panel = document.getElementById('cluesPanel');
-        const backdrop = document.getElementById('cluesBackdrop');
-        if (window.innerWidth <= 768) {
-            if (panel) panel.classList.add('mobile-open');
-            if (backdrop) backdrop.classList.add('active');
-        } else {
-            if (panel) panel.classList.remove('mobile-open');
-            if (backdrop) backdrop.classList.remove('active');
-        }
-    }
-
-    toggleDefinitions() {
-        const area = document.querySelector('.game-area');
-        if (!area) return;
-        // Desktop only: toggle defs-collapsed class
-        if (window.innerWidth > 1024) {
-            area.classList.toggle('defs-collapsed');
-            return;
-        }
-        // iPad and Mobile: use overlay panel (never in layout)
-        const panel = document.getElementById('cluesPanel');
-        const backdrop = document.getElementById('cluesBackdrop');
-        if (!panel || !backdrop) return;
-        if (panel.classList.contains('mobile-open')) {
-            panel.classList.remove('mobile-open');
-            backdrop.classList.remove('active');
-        } else {
-            // Sync height with grid before opening
-            this.syncPanelHeightWithGrid();
-            panel.classList.add('mobile-open');
-            backdrop.classList.add('active');
-        }
-    }
-    
     syncPanelHeightWithGrid() {
-        const gridContainer = document.querySelector('.crossword-container');
-        const panel = document.getElementById('cluesPanel');
-        const backdrop = document.getElementById('cluesBackdrop');
+        // Delegate to gridSizing module
+        this.gridSizing.syncPanelHeightWithGrid();
+    }
+
+    setupAnimationVideo() {
+        // Animation will be shown/hidden by initializeGrid and hideAnimationVideo
+        // This method is just for initial setup if needed
+        const video = document.getElementById('introAnimation');
+        const container = document.getElementById('animationContainer');
         
-        if (!gridContainer || !panel) return;
+        if (!video || !container) return;
         
-        // Get the actual grid container height and position
-        const gridRect = gridContainer.getBoundingClientRect();
-        const gridHeight = gridRect.height;
-        const gridTop = gridRect.top;
-        
-        if (window.innerWidth > 1024) {
-            // Desktop: panel is in grid layout, match container height
-            // The panel should naturally stretch in grid, but ensure it matches
-            panel.style.height = `${gridHeight}px`;
-            panel.style.minHeight = `${gridHeight}px`;
-        } else {
-            // Mobile/iPad: panel is overlay, match height and position
-            panel.style.height = `${gridHeight}px`;
-            panel.style.top = `${gridTop}px`;
-            if (backdrop) {
-                backdrop.style.height = `${gridHeight}px`;
-                backdrop.style.top = `${gridTop}px`;
-            }
+        // Show animation initially if grid is empty
+        if (!this.solutionGrid || !this.solutionGrid.length) {
+            this.showAnimationVideo();
         }
+    }
+
+    showAnimationVideo() {
+        const video = document.getElementById('introAnimation');
+        const container = document.getElementById('animationContainer');
+        const gameArea = document.querySelector('.game-area');
+        
+        if (!video || !container) return;
+        
+        // Show animation container
+        container.style.display = 'flex';
+        container.classList.remove('hidden');
+        
+        // Disable horizontal scroll when video is showing
+        if (gameArea) {
+            gameArea.style.overflowX = 'hidden';
+        }
+        
+        // Try to play video (autoplay may be blocked)
+        video.play().catch(() => {
+            // Autoplay blocked, video will play on user interaction
+            console.log('Video autoplay was blocked');
+        });
+    }
+
+    hideAnimationVideo() {
+        const video = document.getElementById('introAnimation');
+        const container = document.getElementById('animationContainer');
+        const gameArea = document.querySelector('.game-area');
+        
+        if (!video || !container) return;
+        
+        // Pause video
+        video.pause();
+        
+        // Hide container with fade out
+        container.classList.add('hidden');
+        
+        // Re-enable horizontal scroll when grid is showing (only on mobile/iPad)
+        if (gameArea && window.innerWidth <= 1024) {
+            gameArea.style.overflowX = 'auto';
+        }
+        
+        // Remove from display after transition
+        setTimeout(() => {
+            container.style.display = 'none';
+        }, 500);
     }
 
     applyI18nUI() {
