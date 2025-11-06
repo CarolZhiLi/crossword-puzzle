@@ -80,7 +80,6 @@
     const exportBtn = document.getElementById('exportBtn');
     const resetBtn = document.getElementById('resetCallsBtn');
     const resetTodayBtn = document.getElementById('resetTodayBtn');
-    const deleteUserBtn = document.getElementById('deleteUserBtn');
     const rangeSelect = document.getElementById('rangeSelect');
     if (search) search.addEventListener('input', () => applyFilter(state));
     if (refresh) refresh.addEventListener('click', () => loadData(state).catch(err => alert(err.message)));
@@ -132,24 +131,7 @@
         alert(e.message || 'Reset today failed');
       }
     });
-    if (deleteUserBtn) deleteUserBtn.addEventListener('click', async () => {
-      const who = prompt('Enter username to DELETE (permanent):', '');
-      if (!who) return;
-      if (!confirm(`This will permanently delete user "${who}" and related records. Continue?`)) return;
-      try {
-        const res = await fetch(`${window.API_BASE}/api/admin/users/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
-          body: JSON.stringify({ username: who })
-        });
-        const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Delete failed');
-        alert('Delete OK');
-        loadData(state).catch(()=>{});
-      } catch (e) {
-        alert(e.message || 'Delete failed');
-      }
-    });
+    
     if (rangeSelect) rangeSelect.addEventListener('change', () => {
       state.range = rangeSelect.value === 'today' ? 'today' : 'all';
       loadData(state).catch(()=>{});

@@ -1,7 +1,10 @@
+import os
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy import func
 
 from extensions import db
+from utils.db_admin import admin_session_scope
 from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset
 from constants import DEFAULT_DAILY_FREE_LIMIT
  
@@ -11,13 +14,25 @@ admin_bp = Blueprint('admin', __name__)
 
 
 def require_admin() -> User | None:
+    """Authorize admin access.
+
+    Allows either:
+    - The logged-in username equals env ADMIN, or
+    - The user has role 'admin' in DB.
+    """
     username = get_jwt_identity()
     if not username:
         return None
+
+    # Prefer explicit env-configured admin username
+    env_admin = (os.getenv('ADMIN') or '').strip()
+    if env_admin and username == env_admin:
+        return User.query.filter_by(username=username).first()
+
+    # Fallback to role-based check
     user = User.query.filter_by(username=username).first()
     if not user:
         return None
-    # Check DB role only
     ur = UserRole.query.filter_by(user_id=user.id).first()
     role = ur.role if ur else None
     if role != 'admin':
@@ -46,15 +61,15 @@ def update_settings():
     changed = {}
     if 'DAILY_FREE_LIMIT' in data:
         val = str(max(0, int(data['DAILY_FREE_LIMIT'])))
-        s = AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first()
-        if not s:
-            s = AppSetting(key='DAILY_FREE_LIMIT', value=val)
-            db.session.add(s)
-        else:
-            s.value = val
+        with admin_session_scope() as s:
+            row = s.query(AppSetting).filter_by(key='DAILY_FREE_LIMIT').first()
+            if not row:
+                row = AppSetting(key='DAILY_FREE_LIMIT', value=val)
+                s.add(row)
+            else:
+                row.value = val
         changed['DAILY_FREE_LIMIT'] = val
     # ignore FREE_CALLS_LIMIT (deprecated)
-    db.session.commit()
     return jsonify({'success': True, 'changed': changed})
 
 
@@ -68,16 +83,16 @@ def set_user_role():
     role = (data.get('role') or 'user').strip()
     if role not in ('user', 'admin'):
         return jsonify({'success': False, 'error': 'Invalid role'}), 400
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-    ur = UserRole.query.filter_by(user_id=user.id).first()
-    if not ur:
-        ur = UserRole(user_id=user.id, role=role)
-        db.session.add(ur)
-    else:
-        ur.role = role
-    db.session.commit()
+    with admin_session_scope() as s:
+        user = s.query(User).filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        ur = s.query(UserRole).filter_by(user_id=user.id).first()
+        if not ur:
+            ur = UserRole(user_id=user.id, role=role)
+            s.add(ur)
+        else:
+            ur.role = role
     return jsonify({'success': True})
 
 
@@ -91,16 +106,16 @@ def set_user_quota():
     limit = int(data.get('daily_limit') or 0)
     if limit < 0:
         return jsonify({'success': False, 'error': 'Invalid limit'}), 400
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-    uq = UserQuota.query.filter_by(user_id=user.id).first()
-    if not uq:
-        uq = UserQuota(user_id=user.id, daily_limit=limit)
-        db.session.add(uq)
-    else:
-        uq.daily_limit = limit
-    db.session.commit()
+    with admin_session_scope() as s:
+        user = s.query(User).filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+        uq = s.query(UserQuota).filter_by(user_id=user.id).first()
+        if not uq:
+            uq = UserQuota(user_id=user.id, daily_limit=limit)
+            s.add(uq)
+        else:
+            uq.daily_limit = limit
     return jsonify({'success': True})
 
 
@@ -114,26 +129,24 @@ def reset_usage():
 
     # Instead of DELETE (which may be denied), set counts to 0 via UPDATE
     try:
-        if username in ('*', 'all', ''):
-            updated = ApiUsage.query.update({
+        with admin_session_scope() as s:
+            if username in ('*', 'all', ''):
+                updated = s.query(ApiUsage).update({
+                    ApiUsage.count: 0,
+                    ApiUsage.last_used_at: func.current_timestamp()
+                })
+                return jsonify({'success': True, 'reset': 'all', 'rows': int(updated or 0)})
+
+            user = s.query(User).filter_by(username=username).first()
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            updated = s.query(ApiUsage).filter_by(user_id=user.id).update({
                 ApiUsage.count: 0,
-                ApiUsage.last_used_at: db.func.current_timestamp()
+                ApiUsage.last_used_at: func.current_timestamp()
             })
-            db.session.commit()
-            return jsonify({'success': True, 'reset': 'all', 'rows': int(updated or 0)})
-
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
-
-        updated = ApiUsage.query.filter_by(user_id=user.id).update({
-            ApiUsage.count: 0,
-            ApiUsage.last_used_at: db.func.current_timestamp()
-        })
-        db.session.commit()
-        return jsonify({'success': True, 'reset': username, 'rows': int(updated or 0)})
+            return jsonify({'success': True, 'reset': username, 'rows': int(updated or 0)})
     except Exception as e:
-        db.session.rollback()
         # Provide clearer guidance if UPDATE is also denied
         msg = str(e)
         if '1142' in msg and 'command denied' in msg.lower():
@@ -154,32 +167,30 @@ def reset_usage_today():
     today = now.date()
 
     try:
-        if username in ('*', 'all', ''):
-            # Set/reset marker for all known users present in ApiUsage table
-            user_ids = [r.user_id for r in ApiUsage.query.with_entities(ApiUsage.user_id).distinct()]
-            for uid in user_ids:
-                row = UserDailyReset.query.filter_by(user_id=uid, date=today).first()
-                if not row:
-                    row = UserDailyReset(user_id=uid, date=today, reset_at=now)
-                    db.session.add(row)
-                else:
-                    row.reset_at = now
-            db.session.commit()
-            return jsonify({'success': True, 'reset_today': 'all', 'users': len(user_ids)})
+        with admin_session_scope() as s:
+            if username in ('*', 'all', ''):
+                # Set/reset marker for all known users present in ApiUsage table
+                user_ids = [r[0] for r in s.query(ApiUsage.user_id).distinct().all()]
+                for uid in user_ids:
+                    row = s.query(UserDailyReset).filter_by(user_id=uid, date=today).first()
+                    if not row:
+                        row = UserDailyReset(user_id=uid, date=today, reset_at=now)
+                        s.add(row)
+                    else:
+                        row.reset_at = now
+                return jsonify({'success': True, 'reset_today': 'all', 'users': len(user_ids)})
 
-        user = User.query.filter_by(username=username).first()
-        if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
-        row = UserDailyReset.query.filter_by(user_id=user.id, date=today).first()
-        if not row:
-            row = UserDailyReset(user_id=user.id, date=today, reset_at=now)
-            db.session.add(row)
-        else:
-            row.reset_at = now
-        db.session.commit()
-        return jsonify({'success': True, 'reset_today': username})
+            user = s.query(User).filter_by(username=username).first()
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+            row = s.query(UserDailyReset).filter_by(user_id=user.id, date=today).first()
+            if not row:
+                row = UserDailyReset(user_id=user.id, date=today, reset_at=now)
+                s.add(row)
+            else:
+                row.reset_at = now
+            return jsonify({'success': True, 'reset_today': username})
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -194,29 +205,28 @@ def delete_user_and_related():
     if not username:
         return jsonify({'success': False, 'error': 'Username is required'}), 400
 
-    user = User.query.filter_by(username=username).first()
-    if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
-
-    # Do not allow deleting admin users
-    ur = UserRole.query.filter_by(user_id=user.id).first()
-    if ur and ur.role == 'admin':
-        return jsonify({'success': False, 'error': 'not enough privilege to delete an admin'}), 403
-
     try:
-        deleted = {}
-        deleted['api_usage'] = ApiUsage.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        deleted['game_sessions'] = GameSession.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        deleted['password_resets'] = PasswordReset.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        deleted['user_daily_resets'] = UserDailyReset.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        deleted['user_roles'] = UserRole.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        deleted['user_quotas'] = UserQuota.query.filter_by(user_id=user.id).delete(synchronize_session=False) or 0
-        # finally remove the user record itself
-        deleted['users'] = User.query.filter_by(id=user.id).delete(synchronize_session=False) or 0
-        db.session.commit()
-        return jsonify({'success': True, 'deleted': deleted})
+        with admin_session_scope() as s:
+            user = s.query(User).filter_by(username=username).first()
+            if not user:
+                return jsonify({'success': False, 'error': 'User not found'}), 404
+
+            # Do not allow deleting admin users
+            ur = s.query(UserRole).filter_by(user_id=user.id).first()
+            if ur and ur.role == 'admin':
+                return jsonify({'success': False, 'error': 'not enough privilege to delete an admin'}), 403
+
+            deleted = {}
+            deleted['api_usage'] = s.query(ApiUsage).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['game_sessions'] = s.query(GameSession).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['password_resets'] = s.query(PasswordReset).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['user_daily_resets'] = s.query(UserDailyReset).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['user_roles'] = s.query(UserRole).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['user_quotas'] = s.query(UserQuota).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            # finally remove the user record itself
+            deleted['users'] = s.query(User).filter_by(id=user.id).delete(synchronize_session=False) or 0
+            return jsonify({'success': True, 'deleted': deleted})
     except Exception as e:
-        db.session.rollback()
         msg = str(e)
         if '1142' in msg and 'denied' in msg.lower():
             return jsonify({'success': False, 'error': 'Database permission denied for DELETE on one or more tables. Use admin DB user or adjust grants.'}), 500
