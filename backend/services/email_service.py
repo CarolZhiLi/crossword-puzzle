@@ -12,12 +12,6 @@ class EmailService:
         self.from_addr = os.getenv('SMTP_FROM', self.user or '')
         self.use_tls = os.getenv('SMTP_USE_TLS', 'true').lower() == 'true'
         self.use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
-        # Prevent long hangs on outbound SMTP in production (which can yield 502 at the proxy)
-        # Can be overridden via env: SMTP_TIMEOUT (seconds)
-        try:
-            self.timeout = float(os.getenv('SMTP_TIMEOUT', '10'))
-        except Exception:
-            self.timeout = 10.0
         self.app_name = os.getenv('APP_NAME', 'CrossyThink')
 
     def _compose(self, to_email: str, reset_link: str) -> bytes:
@@ -45,11 +39,11 @@ class EmailService:
         try:
             if self.use_ssl:
                 context = ssl.create_default_context()
-                with smtplib.SMTP_SSL(self.host, self.port, context=context, timeout=self.timeout) as server:
+                with smtplib.SMTP_SSL(self.host, self.port, context=context) as server:
                     server.login(self.user, self.password)
                     server.sendmail(self.from_addr, [to_email], payload)
             else:
-                with smtplib.SMTP(self.host, self.port, timeout=self.timeout) as server:
+                with smtplib.SMTP(self.host, self.port) as server:
                     if self.use_tls:
                         context = ssl.create_default_context()
                         server.starttls(context=context)
@@ -59,3 +53,4 @@ class EmailService:
         except Exception as e:
             print(f"[Password Reset] Failed to send email to {to_email}: {e}")
             return False
+
