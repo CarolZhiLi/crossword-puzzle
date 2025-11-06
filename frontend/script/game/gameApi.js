@@ -19,11 +19,14 @@ export class GameApi {
         this.game.currentWord = null;
         this.game.currentDirection = 'across';
         
-        // Clear any existing timer (but don't start new one yet - wait for grid to be displayed)
+        // Stop and reset timer to 00:00 (but don't start yet - wait for grid to be displayed)
         if (this.game.timerInterval) {
             clearInterval(this.game.timerInterval);
             this.game.timerInterval = null;
         }
+        // Reset start time and display 00:00
+        this.game.startTime = Date.now();
+        this.game.updateTimer();
         
         // Frontend does not enforce daily limits; backend is the source of truth
 
@@ -97,9 +100,15 @@ export class GameApi {
             });
             this.game.initializeGrid();
             
-            // Start timer only after grid is displayed
-            this.game.startTime = Date.now();
-            this.game.startTimer();
+            // Start timer only after grid is displayed and rendered
+            // Use requestAnimationFrame to ensure grid is visible before starting timer
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Reset start time right before starting timer
+                    this.game.startTime = Date.now();
+                    this.game.startTimer();
+                });
+            });
             
             // Count this successful start toward free-play limits
             try { this.game.markGameStartedSuccessfully(); } catch (_) {}

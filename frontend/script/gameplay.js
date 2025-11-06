@@ -25,7 +25,9 @@ export default class CrosswordGame {
         
         this.initializeGrid();
         this.setupEventListeners();
-        this.startTimer();
+        // Don't start timer here - wait until grid is visible
+        // Timer will be started in gameApi.startGame() after grid is rendered
+        this.updateTimer(); // Just show 00:00 initially
         this.gridSizing.setupResponsiveGrid();
         this.applyI18nUI();
         this.setupAnimationVideo();
