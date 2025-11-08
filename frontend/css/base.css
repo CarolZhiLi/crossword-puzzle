@@ -3,6 +3,37 @@
    Reset, typography, and global styles
    ============================================ */
 
+/* ============================================
+   COLOR PALETTE: "Playful Pastel"
+   ============================================ */
+
+:root {
+    /* Primary Colors (For UI Elements) */
+    --color-soft-coral: #F28B82;        /* Primary action color - main buttons, active toggles, error states */
+    --color-creamy-yellow: #FDE28C;      /* Secondary action - active dropdowns, secondary buttons, input fields */
+    --color-muted-teal: #63B7AF;         /* Neutral/invalid state - disabled toggles, informational states, nav bar */
+    
+    /* Secondary & Accent Colors */
+    --color-pale-mint: #D3EAE6;          /* Main background color */
+    --color-paper-white: #F7F7F7;        /* Panel backgrounds - search bars, dropdowns, pagination */
+    --color-deep-teal: #006A71;          /* Primary text and icons - excellent readability */
+    --color-vibrant-orange: #F9A825;     /* Highlight color - selected items in lists/dropdowns */
+    
+    /* Semantic Color Mappings */
+    --color-primary: var(--color-soft-coral);
+    --color-secondary: var(--color-creamy-yellow);
+    --color-neutral: var(--color-muted-teal);
+    --color-background: var(--color-pale-mint);
+    --color-panel: var(--color-paper-white);
+    --color-text: var(--color-deep-teal);
+    --color-highlight: var(--color-vibrant-orange);
+    
+    /* Additional utility colors */
+    --color-text-light: rgba(0, 106, 113, 0.7);
+    --color-border: rgba(0, 106, 113, 0.2);
+    --color-shadow: rgba(0, 106, 113, 0.1);
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -10,17 +41,17 @@
 }
 
 body {
-    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
-    background: linear-gradient(135deg, #667eea43 0%, #f3f5e1 100%);
+    font-family: 'Bangers', cursive;
+    background: var(--color-background);
     min-height: 100vh;
     margin: 0;
     padding: 0;
-    color: #333;
+    color: var(--color-text);
     overflow: auto;
     display: block;
 }
 
-/* Utility Classes */
+/* Utility Classes - Base (will be overridden by size-specific files) */
 .desktop-only {
     display: block;
 }

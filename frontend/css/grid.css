@@ -26,7 +26,7 @@
     grid-template-columns: repeat(20, 1fr);
     grid-template-rows: repeat(20, 1fr);
     gap: 4px;
-    background: #ffffff;
+    background: var(--color-paper-white);
     padding: 10px;
     border-radius: 15px;
     width: 100%;
@@ -59,8 +59,8 @@
 }
 
 .grid-cell.black {
-    background: #ffffff;
-    border-color: #e2e8f0;
+    background: var(--color-paper-white);
+    border-color: var(--color-border);
     cursor: default;
     /* Make black cells unclickable */
     pointer-events: none;
@@ -69,17 +69,17 @@
 }
 
 .grid-cell.active {
-    /* Keep wood color but with brighter highlight */
-    background: linear-gradient(135deg, #e6c895 0%, #d4b572 100%);
-    border-color: #4299e1;
-    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.4), 0 2px 4px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    /* Use creamy yellow for active cells */
+    background: var(--color-creamy-yellow);
+    border-color: var(--color-soft-coral);
+    box-shadow: 0 0 0 3px rgba(242, 139, 130, 0.4), 0 2px 4px var(--color-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .grid-cell.highlighted {
-    /* Warmer wood tone for highlighted cells */
-    background: linear-gradient(135deg, #f5d5a6 0%, #e6c895 100%);
-    border-color: #f6ad55;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    /* Use vibrant orange for highlighted cells */
+    background: var(--color-vibrant-orange);
+    border-color: var(--color-soft-coral);
+    box-shadow: 0 2px 4px var(--color-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .grid-cell input {
@@ -90,7 +90,7 @@
     text-align: center;
     font-size: clamp(14px, calc(var(--cell-size, 36px) * 0.6), 32px);
     font-weight: bold;
-    color: #2d3748;
+    color: var(--color-text);
     text-transform: uppercase;
     line-height: 1;
 }
@@ -105,8 +105,8 @@
     left: 3px;
     font-size: clamp(9px, calc(var(--cell-size, 36px) * 0.28), 18px);
     font-weight: bold;
-    color: #4a5568;
-    background: rgba(255,255,255,0.85);
+    color: var(--color-text);
+    background: var(--color-paper-white);
     padding: 0 3px;
     border-radius: 4px;
     cursor: pointer;
@@ -128,8 +128,8 @@
     padding: 10px 14px;
     border-radius: 15px;
     backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.85);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    background: var(--color-paper-white);
+    box-shadow: 0 10px 30px var(--color-shadow);
     flex-wrap: wrap;
 }
 

@@ -7,24 +7,50 @@
     <title>CrossyThink - Challenge your mind and explore the power of AI with CrossyThink — the next-generation
         crossword puzzle experience.</title>
     <link rel="icon" type="image/png" href="./assets/crossythink_logo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 
 <body>
     <div class="game-container">
-        <!-- Header Bar -->
-        <div class="header-bar">
-            <div class="header-left desktop-only">
-                <div class="game-title">
-                    <img src="./assets/crossythink_logo.png" alt="CrossyThink Logo" class="logo">
-                    CrossyThink
+        <!-- Controls Bar (Mobile/iPad only) -->
+        <div class="controls-bar">
+            <button class="btn btn-large btn-warning" id="hintWordBtn">Hint</button>
+            <button class="btn btn-large btn-success" id="checkWordBtn">Check Puzzle</button>
+            <button class="btn btn-large btn-primary" id="newGameBtn">New Game</button>
+            <button class="btn btn-large btn-info" id="definitionsBtn">Definitions</button>
+        </div>
+
+        <!-- Left Sidebar (15%) -->
+        <div class="left-sidebar desktop-only">
+                <!-- Logo and Timer Section -->
+                <div class="sidebar-header">
+                    <img src="./assets/logo_with_name.png" alt="CrossyThink Logo" class="logo">          
                 </div>
-            </div>
-            <div class="header-center">
-                <div id="timer">00:00</div>
-            </div>
-            <div class="header-right">
-                <!-- Mobile icon buttons -->
+                
+                <!-- Game Buttons Section -->
+                <div class="sidebar-section">
+                    <div id="timer" class="sidebar-timer">00:00</div>
+                    <button class="btn btn-large btn-warning" id="hintWordBtn">Hint</button>
+                    <button class="btn btn-large btn-success" id="checkWordBtn">Check Puzzle</button>
+                    <button class="btn btn-large btn-primary" id="newGameBtn">New Game</button>
+                    <button class="btn btn-large btn-info" id="definitionsBtn">Definitions</button>
+                </div>
+                
+                <!-- Login Section -->
+                <div class="sidebar-section sidebar-login">
+                    <span id="freeBanner" class="free-banner" style="display:none;"></span>
+                    <a id="adminLink" href="./admin.html" class="btn btn-info"
+                        style="display:none; text-align: center;">Admin</a>
+                    <span id="apiUsage" class="api-usage" style="display:none;"></span>
+                    <button class="btn btn-primary" id="signInBtn">Log In</button>
+                </div>
+        </div>
+        
+        <!-- Mobile Header (for mobile/iPad) -->
+        <div class="mobile-header">
                 <div class="mobile-action-icons">
                     <button class="icon-btn icon-btn-hint" id="mobileHintBtn" title="Hint">
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
@@ -54,26 +80,10 @@
                         </svg>
                     </button>
                 </div>
-                <!-- Desktop buttons -->
-                <div class="user-registration desktop-only">
-                    <span id="freeBanner" class="free-banner" style="display:none; margin-right: 12px;"></span>
-                    <a id="adminLink" href="./admin.html" class="btn btn-info"
-                        style="display:none; margin-right: 12px; text-align: center;">Admin</a>
-                    <span id="apiUsage" class="api-usage" style="display:none; margin-right: 12px;"></span>
-                    <button class="btn btn-primary" id="signInBtn">Log In</button>
-                </div>
-            </div>
+                <div id="mobileTimer" class="mobile-timer">00:00</div>
         </div>
 
-        <!-- Controls Bar -->
-        <div class="controls-bar">
-            <button class="btn btn-large btn-warning" id="hintWordBtn">Hint</button>
-            <button class="btn btn-large btn-success" id="checkWordBtn">Check Puzzle</button>
-            <button class="btn btn-large btn-primary" id="newGameBtn">New Game</button>
-            <button class="btn btn-large btn-info" id="definitionsBtn">Definitions</button>
-        </div>
-
-        <!-- Main Game Area -->
+        <!-- Main Game Area (85%) -->
         <div class="game-area">
             <!-- Crossword Grid -->
             <div class="crossword-container">

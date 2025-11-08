@@ -8,22 +8,108 @@
     min-height: 100vh;
     margin: 0 auto;
     padding: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 15% 85%;
+    gap: 14px;
+    padding: 4px 16px 14px;
+    box-sizing: border-box;
 }
 
-/* Main Game Area */
+/* Main Content Layout - Removed (using grid directly) */
+
+/* Left Sidebar (15%) */
+.left-sidebar {
+    width: 100%;
+    min-width: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 15px 10px;
+    border-radius: 15px;
+    box-shadow: 0 4px 12px var(--color-shadow);
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+/* Sidebar Header - Logo and Timer */
+.sidebar-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--color-border);
+    margin-bottom: 10px;
+}
+
+.sidebar-header .logo {
+    height: 200px;
+    width: auto;
+    object-fit: contain;
+}
+
+
+.sidebar-timer {
+    font-size: 5rem;
+    font-weight: bold;
+    color: var(--color-deep-teal);
+    text-align: center;
+}
+
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sidebar-section .btn {
+    width: 100%;
+    margin: 0;
+}
+
+.sidebar-login {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 2px solid var(--color-border);
+}
+
+.sidebar-login .free-banner,
+.sidebar-login .api-usage {
+    margin-bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Mobile Header */
+.mobile-header {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--color-muted-teal);
+    border-radius: 0 0 15px 15px;
+    margin-bottom: 10px;
+}
+
+.mobile-timer {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-deep-teal);
+}
+
+/* Main Game Area (85%) */
 .game-area {
+    width: 100%;
     display: grid;
     grid-template-columns: 80fr 20fr;
     align-items: stretch;
     align-content: stretch;
-    flex: 1;
     min-height: 0;
-    padding: 4px 16px 14px;
     gap: 14px;
     overflow-y: auto;
     overflow-x: hidden;
+    box-sizing: border-box;
 }
 
 /* Collapsed definitions toggle */
@@ -34,23 +120,7 @@
     display: none; 
 }
 
-.game-info {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-}
-
-.topic-difficulty {
-    display: flex;
-    gap: 15px;
-    align-items: center;
-}
-
-.user-registration {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
+/* Removed unused classes: .game-info, .topic-difficulty, .user-registration */
 
 /* Animation Video Container - shown in crossword container when empty */
 .animation-container {
@@ -84,56 +154,5 @@
     object-position: center; /* Center the crop */
 }
 
-/* Responsive adjustments for mobile and iPad - scale video to fit game area exactly */
-@media (max-width: 1024px) {
-    /* Disable horizontal scroll when video is showing */
-    .game-area:has(.animation-container:not(.hidden)) {
-        overflow-x: hidden !important;
-    }
-    
-    .animation-container {
-        /* Container fits exactly within crossword-container and centers content */
-        width: 90%;
-        height: 100%;
-        max-width: 100%;
-        max-height: 100%;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .intro-video {
-        /* Scale video and center it vertically and horizontally */
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* Fill the container, cropping if needed */
-        object-position: center center;
-        display: block;
-    }
-}
-
-@media (max-width: 768px) {
-    /* Disable horizontal scroll when video is showing */
-    .game-area:has(.animation-container:not(.hidden)) {
-        overflow-x: hidden !important;
-    }
-    
-    .animation-container {
-        /* Container fits exactly within crossword-container on mobile */
-        width: 74%;
-        height: 100%;
-        align-items: left;
-        justify-content: left;
-    }
-    
-    .intro-video {
-        /* Scale video to fit container width and height exactly and center it */
-        width: 70%;
-        height: 70%;
-        max-width: 70%;
-        max-height: 70%;
-        object-fit: cover; /* Fill the container, cropping if needed */
-        object-position: center center;
-        display: block;
-    }
-}
+/* Animation video styles moved to size-specific files */
 

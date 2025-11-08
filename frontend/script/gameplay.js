@@ -638,9 +638,18 @@ export default class CrosswordGame {
         const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60);
         const seconds = elapsed % 60;
+        const timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update desktop timer (in sidebar)
         const el = document.getElementById('timer');
         if (el) {
-            el.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            el.textContent = timeString;
+        }
+        
+        // Update mobile timer
+        const mobileTimer = document.getElementById('mobileTimer');
+        if (mobileTimer) {
+            mobileTimer.textContent = timeString;
         }
     }
 

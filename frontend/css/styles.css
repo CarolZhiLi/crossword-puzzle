@@ -1,42 +1,35 @@
 /* ============================================
    MAIN STYLESHEET
-   Imports all modular CSS files
+   Imports all CSS files organized by screen size
    ============================================ */
 
-/* Base styles */
+/* Base styles - Color variables, reset, typography (no media queries) */
 @import url('./base.css');
 
-/* Layout components */
+/* Component styles - Shared across all screen sizes */
 @import url('./layout.css');
-
-/* Header components */
-@import url('./header.css');
-
-/* Crossword grid */
 @import url('./grid.css');
-
-/* Clue panel */
 @import url('./panel.css');
-
-/* Buttons */
 @import url('./buttons.css');
-
-/* Controls */
 @import url('./controls.css');
-
-/* Modals */
 @import url('./modals.css');
 
-/* Responsive styles - ALL media queries */
-@import url('./responsive.css');
+/* Size-specific styles - Organized by screen size */
+@import url('./desktop.css');  /* Desktop: > 1024px */
+@import url('./tablet.css');  /* Tablet/iPad: 769px - 1024px */
+@import url('./mobile.css');  /* Mobile: ≤ 768px */
 /* Usage + Free banner styles */
 .api-usage { font-weight: 600; }
 .free-banner {
     font-weight: 600;
     padding: 6px 10px;
     border-radius: 10px;
-    background: #e6fffa; /* teal-50 */
-    color: #234e52;      /* teal-900 */
-    border: 1px solid #b2f5ea; /* teal-200 */
+    background: var(--color-creamy-yellow);
+    color: var(--color-text);
+    border: 1px solid var(--color-vibrant-orange);
 }
-.free-banner.maxed { background: #fff5f5; color: #742a2a; border-color: #fed7d7; }
+.free-banner.maxed { 
+    background: var(--color-soft-coral); 
+    color: var(--color-text); 
+    border-color: var(--color-deep-teal); 
+}

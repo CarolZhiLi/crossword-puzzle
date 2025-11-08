@@ -5,9 +5,10 @@
 
 .clues-panel {
     backdrop-filter: blur(10px);
+    background: var(--color-paper-white);
     border-radius: 20px;
     padding: 15px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 10px 40px var(--color-shadow);
     height: 100%;
     min-height: 0;
     max-height: 100%;
@@ -30,8 +31,8 @@
     position: absolute;
     top: 10px;
     right: 10px;
-    background: rgba(255, 255, 255, 0.9);
-    border: 2px solid #e2e8f0;
+    background: var(--color-paper-white);
+    border: 2px solid var(--color-border);
     border-radius: 50%;
     width: 36px;
     height: 36px;
@@ -40,13 +41,13 @@
     justify-content: center;
     z-index: 100;
     transition: all 0.2s;
-    color: #4a5568;
+    color: var(--color-text);
 }
 
 .clues-close-btn:hover {
-    background: rgba(255, 255, 255, 1);
-    border-color: #4299e1;
-    color: #4299e1;
+    background: var(--color-paper-white);
+    border-color: var(--color-soft-coral);
+    color: var(--color-soft-coral);
     transform: scale(1.1);
 }
 
@@ -55,7 +56,7 @@
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+    background: var(--color-soft-coral);
     border: 3px solid rgba(255, 255, 255, 0.3);
     border-radius: 50%;
     width: 64px;
@@ -64,15 +65,15 @@
     align-items: center;
     justify-content: center;
     z-index: 998;
-    box-shadow: 0 6px 20px rgba(66, 153, 225, 0.5);
+    box-shadow: 0 6px 20px var(--color-shadow);
     transition: all 0.3s ease;
-    color: white;
+    color: var(--color-text);
 }
 
 .clues-toggle-btn:hover {
     transform: scale(1.1);
-    box-shadow: 0 8px 24px rgba(66, 153, 225, 0.6);
-    background: linear-gradient(135deg, #3182ce 0%, #2c5282 100%);
+    box-shadow: 0 8px 24px var(--color-shadow);
+    background: var(--color-vibrant-orange);
 }
 
 .clues-toggle-btn:active {
@@ -117,10 +118,10 @@
 .clues-title {
     font-size: 2.0rem;
     font-weight: bold;
-    color: #2d3748;
+    color: var(--color-text);
     margin-bottom: 20px;
     padding-bottom: 10px;
-    border-bottom: 3px solid #e2e8f0;
+    border-bottom: 3px solid var(--color-border);
     text-align: center;
 }
 
@@ -130,48 +131,48 @@
     border-radius: 12px;
     cursor: pointer;
     transition: all 0.2s;
-    border-left: 5px solid #4299e1;
+    border-left: 5px solid var(--color-muted-teal);
     font-size: 1.8rem;
-    background: #e6f3ff;
+    background: var(--color-paper-white);
 }
 
 .clue-item:hover {
-    background: #d9ecff;
+    background: var(--color-creamy-yellow);
 }
 
 .clue-item.active {
-    background: #bee3f8;
-    border-left-color: #4299e1;
+    background: var(--color-vibrant-orange);
+    border-left-color: var(--color-soft-coral);
 }
 
 .clue-number {
     font-weight: bold;
-    color: #4a5568;
+    color: var(--color-text);
     margin-right: 12px;
     font-size: 1.2rem;
 }
 
 .clue-text {
-    color: #2d3748;
+    color: var(--color-text);
     font-size: 1.35rem;
 }
 
 /* Definition popup shown when clicking numbered cell */
 .def-popup {
     position: fixed;
-    background: rgba(255,255,255,0.98);
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    background: var(--color-paper-white);
+    border: 1px solid var(--color-border);
+    box-shadow: 0 8px 24px var(--color-shadow);
     border-radius: 10px;
     padding: 10px 12px;
     z-index: 3000;
     max-width: min(340px, 86vw);
-    color: #1a202c;
+    color: var(--color-text);
 }
 
 .def-popup .num {
     font-weight: 700;
     margin-right: 6px;
-    color: #2b6cb0;
+    color: var(--color-deep-teal);
 }
 
