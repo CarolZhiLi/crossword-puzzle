@@ -94,6 +94,20 @@
     outline: none;
 }
 
+.grid-cell input.hinted {
+    color: #48bb78; /* Green color for hinted letters */
+}
+
+.grid-cell.correct {
+    background: #c6f6d5 !important; /* Light green for correct */
+    transition: background 0.5s ease;
+}
+
+.grid-cell.incorrect {
+    background: #fed7d7 !important; /* Light red for incorrect */
+    transition: background 0.5s ease;
+}
+
 .cell-number {
     position: absolute;
     top: 3px;

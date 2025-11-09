@@ -98,8 +98,8 @@
   }
 
   .tablet-logo {
-    max-height: 50%;
-    max-width: 40%;
+    max-height: 60%;
+    max-width: 60%;
     height: auto;
     width: auto;
     object-fit: contain;
@@ -159,8 +159,9 @@
     position: relative;
     overflow: auto; /* Enable scrolling when grid doesn't fit */
     justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
+    align-items: flex-start;
+    box-sizing: flex-start;
+    background-color: transparent;
   }
 
   /* Hide desktop clue panel on mobile */
@@ -309,8 +310,9 @@
     transform: scale(1.1);
   }
 
-  /* Animation video */
-  .animation-container {
+  /* Animation video - positioned inside crossword-container */
+  .crossword-container .animation-container,
+  .crossword-container #animationContainer {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -323,7 +325,8 @@
     z-index: 1;
   }
 
-  .intro-video {
+  /* Animation Video - Mobile */
+  .crossword-container .intro-video {
     width: 50%;
     height: 80%;
     object-fit: cover;

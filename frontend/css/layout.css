@@ -138,12 +138,24 @@
 .animation-container {
   width: 100%;
   height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-.animation-container.hidden {
+/* Make animation container visible by default - IMPORTANT: visible on page load */
+#animationContainer {
+  display: flex !important; /* Make sure it's a flex container and visible */
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.5s ease; /* For a smooth fade-out */
+}
+
+#animationContainer.hidden {
   opacity: 0;
-  pointer-events: none;
-  display: none;
+  visibility: hidden;
+  pointer-events: none; /* Make sure it's not clickable when hidden */
+  display: none; /* Completely hide when hidden class is present */
 }
 
 .intro-video {

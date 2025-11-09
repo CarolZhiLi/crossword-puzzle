@@ -86,6 +86,7 @@
     box-sizing: border-box;
     overflow-x: visible;
     overflow-y: hidden;
+    gap: 5px; /* Reduced from 10px in layout.css */
   }
 
   /* Allow tooltips to overflow on hover */
@@ -97,11 +98,13 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: clamp(40px, 8vw, 100px);
-    min-height: 40px;
+    max-height: clamp(32px, 6.4vw, 80px); /* 20% smaller: was clamp(40px, 8vw, 100px) */
+    min-height: 32px; /* 20% smaller: was 40px */
     object-fit: contain;
     box-sizing: border-box;
     aspect-ratio: 1;
+    flex-shrink: 1; /* Allow this button to shrink if space is tight */
+    margin-bottom: 0.5vh; /* Reduced from 2vh in buttons.css */
   }
 
   .left-sidebar.desktop-only .sidebar-header {
@@ -143,6 +146,25 @@
     box-sizing: border-box;
   }
 
+  /* Make the login/logout button shrink more aggressively */
+  .left-sidebar.desktop-only .sidebar-login .svg-button {
+    flex-shrink: 2; /* Make this shrink more readily than other buttons */
+  }
+
+  /* Make the admin-specific info flexible and smaller */
+  .left-sidebar.desktop-only .sidebar-login .free-banner,
+  .left-sidebar.desktop-only .sidebar-login .api-usage,
+  .left-sidebar.desktop-only .sidebar-login #adminLink {
+    width: 100%;
+    text-align: center;
+    font-size: var(--font-size-xs); /* Use a smaller font size for this info */
+    margin-bottom: 8px;
+    flex-shrink: 1; /* Allow these to shrink */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .game-area {
     width: 100%;
     height: 100%;
@@ -161,6 +183,7 @@
 
   /* Crossword Grid - Desktop */
   .crossword-container {
+    background-color: transparent;
     width: 90%;
     height: 90vh !important;
     max-width: 90%;
@@ -169,8 +192,9 @@
     min-width: 90%;
     overflow: auto; /* Enable scrolling when grid doesn't fit */
     display: flex;
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
+    overflow: auto;
     margin: auto;
     padding: 0;
     border-radius: 15px;
@@ -181,7 +205,6 @@
   .crossword-grid {
     display: none; /* Hidden by default, shown after backend response via JavaScript */
     gap: 4px;
-    background: var(--color-paper-white);
     border-radius: 15px;
     max-width: 100%;
     max-height: 100%;
@@ -194,24 +217,6 @@
     position: relative;
     z-index: 2; /* Above animation container */
   }
-
-  /* Collapsed definitions toggle - Desktop only */
-  /* .game-area.defs-collapsed { 
-        grid-template-columns: 1fr; 
-        justify-items: center;
-    }
-    .game-area.defs-collapsed .clues-panel { 
-        display: none; 
-    }
-    .game-area.defs-collapsed .crossword-container {
-        width: 90%;
-        height: 90vh !important;
-        max-width: 90%;
-        max-height: 90vh !important;
-        min-height: 90vh !important;
-        margin: auto;
-        justify-content: center;
-    } */
 
   /* Clue panel - Desktop */
   .clues-panel {
@@ -231,15 +236,43 @@
     border: none !important;
     position: relative;
     background: var(--color-paper-white);
+    font-size: var(--font-size-xs);
+    display: flex;
+    flex-direction: column;
   }
 
-  /* .clues-panel #allClues {
-        padding: 15px;
-        overflow-y: auto;
-        overflow-x: hidden;
-        flex: 1;
-        min-height: 0;
-    } */
+  /* Make the clues list scrollable on desktop */
+  .clues-panel #allClues {
+    padding: 15px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    flex: 1;
+    min-height: 0;
+    /* Smooth scrolling */
+    scroll-behavior: smooth;
+    /* Custom scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-muted-teal) var(--color-paper-white);
+  }
+
+  /* Custom scrollbar for WebKit browsers (Chrome, Safari, Edge) */
+  .clues-panel #allClues::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .clues-panel #allClues::-webkit-scrollbar-track {
+    background: var(--color-paper-white);
+    border-radius: 10px;
+  }
+
+  .clues-panel #allClues::-webkit-scrollbar-thumb {
+    background: var(--color-muted-teal);
+    border-radius: 10px;
+  }
+
+  .clues-panel #allClues::-webkit-scrollbar-thumb:hover {
+    background: var(--color-deep-teal);
+  }
 
   /* Controls Bar - Hidden on Desktop */
   .controls-bar {
@@ -283,20 +316,20 @@
   }
 
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(40px, 7.5vw, 90px);
+    max-height: clamp(32px, 6vw, 72px); /* 20% smaller: was clamp(40px, 7.5vw, 90px) */
   }
 }
 
 /* Small Desktop (1201px - 1400px) */
 @media (min-width: 1201px) and (max-width: 1400px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(50px, 8.5vw, 95px);
+    max-height: clamp(40px, 6.8vw, 76px); /* 20% smaller: was clamp(50px, 8.5vw, 95px) */
   }
 }
 
 /* Large Desktop (> 1400px) */
 @media (min-width: 1401px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(60px, 9vw, 100px);
+    max-height: clamp(48px, 7.2vw, 80px); /* 20% smaller: was clamp(60px, 9vw, 100px) */
   }
 }

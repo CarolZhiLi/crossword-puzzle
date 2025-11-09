@@ -100,7 +100,7 @@
 
   .tablet-logo {
     max-height: 60%;
-    max-width: 40%;
+    max-width: 60%;
     height: auto;
     width: auto;
     object-fit: contain;
@@ -158,9 +158,10 @@
     display: flex;
     position: relative;
     overflow: auto; /* Enable scrolling when grid doesn't fit */
-    justify-content: center;
-    align-items: center;
+    justify-content: flex-start;
+    align-items: flex-start;
     box-sizing: border-box;
+    background-color: transparent;
   }
 
   /* Crossword grid - same as desktop: always inside container */
@@ -323,7 +324,9 @@
     transform: scale(1.1);
   }
 
-  .animation-container {
+  /* Animation video - positioned inside crossword-container */
+  .crossword-container .animation-container,
+  .crossword-container #animationContainer {
     width: 100%;
     height: 100%;
     position: absolute;
@@ -334,6 +337,14 @@
     align-items: center;
     box-sizing: border-box;
     z-index: 1;
+  }
+
+  /* Animation Video - Tablet */
+  .crossword-container .intro-video {
+    width: 50%;
+    height: 80%;
+    object-fit: cover;
+    object-position: center;
   }
 }
 
@@ -358,13 +369,13 @@
   .auth-logo-section {
     display: none !important;
   }
-  
+
   .auth-form-section {
     flex: 1;
     width: 100%;
     max-width: 100%;
   }
-  
+
   .auth-modal-content {
     width: 80%;
     max-width: 500px;

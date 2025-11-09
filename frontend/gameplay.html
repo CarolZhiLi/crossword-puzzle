@@ -30,14 +30,12 @@
         <img
           src="./assets/start.svg"
           alt="Hint"
-          id="hintWordBtn"
-          class="svg-button"
+          class="svg-button js-hint-word-btn"
         />
         <img
           src="./assets/start.svg"
-          alt="Check Puzzle"
-          id="checkWordBtn"
-          class="svg-button"
+          alt="Submit Puzzle"
+          class="svg-button js-check-puzzle-btn"
         />
         <img
           src="./assets/start.svg"
@@ -79,16 +77,14 @@
             <img
               src="./assets/hint.svg"
               alt="Hint"
-              id="hintWordBtn"
-              class="svg-button"
+              class="svg-button js-hint-word-btn"
             />
           </div>
-          <div class="tooltip-wrapper" data-tooltip="Check Puzzle">
+          <div class="tooltip-wrapper" data-tooltip="Submit Puzzle">
             <img
               src="./assets/submit.svg"
-              alt="Check Puzzle"
-              id="checkWordBtn"
-              class="svg-button"
+              alt="Submit Puzzle"
+              class="svg-button js-check-puzzle-btn"
             />
           </div>
         </div>
@@ -124,16 +120,14 @@
           <img
             src="./assets/hint.svg"
             alt="Hint"
-            id="mobileHintBtn"
-            class="svg-button"
+            class="svg-button js-hint-word-btn"
             title="Hint"
           />
           <img
             src="./assets/submit.svg"
-            alt="Check Puzzle"
-            id="mobileCheckBtn"
-            class="svg-button"
-            title="Check Puzzle"
+            alt="Submit Puzzle"
+            class="svg-button js-check-puzzle-btn"
+            title="Submit Puzzle"
           />
 
           <img
@@ -190,7 +184,7 @@
             <option value="Hard">Hard</option>
           </select>
           <!-- Animation Video - shown when grid is empty -->
-          <div class="animation-container" id="animationContainer">
+          <div class="animation-container" id="animationContainer" style="display: flex; opacity: 1; visibility: visible;">
             <video
               id="introAnimation"
               class="intro-video"
@@ -237,16 +231,14 @@
         <div class="tablet-bottom-actions">
           <img
             src="./assets/submit.svg"
-            alt="Check Puzzle"
-            id="tabletCheckBtn"
-            class="svg-button tablet-action-btn"
-            title="Check Puzzle"
+            alt="Submit Puzzle"
+            class="svg-button tablet-action-btn js-check-puzzle-btn"
+            title="Submit Puzzle"
           />
           <img
             src="./assets/hint.svg"
             alt="Hint"
-            id="tabletHintBtn"
-            class="svg-button tablet-action-btn"
+            class="svg-button tablet-action-btn js-hint-word-btn"
             title="Hint"
           />
         </div>

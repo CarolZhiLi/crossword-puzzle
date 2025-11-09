@@ -18,9 +18,20 @@ class CrosswordGenerator:
         
         # The first word is placed specially to anchor the puzzle
         first_word = self.words[0]
+        
+        # Ensure the first word fits in the grid
+        if len(first_word) > self.grid_size:
+            return False
+        
         # Place horizontally near the center
         start_row = self.grid_size // 2
         start_col = (self.grid_size - len(first_word)) // 2
+        
+        # Ensure coordinates are valid
+        if start_col < 0 or start_col + len(first_word) > self.grid_size:
+            return False
+        if start_row < 0 or start_row >= self.grid_size:
+            return False
         
         # Place the first word
         for i, char in enumerate(first_word):
@@ -46,6 +57,10 @@ class CrosswordGenerator:
         for col, row, direction in placements:
             # 1. Choose: Place the word by making a snapshot
             snapshot = self._place_word(word, col, row, direction)
+            if snapshot is None:
+                # Placement failed due to bounds error, try next placement
+                continue
+            
             self.solution_coordinates.append((word, col, row, direction))
 
             # 2. Explore: Recurse with the new state
@@ -125,6 +140,12 @@ class CrosswordGenerator:
             else: # Vertical
                 cur_c, cur_r = c, r + i
             
+            # Bounds check before accessing grid
+            if cur_r < 0 or cur_r >= self.grid_size or cur_c < 0 or cur_c >= self.grid_size:
+                # If we hit an invalid coordinate, revert what we've placed so far
+                self._revert_placement(snapshot)
+                return None
+            
             original_char = self.grid[cur_r][cur_c]
             snapshot.append((cur_c, cur_r, original_char))
             self.grid[cur_r][cur_c] = char
@@ -155,18 +176,57 @@ class CrosswordGenerator:
 
 # --- Main execution block ---
 if __name__ == "__main__":
-    results = request("Generate 20 one-word terms related to JavaScript. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.")
-    words = [w.upper() for _,w, _ in results]  # Convert to uppercase immediately
+    
+    def clean_word_from_llm_output(raw_string):
+        """
+        Cleans a raw string from the LLM to be a valid crossword word.
+        Example: '16. Document Object Model (DOM)' -> 'DOCUMENTOBJECTMODEL'
+        """
+        # 1. Split on the first period to separate the number from the term.
+        #    e.g., '16. Document...' -> ['16', ' Document Object Model (DOM)']
+        parts = raw_string.split('.', 1)
+        
+        # If the format is unexpected (no period), use the whole string.
+        term = parts[1] if len(parts) > 1 else raw_string
+
+        # 2. Remove all non-alphabetic characters (spaces, parentheses, etc.)
+        #    and convert the result to uppercase.
+        #    e.g., ' Document Object Model (DOM)' -> 'DOCUMENTOBJECTMODEL'
+        cleaned_word = ''.join(char for char in term if char.isalpha()).upper()
+        
+        return cleaned_word
+
+    # --- Step 1: Get data from the LLM ---
+   # --- This is the formatted prompt ---
+    prompt = """Generate a list of 20 terms about JavaScript. The terms must be single words suitable for a crossword puzzle.
+
+Follow these strict rules for the terms:
+1. Each term must be a single word (e.g., use 'REGEX' not 'Regular Expression').
+2. If a term is a common acronym (like AJAX, DOM, JSON), use the acronym itself, not the full expanded name.
+3. The term must not contain spaces or punctuation.
+
+Provide the output as a numbered list in the format:
+WORD - Clue"""
+
+# --- Now, call your request function with the prompt ---
+    results = request(prompt)
+    # --- Step 2: Clean the words using our helper function ---
+    # This is the corrected line that fixes the bug.
+    words = [clean_word_from_llm_output(w) for _, w, _ in results]
+
+    # --- (Optional but Recommended) Print the cleaned words for verification ---
+    print("--- Cleaned words being sent to generator ---")
+    for i, word in enumerate(words, 1):
+        print(f"{i:2d}. {word}")
+    print("-" * 45)
+    
     print(f"Attempting to generate a crossword with {len(words)} words...")
     
     if not words or len(words) == 0:
-        print("❌ Error: No words were generated. Cannot create crossword.")
-        print("This could be due to:")
-        print("  - API service unavailable")
-        print("  - Invalid response format from API")
-        print("  - Network connectivity issues")
+        print("❌ Error: No valid words were processed. Cannot create crossword.")
         exit(1)
     
+    # --- Step 3: Run the generator with the clean words ---
     generator = CrosswordGenerator(words)
 
     if generator.solve():

@@ -19,6 +19,44 @@ DIFF_LEVELS = {
     'hard': 20
 }
 
+# THIS IS THE CORRECT VERSION TO USE
+
+def _clean_llm_term(raw_string: str) -> str:
+    """
+    Cleans a raw string from the LLM to be a valid crossword word.
+    This is our "safety net" for inconsistent AI output.
+    Example: '16. ES6' -> 'ES6'
+    Example: 'Document Object Model (DOM)' -> 'DOM'
+    """
+    # If the string contains a period, assume it's a numbered list
+    # and take everything after the first period.
+    if '.' in raw_string:
+        try:
+            # Strip leading/trailing whitespace from the term part
+            term = raw_string.split('.', 1)[1].strip()
+        except IndexError:
+            term = raw_string.strip()
+    else:
+        term = raw_string.strip()
+
+    # Case 1: The LLM provided an acronym with its full name, like "Document Object Model (DOM)".
+    # We should extract just the acronym.
+    if '(' in term and ')' in term:
+        start = term.rfind('(')
+        end = term.rfind(')')
+        if start < end:
+            acronym = term[start+1:end]
+            # Check if the extracted part is a valid-looking acronym (all uppercase, short)
+            if acronym.isupper() and len(acronym) > 1 and acronym.isalpha():
+                return acronym
+    
+    # Case 2: The term is a mix of letters and numbers (like ES6).
+    # Keep alphanumeric characters, remove others.
+    # e.g., 'If/Else' -> 'IFELSE'
+    # e.g., 'ES6' -> 'ES6'
+    cleaned_word = ''.join(char for char in term if char.isalnum()).upper()
+    
+    return cleaned_word
 
 @puzzle_bp.route('/generate-crossword', methods=['POST'])
 def generate_crossword():
@@ -79,19 +117,56 @@ def generate_crossword():
             # If anything fails here, do not block puzzle generation
             pass
 
-        prompt = (
-            f"Generate {word_count} one-word terms related to {topic}. "
-            f"Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description."
-        )
+        # Use a more detailed, multi-line prompt to guide the LLM.
+        prompt = f"""Generate a list of {word_count} vacabularies about {topic}. The list must be suitable for creating an interlocking crossword puzzle.
+Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.
+Provide the output in the format:
+WORD - Clue"""
         t0 = datetime.utcnow()
-        results = generate_words(prompt)
+        try:
+            results = generate_words(prompt)
+        except Exception as e:
+            print(f"Error calling word generation API: {e}")
+            error_msg = str(e)
+            if "timeout" in error_msg.lower() or "connection" in error_msg.lower():
+                return jsonify({'success': False, 'error': 'Failed to connect to word generation service. Please check your internet connection and try again.'}), 502
+            return jsonify({'success': False, 'error': f'Failed to connect to word generation service: {error_msg}'}), 502
+
+        if not results or len(results) == 0:
+            print("Word generation API returned empty results")
+            return jsonify({'success': False, 'error': 'Word generation API returned no results. The service may be unavailable or the response format was unexpected.'}), 502
 
         pairs = []
         for item in results:
             try:
-                _, w, definition = item
-                pairs.append((w.upper(), (definition or '').strip()))
-            except Exception:
+                # Ensure item is a tuple/list with at least 3 elements
+                if not isinstance(item, (tuple, list)) or len(item) < 3:
+                    continue
+                
+                _, raw_word, definition = item
+                
+                # Skip error responses from the API
+                if raw_word == "Error" or (isinstance(definition, str) and definition.startswith("{")):
+                    print(f"Skipping error response: {item}")
+                    continue
+                
+                # Ensure raw_word is a string
+                if not isinstance(raw_word, str):
+                    continue
+                
+                # Apply the cleaning function here
+                cleaned_word = _clean_llm_term(raw_word)
+                
+                # Only add the pair if the cleaned word is not empty and has reasonable length
+                if cleaned_word and len(cleaned_word) > 0 and len(cleaned_word) <= 30:
+                    pairs.append((cleaned_word, (definition or '').strip()))
+            except (ValueError, TypeError, IndexError) as e:
+                # Log the error for debugging but continue processing
+                print(f"Error processing word item: {item}, error: {e}")
+                continue
+            except Exception as e:
+                # Catch any other unexpected errors
+                print(f"Unexpected error processing word item: {item}, error: {e}")
                 continue
 
         if not pairs:
@@ -100,34 +175,103 @@ def generate_crossword():
         words = [w for w, _ in pairs]
         definitions = {w: d for w, d in pairs}
 
-        generator = CrosswordGenerator(words)
+        # Filter out words that are too long for the grid (grid_size is 30 by default)
+        max_word_length = 30
+        valid_words = [w for w in words if len(w) <= max_word_length]
+        
+        print(f"Generated {len(pairs)} word pairs, {len(valid_words)} valid words after filtering")
+        print(f"Valid words: {valid_words[:10]}...")  # Print first 10 for debugging
+        
+        if not valid_words:
+            return jsonify({'success': False, 'error': 'No valid words after filtering (all words too long)'}), 502
+
+        if len(valid_words) < 3:
+            return jsonify({'success': False, 'error': f'Too few valid words ({len(valid_words)}). Need at least 3 words to generate a crossword.'}), 502
+
+        generator = CrosswordGenerator(valid_words)
         success = generator.solve()
 
         if not success:
-            return jsonify({'success': False, 'error': 'Crossword generation failed'}), 500
+            placed_count = len(generator.solution_coordinates)
+            print(f"Crossword generation failed: placed {placed_count}/{len(valid_words)} words")
+            
+            # If we placed at least 50% of words, consider it a partial success
+            # But for now, we'll still return an error to maintain quality
+            min_required = max(3, len(valid_words) // 2)
+            if placed_count >= min_required:
+                print(f"Partial success: {placed_count} words placed (minimum: {min_required})")
+                # Continue with partial grid - this is acceptable
+                # But we need to update the logic to handle this
+                # For now, we'll still fail but with a more helpful message
+                return jsonify({
+                    'success': False, 
+                    'error': f'Could only place {placed_count} out of {len(valid_words)} words. The crossword generator needs words that can intersect. Try a different topic with more common terms.'
+                }), 500
+            else:
+                return jsonify({
+                    'success': False, 
+                    'error': f'Crossword generation failed. Could only place {placed_count} out of {len(valid_words)} words. The words may not have enough common letters to intersect. Try a different topic or difficulty.'
+                }), 500
 
         used_words = [word for word, _, _, _ in generator.solution_coordinates]
         size = generator.grid_size
         grid = generator.grid
 
+        # Validate grid format - ensure it's a 2D list
+        if not grid or not isinstance(grid, list):
+            print(f"Invalid grid format: {type(grid)}")
+            return jsonify({'success': False, 'error': 'Invalid grid format generated'}), 500
+        
+        # Ensure grid cells are strings (convert empty strings to empty strings for JSON)
+        grid_serializable = []
+        for row in grid:
+            if not isinstance(row, list):
+                print(f"Invalid grid row format: {type(row)}")
+                return jsonify({'success': False, 'error': 'Invalid grid row format'}), 500
+            grid_serializable.append([str(cell) if cell else '' for cell in row])
+
+        # Build words list with validation
+        words_list = []
+        for coord in generator.solution_coordinates:
+            try:
+                if len(coord) != 4:
+                    print(f"Invalid coordinate format: {coord}")
+                    continue
+                word, col, row, direction = coord
+                words_list.append({
+                    'word': str(word),
+                    'direction': ('across' if (str(direction).upper() == 'H') else 'down'),
+                    'row': int(row),
+                    'col': int(col),
+                    'length': len(str(word))
+                })
+            except (ValueError, TypeError, IndexError) as e:
+                print(f"Error processing coordinate {coord}: {e}")
+                continue
+
+        if not words_list:
+            print("No valid words in solution_coordinates")
+            return jsonify({'success': False, 'error': 'No valid word coordinates generated'}), 500
+
+        # Ensure definitions are JSON serializable (all keys and values should be strings)
+        definitions_serializable = {}
+        for word, definition in definitions.items():
+            if isinstance(word, str) and isinstance(definition, str):
+                definitions_serializable[word] = definition
+            else:
+                definitions_serializable[str(word)] = str(definition) if definition else ''
+
         response = {
             'success': True,
-            'grid': grid,
-            'words': [
-                {
-                    'word': word,
-                    'direction': ('across' if (str(direction).upper() == 'H') else 'down'),
-                    'row': row,
-                    'col': col,
-                    'length': len(word)
-                }
-                for word, col, row, direction in generator.solution_coordinates
-            ],
-            'definitions': definitions,
-            'total_words': len(words),
+            'grid': grid_serializable,
+            'words': words_list,
+            'definitions': definitions_serializable,
+            'total_words': len(valid_words),
             'placed_words': len(used_words),
             'grid_size': size
         }
+        
+        print(f"Response prepared: {len(words_list)} words, grid size {size}x{size}, {len(definitions_serializable)} definitions")
 
         # Optional usage + token tracking if user is authenticated
         try:
@@ -170,7 +314,7 @@ def generate_crossword():
                 prompt_tokens = estimate_tokens(prompt)
                 # Build a completion text approximation using parsed definitions
                 try:
-                    completion_text = '\n'.join([f"{w}: {definitions.get(w, '')}" for w in words])
+                    completion_text = '\n'.join([f"{w}: {definitions.get(w, '')}" for w in valid_words])
                 except Exception:
                     completion_text = ''
                 completion_tokens = estimate_tokens(completion_text)
@@ -187,7 +331,7 @@ def generate_crossword():
                             tokens_prompt=prompt_tokens,
                             tokens_completion=completion_tokens,
                             tokens_total=total_tokens,
-                            words_count=len(words),
+                            words_count=len(valid_words),
                             placed_words=len(used_words),
                             grid_size=size,
                             words_json=None,
@@ -208,4 +352,8 @@ def generate_crossword():
 
         return jsonify(response)
     except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"Error in generate_crossword route: {e}")
+        print(f"Traceback: {error_trace}")
         return jsonify({'success': False, 'error': str(e)}), 500

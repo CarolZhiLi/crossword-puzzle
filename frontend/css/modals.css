@@ -158,13 +158,13 @@
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 10px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 5px;
 }
 
 .form-group label {
@@ -174,7 +174,7 @@
 }
 
 .form-group input {
-  padding: 12px 16px;
+  padding: 8px 16px;
   border: 2px solid var(--color-border);
   border-radius: 10px;
   font-size: var(--font-size-md);
@@ -193,7 +193,7 @@
 .form-actions {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   margin-top: 10px;
 }
 
@@ -254,38 +254,50 @@
   border: 1px solid var(--color-deep-teal);
 }
 
-/* Game Controls Modal */
+/* ============================================
+   GAME CONTROLS MODAL
+   ============================================ */
+
 .game-modal {
-  position: fixed;
+  /* Positioning & Stacking */
+  position: fixed; /* Position relative to the viewport */
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
+  width: 100vw;
+  height: 100vh;
+  z-index: 1000; /* A high z-index to ensure it's on top of everything */
+  
+  /* Layout */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  
+  /* Appearance & Animation */
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent backdrop */
+  backdrop-filter: blur(5px);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
   font-family: "Ubuntu", sans-serif;
 }
 
 .game-modal.show {
   opacity: 1;
+  visibility: visible;
 }
 
 .game-modal-content {
-  background: var(--color-muted-teal);
-  border-radius: 20px;
+  background-color: var(--color-paper-white, #F7F7F7);
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   width: 90%;
-  max-width: 600px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 400px; /* Prevent it from being too wide on desktop */
+  position: relative;
+  
+  /* Animation for the content box itself */
   transform: scale(0.9);
   transition: transform 0.3s ease;
-  position: relative;
 }
 
 .game-modal.show .game-modal-content {
@@ -333,22 +345,16 @@
 .game-modal .game-settings {
   display: flex;
   flex-direction: column;
-  gap: 30px;
-  align-items: stretch;
-  justify-self: center;
-  width: 80%;
+  gap: 1rem;
+}
+
+.game-modal .game-settings .dropdown,
+.game-modal .game-settings .btn {
+  width: 100%;
 }
 
 .game-modal .game-settings .dropdown #customThemeRow {
-  width: 80%;
-  align-self: center;
-}
-
-.game-modal .game-settings .btn {
-  width: 60%;
-  align-self: center;
-  background-color: var(--color-deep-teal);
-  color: var(--color-paper-white);
+  width: 100%;
 }
 
 /* Start Prompt Modal
