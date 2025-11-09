@@ -8,128 +8,129 @@
    ============================================ */
 
 :root {
-    /* Primary Colors (For UI Elements) */
-    --color-soft-coral: #F28B82;        /* Primary action color - main buttons, active toggles, error states */
-    --color-creamy-yellow: #FDE28C;      /* Secondary action - active dropdowns, secondary buttons, input fields */
-    --color-muted-teal: #63B7AF;         /* Neutral/invalid state - disabled toggles, informational states, nav bar */
-    
-    /* Secondary & Accent Colors */
-    --color-pale-mint: #D3EAE6;          /* Main background color */
-    --color-paper-white: #F7F7F7;        /* Panel backgrounds - search bars, dropdowns, pagination */
-    --color-deep-teal: #006A71;          /* Primary text and icons - excellent readability */
-    --color-vibrant-orange: #F9A825;     /* Highlight color - selected items in lists/dropdowns */
-    
-    /* Semantic Color Mappings */
-    --color-primary: var(--color-soft-coral);
-    --color-secondary: var(--color-creamy-yellow);
-    --color-neutral: var(--color-muted-teal);
-    --color-background: var(--color-pale-mint);
-    --color-panel: var(--color-paper-white);
-    --color-text: var(--color-deep-teal);
-    --color-highlight: var(--color-vibrant-orange);
-    
-    /* Additional utility colors */
-    --color-text-light: rgba(0, 106, 113, 0.7);
-    --color-border: rgba(0, 106, 113, 0.2);
-    --color-shadow: rgba(0, 106, 113, 0.1);
+  /* Primary Colors (For UI Elements) */
+  --color-soft-coral: #f28b82; /* Primary action color - main buttons, active toggles, error states */
+  --color-creamy-yellow: #fde28c; /* Secondary action - active dropdowns, secondary buttons, input fields */
+  --color-muted-teal: #63b7af; /* Neutral/invalid state - disabled toggles, informational states, nav bar */
+  --color-deep-purple: #392d7b; /* Deep purple accent color for border */
 
-    /* Font Size System - Base sizes (will be overridden by device-specific files) */
-    --font-size-xs: 0.75rem;      /* 12px */
-    --font-size-sm: 0.875rem;     /* 14px */
-    --font-size-base: 1rem;       /* 16px */
-    --font-size-md: 1.125rem;     /* 18px */
-    --font-size-lg: 1.25rem;      /* 20px */
-    --font-size-xl: 1.5rem;       /* 24px */
-    --font-size-2xl: 1.875rem;    /* 30px */
-    --font-size-3xl: 2.25rem;     /* 36px */
-    --font-size-4xl: 3rem;        /* 48px */
-    --font-size-5xl: 3.75rem;     /* 60px */
+  /* Secondary & Accent Colors */
+  --color-pale-mint: #d3eae6; /* Main background color */
+  --color-paper-white: #f7f7f7; /* Panel backgrounds - search bars, dropdowns, pagination */
+  --color-deep-teal: #006a71; /* Primary text and icons - excellent readability */
+  --color-vibrant-orange: #f9a825; /* Highlight color - selected items in lists/dropdowns */
+
+  /* Semantic Color Mappings */
+  --color-primary: var(--color-soft-coral);
+  --color-secondary: var(--color-creamy-yellow);
+  --color-neutral: var(--color-muted-teal);
+  --color-background: var(--color-pale-mint);
+  --color-panel: var(--color-paper-white);
+  --color-text: var(--color-deep-teal);
+  --color-highlight: var(--color-vibrant-orange);
+
+  /* Additional utility colors */
+  --color-text-light: rgba(0, 106, 113, 0.7);
+  --color-border: rgba(0, 106, 113, 0.2);
+  --color-shadow: rgba(0, 106, 113, 0.1);
+
+  /* Font Size System - Base sizes (will be overridden by device-specific files) */
+  --font-size-xs: 0.75rem; /* 12px */
+  --font-size-sm: 0.875rem; /* 14px */
+  --font-size-base: 1rem; /* 16px */
+  --font-size-md: 1.125rem; /* 18px */
+  --font-size-lg: 1.25rem; /* 20px */
+  --font-size-xl: 1.5rem; /* 24px */
+  --font-size-2xl: 1.875rem; /* 30px */
+  --font-size-3xl: 2.25rem; /* 36px */
+  --font-size-4xl: 3rem; /* 48px */
+  --font-size-5xl: 3.75rem; /* 60px */
 }
 
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 body {
-    font-family: 'Ubuntu', sans-serif;
-    font-weight: 400;
-    font-size: var(--font-size-base);
-    background: var(--color-background);
-    min-height: 100vh;
-    margin: 0;
-    padding: 0;
-    color: var(--color-text);
-    overflow: auto;
-    display: block;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-size: var(--font-size-base);
+  background: var(--color-background);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+  color: var(--color-text);
+  overflow: auto;
+  display: block;
 }
 
 /* Ubuntu Font Family Classes */
 .ubuntu-light {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 300;
-    font-style: normal;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 300;
+  font-style: normal;
 }
 
 .ubuntu-regular {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 400;
-    font-style: normal;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .ubuntu-medium {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 500;
-    font-style: normal;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 500;
+  font-style: normal;
 }
 
 .ubuntu-bold {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 700;
-    font-style: normal;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-style: normal;
 }
 
 .ubuntu-light-italic {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 300;
-    font-style: italic;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 300;
+  font-style: italic;
 }
 
 .ubuntu-regular-italic {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 400;
-    font-style: italic;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 400;
+  font-style: italic;
 }
 
 .ubuntu-medium-italic {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 500;
-    font-style: italic;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 500;
+  font-style: italic;
 }
 
 .ubuntu-bold-italic {
-    font-family: "Ubuntu", sans-serif;
-    font-weight: 700;
-    font-style: italic;
+  font-family: "Ubuntu", sans-serif;
+  font-weight: 700;
+  font-style: italic;
 }
 
 /* Utility Classes - Base (will be overridden by size-specific files) */
 .desktop-only {
-    display: block;
+  display: block;
 }
 
 .mobile-only {
-    display: none;
+  display: none;
 }
 
 /* Utility classes */
 .hidden {
-    display: none;
+  display: none;
 }
 
 .hidden-dropdown {
-    display: none;
+  display: none;
 }
 
 /* Hide tablet clue panel elements by default - shown only in tablet view */
@@ -137,6 +138,5 @@ body {
 .tablet-clue-panel,
 .tablet-header-layout,
 .tablet-bottom-actions {
-    display: none;
+  display: none;
 }
-

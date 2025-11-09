@@ -98,7 +98,11 @@
     width: 100%;
     max-width: 100%;
     height: auto;
-    max-height: clamp(32px, 6.4vw, 80px); /* 20% smaller: was clamp(40px, 8vw, 100px) */
+    max-height: clamp(
+      32px,
+      6.4vw,
+      80px
+    ); /* 20% smaller: was clamp(40px, 8vw, 100px) */
     min-height: 32px; /* 20% smaller: was 40px */
     object-fit: contain;
     box-sizing: border-box;
@@ -235,7 +239,7 @@
     border-radius: 15px !important;
     border: none !important;
     position: relative;
-    background: var(--color-paper-white);
+    background: var(--color-pale-mint);
     font-size: var(--font-size-xs);
     display: flex;
     flex-direction: column;
@@ -296,9 +300,9 @@
 
   /* Animation Video - Desktop */
   .crossword-container .intro-video {
-    width: 50%;
-    height: 50%;
-    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Show full video without cropping */
     object-position: center;
   }
 
@@ -316,20 +320,32 @@
   }
 
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(32px, 6vw, 72px); /* 20% smaller: was clamp(40px, 7.5vw, 90px) */
+    max-height: clamp(
+      32px,
+      6vw,
+      72px
+    ); /* 20% smaller: was clamp(40px, 7.5vw, 90px) */
   }
 }
 
 /* Small Desktop (1201px - 1400px) */
 @media (min-width: 1201px) and (max-width: 1400px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(40px, 6.8vw, 76px); /* 20% smaller: was clamp(50px, 8.5vw, 95px) */
+    max-height: clamp(
+      40px,
+      6.8vw,
+      76px
+    ); /* 20% smaller: was clamp(50px, 8.5vw, 95px) */
   }
 }
 
 /* Large Desktop (> 1400px) */
 @media (min-width: 1401px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(48px, 7.2vw, 80px); /* 20% smaller: was clamp(60px, 9vw, 100px) */
+    max-height: clamp(
+      48px,
+      7.2vw,
+      80px
+    ); /* 20% smaller: was clamp(60px, 9vw, 100px) */
   }
 }

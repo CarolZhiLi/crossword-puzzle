@@ -192,9 +192,9 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 40%;
-    height: auto;
-    min-height: 100px;
+    width: 30%;
+    height: 10%;
+    padding-bottom: 3px;
     background-color: var(--color-deep-teal);
     border-top-right-radius: 15px;
     align-items: center;
@@ -209,12 +209,11 @@
     background-color: var(--color-muted-teal);
   }
 
-  .tablet-clue-header span {
-    color: var(--color-paper-white);
-    font-size: var(--font-size-2xl);
-    font-weight: bold;
-    padding: 15px;
-    text-align: center;
+  .tablet-clue-header-icon {
+    width: 70%;
+    height: 70%;
+    object-fit: contain;
+    display: block;
   }
 
   /* Tablet Slide-in Clue Panel */
@@ -233,6 +232,7 @@
     transform: translateY(100%);
     transition: transform 0.3s ease-in-out;
     overflow: hidden;
+    opacity: 0.9;
   }
 
   .tablet-clue-panel.open {
@@ -327,9 +327,9 @@
 
   /* Animation Video - Mobile */
   .crossword-container .intro-video {
-    width: 50%;
-    height: 80%;
-    object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Show full video without cropping */
     object-position: center;
   }
 }

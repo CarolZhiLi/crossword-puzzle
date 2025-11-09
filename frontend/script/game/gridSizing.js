@@ -98,7 +98,7 @@ export class GridSizing {
 
     if (isDesktop) {
       // Desktop: Fixed larger cell size
-      baseCellSize = 50; // Fixed 50px per cell
+      baseCellSize = 51; // Fixed 50px per cell
     } else if (isTablet) {
       // Tablet: Fixed medium cell size
       baseCellSize = 30; // Fixed 30px per cell

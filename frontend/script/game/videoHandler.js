@@ -62,7 +62,13 @@ export class VideoHandler {
 
     console.log("Hiding animation video");
     video.pause();
+    // Ensure video is completely hidden with inline styles
     container.classList.add("hidden");
+    container.style.display = "none";
+    container.style.opacity = "0";
+    container.style.visibility = "hidden";
+    container.style.pointerEvents = "none";
+    container.style.zIndex = "-1"; // Move behind everything
   }
 }
 

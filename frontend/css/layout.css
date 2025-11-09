@@ -152,17 +152,18 @@
 }
 
 #animationContainer.hidden {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none; /* Make sure it's not clickable when hidden */
-  display: none; /* Completely hide when hidden class is present */
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important; /* Make sure it's not clickable when hidden */
+  display: none !important; /* Completely hide when hidden class is present */
+  z-index: -1 !important; /* Move behind everything */
 }
 
 .intro-video {
-  width: 50%;
-  height: 80%;
-  object-fit: cover; /* Crop video to fit container */
-  object-position: center; /* Center the crop */
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Show full video without cropping */
+  object-position: center; /* Center the video */
 }
 
 /* Animation video styles moved to size-specific files */
