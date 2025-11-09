@@ -10,8 +10,23 @@ export class GameApi {
         // Keep video visible until grid is ready - don't hide it here
         // Video will be hidden in initializeGrid() when grid is actually created
         
-        const topic = document.getElementById('topicSelect').value;
-        const difficulty = document.getElementById('difficultySelect').value;
+        const topicSelect = document.getElementById('topicSelect');
+        const difficultySelect = document.getElementById('difficultySelect');
+        
+        if (!topicSelect) {
+            console.error('topicSelect element not found!');
+            alert('Error: Topic select element not found. Please refresh the page.');
+            return;
+        }
+        
+        if (!difficultySelect) {
+            console.error('difficultySelect element not found!');
+            alert('Error: Difficulty select element not found. Please refresh the page.');
+            return;
+        }
+        
+        const topic = topicSelect.value;
+        const difficulty = difficultySelect.value;
         
         console.log(`Starting new game with topic: ${topic}, difficulty: ${difficulty}`);
         
@@ -42,19 +57,42 @@ export class GameApi {
             method: 'POST',
             headers,
             body: JSON.stringify({ topic, difficulty: mapped })
-        }).then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data }))).then(({ ok, status, data }) => {
+        }).then(r => {
+            // Handle non-JSON responses
+            const contentType = r.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return r.json().then(data => ({ ok: r.ok, status: r.status, data }));
+            } else {
+                // If response is not JSON, return error
+                return { ok: false, status: r.status, data: { error: `Server error (${r.status})` } };
+            }
+        }).then(({ ok, status, data }) => {
             if (!ok) {
                 if (status === 429 && data && data.daily) {
                     const msg = (window.t ? t('user_daily_limit') : 'Daily free limit reached.');
                     alert(msg);
                     return;
                 }
-                throw new Error(data && data.error ? data.error : 'Failed to generate puzzle');
+                // Handle 502 specifically (word generation failed)
+                if (status === 502) {
+                    const errorMsg = data && data.error ? data.error : 'Word generation failed';
+                    throw new Error(`${errorMsg}. The server could not generate words for this topic. Please try a different topic or try again later.`);
+                }
+                // Handle 500 (crossword generation failed)
+                if (status === 500) {
+                    const errorMsg = data && data.error ? data.error : 'Crossword generation failed';
+                    throw new Error(`${errorMsg}. Please try again with a different topic or difficulty.`);
+                }
+                // Generic error
+                throw new Error(data && data.error ? data.error : `Failed to generate puzzle (${status})`);
             }
 
+            console.log("API response received, data:", data);
             const normalized = GridUtils.normalizeGrid(data.grid || []);
+            console.log("Normalized grid:", normalized);
             this.game.solutionGrid = normalized.grid;
             this.game.gridSize = normalized.size || (this.game.solutionGrid ? this.game.solutionGrid.length : 0) || 15;
+            console.log("Solution grid set, size:", this.game.gridSize, "rows:", this.game.solutionGrid.length);
             this.game.words = {};
             const rowOffset = normalized.offset?.row ?? 0;
             const colOffset = normalized.offset?.col ?? 0;
@@ -79,6 +117,7 @@ export class GameApi {
         const defs = data.definitions || {};
         this.game.definitionsData = defs;
             const allCluesEl = document.getElementById('allClues');
+            const tabletClueContent = document.getElementById('tabletClueContent');
             if (allCluesEl) {
                 // Combine all clues and sort by number
                 const allClues = Object.entries(this.game.words)
@@ -91,7 +130,13 @@ export class GameApi {
                     .map(item => `<div class="clue-item" data-word="${item.word}"><span class="clue-number">${item.word}.</span><span class="clue-text">${item.text}</span></div>`)
                     .join('');
                 allCluesEl.innerHTML = allClues;
+                
+                // Also populate tablet clue panel content
+                if (tabletClueContent) {
+                    tabletClueContent.innerHTML = allClues;
+                }
             }
+            // Add event listeners to all clue items (both desktop and tablet)
             document.querySelectorAll('.clue-item').forEach(item => {
                 item.addEventListener('click', () => {
                     const wordNum = item.dataset.word;
@@ -119,8 +164,18 @@ export class GameApi {
             // Update header banner (daily limit info) instead of alert
             try { if (typeof window.refreshUsageIndicator === 'function') window.refreshUsageIndicator(); } catch (_) {}
         }).catch(err => {
-            console.error(err);
-            alert(err.message || t('error_generating_puzzle'));
+            console.error('Error generating crossword:', err);
+            // Close the modal if it's open
+            try {
+                if (this.game && typeof this.game.closeGameModal === 'function') {
+                    this.game.closeGameModal();
+                }
+            } catch (e) {
+                console.warn('Could not close modal:', e);
+            }
+            // Show user-friendly error message
+            const errorMsg = err.message || (window.t ? t('error_generating_puzzle') : 'Failed to generate puzzle. Please try again.');
+            alert(errorMsg);
         });
     }
 }

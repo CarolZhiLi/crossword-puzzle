@@ -1,191 +1,372 @@
 /* ============================================
-   TABLET/iPAD STYLES (769px - 1024px)
-   All styles specific to tablet/iPad screens
+   TABLET/iPAD STYLES (768px - 1024px)
+   iPad-specific styles - Portrait orientation only
+   Grid row template: 20% timer/icons, 80% game area
    ============================================ */
 
-@media (max-width: 1024px) {
-    /* Layout */
-    body {
-        height: 100vh;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .game-container {
-        height: 100vh;
-        max-height: 100vh;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-        min-height: 0;
-    }
-    
-    .header-bar {
-        display: none !important;
-    }
-    
-    .mobile-header {
-        display: flex !important;
-        flex-shrink: 0;
-    }
-    
-    .mobile-action-icons {
-        display: flex !important;
-    }
-    
-    .desktop-only {
-        display: none !important;
-    }
-    
-    /* Hide sidebar on tablet/iPad */
-    .left-sidebar {
-        display: none !important;
-    }
-    
-    /* Show controls bar on tablet/iPad */
-    .controls-bar {
-        display: flex !important;
-    }
-    
-    /* Game container - full width on tablet */
-    .game-container {
-        display: flex;
-        flex-direction: column;
-        padding: 4px 8px 14px;
-        gap: 10px;
-    }
-    
-    /* Game Area - full width */
-    .game-area {
-        width: 100% !important;
-        grid-template-columns: 1fr !important;
-        gap: 0;
-        padding: 0;
-        position: relative;
-        flex: 1 1 0%;
-        min-height: 0;
-        overflow-y: auto;
-        overflow-x: auto;
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-    }
-    
-    /* Collapsed definitions - always overlay */
-    .game-area.defs-collapsed {
-        grid-template-columns: 1fr !important;
-    }
-    .game-area.defs-collapsed .clues-panel {
-        position: fixed !important;
-        right: -100%;
-    }
-    
-    /* Crossword Container */
-    .crossword-container {
-        width: 100%;
-        height: 100%;
-        padding: 0;
-        min-height: 0;
-        overflow: visible;
-        display: flex;
-        align-items: center;
-        flex: 1;
-        min-width: fit-content;
-    }
-    
-    .crossword-grid {
-        margin: 0;
+/* iPad Portrait Orientation Only (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Font Size System - Tablet (Medium sizes) */
+  :root {
+    --font-size-xs: 0.75rem; /* 12px */
+    --font-size-sm: 0.875rem; /* 14px */
+    --font-size-base: 1rem; /* 16px */
+    --font-size-md: 1.125rem; /* 18px */
+    --font-size-lg: 1.25rem; /* 20px */
+    --font-size-xl: 1.5rem; /* 24px */
+    --font-size-2xl: 1.875rem; /* 30px */
+    --font-size-3xl: 2.25rem; /* 36px */
+    --font-size-4xl: 3rem; /* 48px */
+    --font-size-5xl: 3.75rem; /* 60px */
+  }
+
+  /* Body and Layout */
+  html {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-size: var(--font-size-2xl);
+  }
+
+  /* Game container - row-based grid layout */
+  .game-container {
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 15% 85%;
+    gap: 0;
+    box-sizing: border-box;
+  }
+
+  /* Hide desktop sidebar and controls bar */
+  .left-sidebar {
+    display: none !important;
+  }
+
+  .controls-bar {
+    display: none !important;
+  }
+
+  /* Mobile header - takes 15% of height, first row */
+  .mobile-header {
+    display: flex !important;
+    grid-row: 1;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 10px;
+    /* background: var(--color-muted-teal); */
+    border-radius: 0;
+    margin: 0;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  /* Hide mobile action icons and mobile timer on tablet */
+  .mobile-action-icons,
+  #mobileTimer {
+    display: none !important;
+  }
+
+  /* Tablet Header Layout: Logo (left), Timer (middle), Start (right) */
+  .tablet-header-layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 90%;
+    height: 100%;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
+
+  .tablet-logo {
+    max-height: 60%;
+    max-width: 40%;
+    height: auto;
+    width: auto;
+    object-fit: contain;
+    flex: 0 0 auto;
+  }
+
+  #tabletTimer {
+    font-size: var(--font-size-4xl);
+    font-weight: bold;
+    color: var(--color-deep-teal);
+    flex: 0 1 auto;
+    text-align: center;
+  }
+
+  .tablet-header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex: 0 0 auto;
+  }
+
+  .tablet-start-btn,
+  .tablet-login-btn {
+    flex: 0 0 auto;
+    width: 80px;
+    height: 80px;
+  }
+
+  /* Game area - takes 85% of height, second row */
+  .game-area {
+    grid-row: 2;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    min-height: 100%;
+    display: flex;
+    background-color: var(--color-deep-teal);
+    margin: 0;
+    justify-content: center;
+    align-items: start;
+    position: relative;
+  }
+
+  /* Crossword container - fixed size: same approach as desktop */
+  /* Container size is fixed and will NOT be affected by grid size */
+  .crossword-container {
+    width: 90%;
+    height: 85%;
+    max-width: 90%;
+    max-height: 85%;
+    min-width: 90%;
+    min-height: 85%;
+    align-self: start;
+    display: flex;
+    position: relative;
+    overflow: auto; /* Enable scrolling when grid doesn't fit */
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+  }
+
+  /* Crossword grid - same as desktop: always inside container */
+  /* .crossword-grid {
+        max-width: 50%;
+        max-height: 50%;
         aspect-ratio: 1 / 1;
-        flex-shrink: 0;
+        margin: 0;
+        padding: 10px;
+        box-sizing: border-box;
+        flex-shrink: 1;
         min-width: 0;
         min-height: 0;
-    }
-    
-    /* Clue Panel - Overlay Mode */
-    .clues-panel {
-        position: fixed !important;
-        top: 100px;
-        right: -100%;
-        width: 80%;
-        max-width: 400px;
-        height: calc(100vh - 100px);
-        max-height: none;
-        z-index: 2000;
-        transition: right 0.3s ease;
-        border-radius: 0;
-        padding: 15px 15px 0 15px;
-        order: 0;
-        display: flex !important;
-        flex-direction: column;
-        box-sizing: border-box;
-        overflow: hidden;
-        margin: 0;
-    }
-    
-    .clues-panel #allClues {
-        flex: 1;
-        overflow-y: auto;
-        min-height: 0;
-        padding-bottom: 15px;
-    }
-    
-    .clues-close-btn {
-        display: none !important;
-    }
-    
-    .clues-panel.mobile-open {
-        right: 0;
-    }
-    
-    .clues-backdrop {
-        display: block;
-        top: 100px;
-        height: calc(100vh - 100px);
-    }
-    
-    .clues-toggle-btn {
-        display: none !important;
-    }
-    
-    /* Animation Video - Tablet */
-    .game-area:has(.animation-container:not(.hidden)) {
-        overflow-x: hidden !important;
-    }
-    
-    .animation-container {
-        width: 90%;
-        height: 100%;
-        max-width: 100%;
-        max-height: 100%;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .intro-video {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center center;
-        display: block;
-    }
+    } */
+
+  /* Hide desktop clue panel on tablet */
+  .clues-panel {
+    display: none !important;
+  }
+
+  /* Hide definitions button */
+  #definitionsBtn,
+  #mobileDefsBtn {
+    display: none !important;
+  }
+
+  /* Show tablet clue panel elements in tablet view */
+  .tablet-clue-header,
+  .tablet-clue-panel {
+    display: flex;
+  }
+
+  /* Show tablet header layout and bottom actions in tablet view */
+  .tablet-header-layout,
+  .tablet-bottom-actions {
+    display: flex;
+  }
+
+  /* Tablet Clue Panel Header - bottom left 15% */
+  .tablet-clue-header {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 30%;
+    height: 10%;
+    min-height: 10px;
+    background-color: var(--color-deep-teal);
+    border-top-right-radius: 15px;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 200;
+    box-shadow: 0 -2px 8px var(--color-shadow);
+    transition: background-color 0.3s ease;
+  }
+
+  .tablet-clue-header:hover {
+    background-color: var(--color-deep-teal);
+  }
+
+  .tablet-clue-header span {
+    color: var(--color-paper-white);
+    font-size: var(--font-size-2xl);
+    font-weight: bold;
+    padding: 10px;
+    text-align: left;
+  }
+
+  /* Tablet Slide-in Clue Panel */
+  .tablet-clue-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50%;
+    height: 80%;
+    background-color: var(--color-paper-white);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -4px 16px var(--color-shadow);
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    transform: translateY(100%);
+    transition: transform 0.3s ease-in-out;
+    overflow: hidden;
+  }
+
+  .tablet-clue-panel.open {
+    transform: translateY(0);
+  }
+
+  .tablet-clue-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 2px solid var(--color-border);
+    background-color: var(--color-deep-teal);
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+  }
+
+  .tablet-clue-panel-header h2 {
+    margin: 0;
+    color: var(--color-paper-white);
+    font-size: 2rem;
+    font-weight: bold;
+  }
+
+  .tablet-clue-close {
+    background: transparent;
+    border: 2px solid var(--color-paper-white);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    color: var(--color-paper-white);
+    font-size: 2.4rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+
+  .tablet-clue-close:hover {
+    background-color: var(--color-paper-white);
+    color: var(--color-deep-teal);
+    transform: scale(1.1);
+  }
+
+  .tablet-clue-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    background-color: var(--color-paper-white);
+  }
+
+  /* Tablet Bottom Right Action Buttons */
+  .tablet-bottom-actions {
+    position: absolute;
+    bottom: 0;
+    right: 15px;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 20px;
+    z-index: 200;
+  }
+
+  .tablet-action-btn {
+    width: 80px;
+    height: 80px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .tablet-action-btn:hover {
+    transform: scale(1.1);
+  }
+
+  .animation-container {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 1;
+  }
 }
 
-/* iPad Only (769px - 1024px) */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .left-sidebar {
-        display: none !important;
-    }
-    
-    .controls-bar {
-        display: flex !important;
-    }
-    
-    /* main-content-layout removed - using grid/flex directly */
-    
-    .game-area {
-        width: 100% !important;
-    }
+/* Prevent landscape rotation on iPad - force portrait */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: landscape) {
+  /* Force portrait orientation by rotating */
+  html {
+    transform: rotate(90deg);
+    transform-origin: center center;
+    width: 100vh;
+    height: 100vw;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-left: -50vh;
+    margin-top: -50vw;
+  }
 }
 
+/* Auth modal for tablet - hide logo section, show only form */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .auth-logo-section {
+    display: none !important;
+  }
+  
+  .auth-form-section {
+    flex: 1;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .auth-modal-content {
+    width: 80%;
+    max-width: 500px;
+  }
+}

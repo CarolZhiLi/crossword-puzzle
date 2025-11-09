@@ -12,6 +12,10 @@ class CrosswordGenerator:
 
     def solve(self):
         """Public method to start the solving process."""
+        # Check if we have any words to place
+        if not self.words or len(self.words) == 0:
+            return False
+        
         # The first word is placed specially to anchor the puzzle
         first_word = self.words[0]
         # Place horizontally near the center
@@ -154,6 +158,15 @@ if __name__ == "__main__":
     results = request("Generate 20 one-word terms related to JavaScript. Do not use bold (**), punctuation marks, or formatting other than the pattern WORD - description.")
     words = [w.upper() for _,w, _ in results]  # Convert to uppercase immediately
     print(f"Attempting to generate a crossword with {len(words)} words...")
+    
+    if not words or len(words) == 0:
+        print("❌ Error: No words were generated. Cannot create crossword.")
+        print("This could be due to:")
+        print("  - API service unavailable")
+        print("  - Invalid response format from API")
+        print("  - Network connectivity issues")
+        exit(1)
+    
     generator = CrosswordGenerator(words)
 
     if generator.solve():

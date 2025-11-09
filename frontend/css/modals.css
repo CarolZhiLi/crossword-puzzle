@@ -5,334 +5,412 @@
 
 /* Authentication Modal */
 .auth-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .auth-modal.show {
-    opacity: 1;
+  opacity: 1;
 }
 
 .auth-modal-content {
-    background: var(--color-paper-white);
-    border-radius: 20px;
-    width: 90%;
-    max-width: 1000px;
-    height: 100vh;
-    max-height: 900px;
-    box-shadow: 0 20px 60px var(--color-shadow);
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
+  background: var(--color-paper-white);
+  border-radius: 20px;
+  width: 60%;
+  max-width: 800px;
+  height: 60vh;
+  max-height: 600px;
+  box-shadow: 0 20px 60px var(--color-shadow);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .auth-modal.show .auth-modal-content {
-    transform: scale(1);
+  transform: scale(1);
 }
 
 .auth-modal-body {
-    display: flex;
-    height: 100%;
+  display: flex;
+  height: 100%;
 }
 
 .auth-form-section {
-    flex: 1;
-    padding: 40px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+  flex: 1;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .auth-logo-section {
-    flex: 1;
-    background: linear-gradient(135deg, var(--color-muted-teal) 0%, var(--color-deep-teal) 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
+  flex: 1;
+  background: linear-gradient(
+    135deg,
+    var(--color-muted-teal) 0%,
+    var(--color-deep-teal) 100%
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .auth-logo-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-    opacity: 0.3;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+  opacity: 0.3;
 }
 
 .logo-container {
-    text-align: center;
-    color: white;
-    z-index: 1;
-    position: relative;
+  text-align: center;
+  color: white;
+  z-index: 1;
+  position: relative;
 }
 
 .modal-logo {
-    width: 250px;
-    height: 250px;
-    object-fit: contain;
-    margin-bottom: 20px;
-    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  width: 250px;
+  height: 250px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
 }
 
 .logo-container h3 {
-    font-size: 2.5rem;
-    font-weight: bold;
-    margin: 0 0 10px 0;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .logo-container p {
-    font-size: 2rem;
-    opacity: 0.9;
-    margin: 30px;
-    font-weight: 300;
+  font-size: 2rem;
+  opacity: 0.9;
+  margin: 30px;
+  font-weight: 300;
 }
 
 .auth-form-header {
-    text-align: center;
-    margin-bottom: 30px;
+  text-align: center;
+  margin: 30px;
 }
 
 .auth-form-header h2 {
-    font-size: 2.2rem;
-    font-weight: bold;
-    color: var(--color-text);
-    margin: 0 0 10px 0;
+  font-size: var(--font-size-lg);
+  font-weight: bold;
+  color: var(--color-text);
 }
 
 .auth-form-header p {
-    color: var(--color-text-light);
-    font-size: 1rem;
-    margin: 0;
+  color: var(--color-text-light);
+  font-size: 1rem;
+  margin: 0;
 }
 
 .close-btn {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: var(--color-paper-white);
-    border: none;
-    font-size: 2rem;
-    color: var(--color-text);
-    cursor: pointer;
-    padding: 8px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s;
-    z-index: 10;
-    box-shadow: 0 2px 8px var(--color-shadow);
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--color-paper-white);
+  border: none;
+  font-size: 2rem;
+  color: var(--color-text);
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 .close-btn:hover {
-    background: var(--color-paper-white);
-    transform: scale(1.1);
-    color: var(--color-soft-coral);
+  background: var(--color-paper-white);
+  transform: scale(1.1);
+  color: var(--color-soft-coral);
 }
 
 .auth-form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .form-group label {
-    font-weight: 600;
-    color: var(--color-text);
-    font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
 }
 
 .form-group input {
-    padding: 12px 16px;
-    border: 2px solid var(--color-border);
-    border-radius: 10px;
-    font-size: 2rem;
-    transition: all 0.2s;
-    background: var(--color-creamy-yellow);
-    color: var(--color-text);
+  padding: 12px 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  font-size: var(--font-size-md);
+  transition: all 0.2s;
+  background: var(--color-creamy-yellow);
+  color: var(--color-text);
 }
 
 .form-group input:focus {
-    outline: none;
-    border-color: var(--color-soft-coral);
-    background: var(--color-paper-white);
-    box-shadow: 0 0 0 3px rgba(242, 139, 130, 0.1);
+  outline: none;
+  border-color: var(--color-soft-coral);
+  background: var(--color-paper-white);
+  box-shadow: 0 0 0 3px var(--color-soft-coral);
 }
 
 .form-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .form-actions .btn {
-    width: 100%;
-    padding: 14px 20px;
-    font-size: 1.8rem;
-    font-weight: 600;
-    height: 80px;
+  width: 60%;
+  padding: 14px 20px;
+  font-size: var(--font-size-md);
+  background-color: var(--color-deep-teal);
+  color: var(--color-paper-white);
+  font-weight: 600;
+  height: 48px;
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .auth-links {
-    text-align: center;
-    margin-top: 15px;
+  text-align: center;
+  margin-top: 15px;
 }
 
 .forgot-password {
-    color: var(--color-deep-teal);
-    text-decoration: none;
-    font-size: 1.5rem;
-    transition: color 0.2s;
+  color: var(--color-deep-teal);
+  text-decoration: none;
+  font-size: 1.5rem;
+  transition: color 0.2s;
 }
 
 .forgot-password:hover {
-    color: var(--color-soft-coral);
-    text-decoration: underline;
+  color: var(--color-soft-coral);
+  text-decoration: underline;
 }
 
 .auth-message {
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-weight: 500;
-    text-align: center;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  text-align: center;
 }
 
 .auth-message-success {
-    background: var(--color-creamy-yellow);
-    color: var(--color-text);
-    border: 1px solid var(--color-vibrant-orange);
+  background: var(--color-creamy-yellow);
+  color: var(--color-text);
+  border: 1px solid var(--color-vibrant-orange);
 }
 
 .auth-message-error {
-    background: var(--color-soft-coral);
-    color: var(--color-text);
-    border: 1px solid var(--color-deep-teal);
+  background: var(--color-soft-coral);
+  color: var(--color-text);
+  border: 1px solid var(--color-deep-teal);
 }
 
 .auth-message-info {
-    background: var(--color-muted-teal);
-    color: var(--color-text);
-    border: 1px solid var(--color-deep-teal);
+  background: var(--color-muted-teal);
+  color: var(--color-text);
+  border: 1px solid var(--color-deep-teal);
 }
 
 /* Game Controls Modal */
 .game-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.7);
-    backdrop-filter: blur(5px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  font-family: "Ubuntu", sans-serif;
 }
 
 .game-modal.show {
-    opacity: 1;
+  opacity: 1;
 }
 
 .game-modal-content {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    width: 90%;
-    max-width: 600px;
-    padding: 40px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-    position: relative;
+  background: var(--color-muted-teal);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 600px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+  position: relative;
 }
 
 .game-modal.show .game-modal-content {
-    transform: scale(1);
+  transform: scale(1);
 }
 
 .game-modal-header {
-    text-align: center;
-    margin-bottom: 30px;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .game-modal-header h2 {
-    font-size: 2.2rem;
-    font-weight: bold;
-    color: #2d3748;
-    margin: 0 0 10px 0;
+  font-size: var(--font-size-3xl);
+  font-weight: bold;
+  color: var(--color-deep-teal);
+  margin: 0 0 10px 0;
 }
 
 .game-modal-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    font-size: 2rem;
-    color: #4a5568;
-    cursor: pointer;
-    padding: 8px;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: all 0.2s;
-    z-index: 10;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 2rem;
+  color: #4a5568;
+  cursor: pointer;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .game-modal-close:hover {
-    background: rgba(255, 255, 255, 1);
-    transform: scale(1.1);
-    color: #2d3748;
+  transform: scale(1.1);
+  color: #2d3748;
 }
 
 .game-modal .game-settings {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  align-items: stretch;
+  justify-self: center;
+  width: 80%;
 }
 
-.game-modal .game-settings .dropdown {
-    width: 100%;
+.game-modal .game-settings .dropdown #customThemeRow {
+  width: 80%;
+  align-self: center;
 }
 
 .game-modal .game-settings .btn {
-    width: 100%;
+  width: 60%;
+  align-self: center;
+  background-color: var(--color-deep-teal);
+  color: var(--color-paper-white);
 }
 
+/* Start Prompt Modal
+.start-prompt {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+} */
+
+/* .start-prompt.show {
+  opacity: 1;
+}
+
+.start-prompt-content {
+  background: var(--color-paper-white);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  padding: 30px;
+  box-shadow: 0 10px 40px var(--color-shadow);
+  text-align: center;
+  transform: scale(0.9);
+  transition: transform 0.3s ease;
+}
+
+.start-prompt.show .start-prompt-content {
+  transform: scale(1);
+}
+
+.start-prompt-content h2 {
+  color: var(--color-text);
+  font-size: var(--font-size-2xl);
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.start-prompt-content p {
+  color: var(--color-text-light);
+  font-size: var(--font-size-base);
+  margin-bottom: 25px;
+}
+
+.start-prompt-content .btn {
+  margin: 10px;
+  min-width: 120px;
+}
+
+.start-prompt-close {
+  background: var(--color-muted-teal);
+  color: var(--color-paper-white);
+}
+
+.start-prompt-close:hover {
+  background: var(--color-deep-teal);
+} */

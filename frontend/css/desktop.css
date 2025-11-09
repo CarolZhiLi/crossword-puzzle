@@ -4,111 +4,199 @@
    ============================================ */
 
 @media (min-width: 1025px) {
-    /* Body and Layout */
-    body {
-        height: 100vh;
-        max-height: 100vh;
-        overflow: hidden;
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        position: relative;
-    }
-    
-    html {
-        height: 100vh;
-        max-height: 100vh;
-        overflow: hidden;
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    
-    .game-container {
-        height: 100vh;
-        max-height: 100vh;
-        overflow: hidden;
-        display: grid;
-        grid-template-columns: 10% 90%;
-        grid-template-rows: auto 1fr;
-        gap: 14px;
-        padding: 4px 16px 14px;
-        box-sizing: border-box;
-        margin: 0 auto;
-        width: 90%;
-        position: relative;
-    }
-    
-    .header-bar {
-        display: none !important;
-    }
-    
-    .mobile-header {
-        display: none !important;
-    }
-    
-    .controls-bar {
-        grid-column: 1 / -1; /* Span full width */
-        display: none; /* Hidden on desktop */
-    }
-    
-    /* main-content-layout removed - using grid directly */
-    
-    .left-sidebar {
-        width: 100%;
-        min-width: 120px;
-        max-width: 100%;
-        overflow-y: auto;
-        box-sizing: border-box;
-    }
-    
-    .game-area {
-        width: 100%;
-        min-height: 0;
-        overflow: hidden;
-        align-items: stretch;
-        align-content: stretch;
-        justify-content: stretch;
-        padding: 0 !important;
-        gap: 14px;
-        box-sizing: border-box;
-        max-height: none;
-        margin: 0 !important;
-        grid-template-columns: 80fr 20fr;
-        grid-auto-rows: 1fr;
-    }
-    
-    /* Crossword Grid - Desktop */
-    .crossword-container {
-        min-height: 0;
-        max-height: 100%;
-        overflow: hidden;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        align-self: stretch;
-        height: 100%;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        border-radius: 15px;
-        box-sizing: border-box;
-    }
-    
-    .crossword-grid {
-        max-width: 100%;
-        max-height: 100%;
-        aspect-ratio: 1 / 1;
-        margin: 0;
-        padding: 10px;
-        box-sizing: border-box;
-        flex-shrink: 1;
-        min-width: 0;
-        min-height: 0;
-    }
-    
-    /* Collapsed definitions toggle - Desktop only */
-    .game-area.defs-collapsed { 
+  /* Font Size System - Desktop (Larger sizes) */
+  :root {
+    --font-size-xs: 0.875rem; /* 14px */
+    --font-size-sm: 1rem; /* 16px */
+    --font-size-base: 1.125rem; /* 18px */
+    --font-size-md: 1.25rem; /* 20px */
+    --font-size-lg: 1.5rem; /* 24px */
+    --font-size-xl: 1.875rem; /* 30px */
+    --font-size-2xl: 2.25rem; /* 36px */
+    --font-size-3xl: 3rem; /* 48px */
+    --font-size-4xl: 3.75rem; /* 60px */
+    --font-size-5xl: 4.5rem; /* 72px */
+  }
+
+  /* Body and Layout */
+  body {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: var(--font-size-base);
+  }
+
+  html {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  .game-container {
+    height: calc(100vh - 20px);
+    max-height: calc(100vh - 20px);
+    overflow: visible;
+    display: grid;
+    grid-template-columns: 10% 90%;
+    gap: 14px;
+    padding: 4px 16px 14px;
+    box-sizing: border-box;
+    margin: 20px auto 20px auto;
+    width: 90%;
+    position: relative;
+  }
+
+  .header-bar {
+    display: none !important;
+  }
+
+  .mobile-header {
+    display: none !important;
+  }
+
+  .controls-bar {
+    grid-column: 1 / -1; /* Span full width */
+    display: none; /* Hidden on desktop */
+  }
+
+  /* main-content-layout removed - using grid directly */
+
+  .left-sidebar.desktop-only {
+    width: 100%;
+    min-width: 120px;
+    max-width: 100%;
+    height: 90vh;
+    max-height: 90vh;
+    box-sizing: border-box;
+    border-color: var(--color-muted-teal);
+    align-self: center;
+    overflow-y: auto;
+    overflow-x: visible;
+  }
+
+  /* Ensure sidebar sections and buttons stay within sidebar */
+  .left-sidebar.desktop-only .sidebar-section {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: visible;
+    overflow-y: hidden;
+  }
+
+  /* Allow tooltips to overflow on hover */
+  .left-sidebar.desktop-only .sidebar-section:hover {
+    overflow-x: visible;
+  }
+
+  .left-sidebar.desktop-only .sidebar-section .svg-button {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: clamp(40px, 8vw, 100px);
+    min-height: 40px;
+    object-fit: contain;
+    box-sizing: border-box;
+    aspect-ratio: 1;
+  }
+
+  .left-sidebar.desktop-only .sidebar-header {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+  }
+
+  .left-sidebar.desktop-only .sidebar-header .logo {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  .left-sidebar.desktop-only .sidebar-timer {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .left-sidebar.desktop-only .sidebar-login {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    margin-top: auto;
+  }
+
+  .left-sidebar.desktop-only #signInBtn {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 100px;
+    object-fit: contain;
+    box-sizing: border-box;
+  }
+
+  .game-area {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    padding: 0 !important;
+    gap: 20px;
+    box-sizing: border-box;
+    max-height: none;
+    margin: 0 !important;
+    grid-template-columns: 80% 20%;
+    grid-auto-rows: 1fr;
+  }
+
+  /* Crossword Grid - Desktop */
+  .crossword-container {
+    width: 90%;
+    height: 90vh !important;
+    max-width: 90%;
+    max-height: 90vh !important;
+    min-height: 90vh !important;
+    min-width: 90%;
+    overflow: auto; /* Enable scrolling when grid doesn't fit */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: auto;
+    padding: 0;
+    border-radius: 15px;
+    box-sizing: border-box;
+    position: relative; /* Needed for absolutely positioned animation container */
+  }
+
+  .crossword-grid {
+    display: none; /* Hidden by default, shown after backend response via JavaScript */
+    gap: 4px;
+    background: var(--color-paper-white);
+    border-radius: 15px;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0;
+    padding: 10px;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    min-width: 0;
+    min-height: 0;
+    position: relative;
+    z-index: 2; /* Above animation container */
+  }
+
+  /* Collapsed definitions toggle - Desktop only */
+  /* .game-area.defs-collapsed { 
         grid-template-columns: 1fr; 
         justify-items: center;
     }
@@ -116,55 +204,99 @@
         display: none; 
     }
     .game-area.defs-collapsed .crossword-container {
-        width: auto;
-        margin: 0 auto;
+        width: 90%;
+        height: 90vh !important;
+        max-width: 90%;
+        max-height: 90vh !important;
+        min-height: 90vh !important;
+        margin: auto;
         justify-content: center;
-    }
-    
-    /* Clue panel - Desktop */
-    .clues-panel {
-        height: 100%;
-        width: 100%;
-        max-height: 100%;
-        max-width: 100%;
-        min-height: 0;
-        box-sizing: border-box;
-        overflow: hidden;
-        align-self: stretch;
-        margin: 0;
-        padding: 0;
-        border-radius: 15px;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .clues-panel #allClues {
+    } */
+
+  /* Clue panel - Desktop */
+  .clues-panel {
+    height: 90vh !important;
+    max-height: 100vh !important;
+    width: 100% !important;
+    max-width: 90% !important;
+    min-height: 0;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+    align-self: center;
+    justify-self: center;
+    margin: auto;
+    padding: 0 !important;
+    border-radius: 15px !important;
+    border: none !important;
+    position: relative;
+    background: var(--color-paper-white);
+  }
+
+  /* .clues-panel #allClues {
         padding: 15px;
         overflow-y: auto;
         overflow-x: hidden;
         flex: 1;
         min-height: 0;
-    }
-    
-    /* Controls Bar - Hidden on Desktop */
-    .controls-bar {
-        display: none;
-    }
-    
-    /* Animation Video - Desktop */
-    .intro-video {
-        width: 50%;
-        height: 50%;
-        object-fit: cover;
-        object-position: center;
-    }
+    } */
+
+  /* Controls Bar - Hidden on Desktop */
+  .controls-bar {
+    display: none;
+  }
+
+  /* Animation container - Desktop: positioned inside crossword container */
+  .crossword-container .animation-container,
+  .crossword-container #animationContainer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    z-index: 1;
+  }
+
+  /* Animation Video - Desktop */
+  .crossword-container .intro-video {
+    width: 50%;
+    height: 50%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* Hide definitions button */
+  #definitionsBtn {
+    display: none !important;
+  }
 }
 
 /* Medium Desktop (1025px - 1200px) */
 @media (min-width: 1025px) and (max-width: 1200px) {
-    .game-area {
-        grid-template-columns: max-content minmax(320px, 30%);
-        gap: 0;
-    }
+  .game-area {
+    grid-template-columns: 80% 20%;
+    gap: 14px;
+  }
+
+  .left-sidebar.desktop-only .sidebar-section .svg-button {
+    max-height: clamp(40px, 7.5vw, 90px);
+  }
 }
 
+/* Small Desktop (1201px - 1400px) */
+@media (min-width: 1201px) and (max-width: 1400px) {
+  .left-sidebar.desktop-only .sidebar-section .svg-button {
+    max-height: clamp(50px, 8.5vw, 95px);
+  }
+}
+
+/* Large Desktop (> 1400px) */
+@media (min-width: 1401px) {
+  .left-sidebar.desktop-only .sidebar-section .svg-button {
+    max-height: clamp(60px, 9vw, 100px);
+  }
+}

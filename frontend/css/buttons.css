@@ -5,157 +5,268 @@
 
 /* Regular Buttons */
 .btn {
-    padding: 9px 18px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1.5rem;
-    transition: all 0.2s;
-    width: 220px;
-}
-
-.btn-primary {
-    background: var(--color-soft-coral);
-    color: var(--color-text);
+  padding: 9px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 1.5rem;
+  width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn-primary:hover {
-    background: var(--color-vibrant-orange);
-    color: var(--color-text);
-}
-
-.btn-info {
-    background: var(--color-muted-teal);
-    color: var(--color-text);
+  background: var(--color-vibrant-orange);
+  color: var(--color-text);
 }
 
 .btn-info:hover {
-    background: var(--color-deep-teal);
-    color: var(--color-paper-white);
-    box-shadow: 0 6px 16px var(--color-shadow);
+  background: var(--color-deep-teal);
+  color: var(--color-paper-white);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
 .btn-large {
-    padding: 14px 27px;
-    font-size: 1.5rem;
-    font-weight: 700;
-    width: 300px;
+  padding: 14px 27px;
+  width: 300px;
 }
 
 .btn-success {
-    background: var(--color-creamy-yellow);
-    color: var(--color-text);
+  background: var(--color-creamy-yellow);
+  color: var(--color-text);
 }
 
 .btn-success:hover {
-    background: var(--color-vibrant-orange);
-    color: var(--color-text);
+  background: var(--color-vibrant-orange);
+  color: var(--color-text);
 }
 
 .btn-warning {
-    background: var(--color-soft-coral);
-    color: var(--color-text);
+  background: var(--color-soft-coral);
+  color: var(--color-text);
 }
 
 .btn-warning:hover {
-    background: var(--color-vibrant-orange);
-    color: var(--color-text);
-}
-
-/* Mobile Icon Buttons */
-.mobile-action-icons {
-    display: none;
-    gap: 10px;
-    align-items: center;
+  background: var(--color-vibrant-orange);
+  color: var(--color-text);
 }
 
 .icon-btn {
-    background: var(--color-soft-coral);
-    border: none;
-    border-radius: 12px;
-    padding: 0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    color: var(--color-text);
-    width: 56px;
-    height: 56px;
-    box-shadow: 0 4px 12px var(--color-shadow);
-    position: relative;
-    overflow: hidden;
+  background: var(--color-soft-coral);
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: var(--color-text);
+  width: 56px;
+  height: 56px;
+  box-shadow: 0 4px 12px var(--color-shadow);
+  position: relative;
+  overflow: hidden;
 }
 
 .icon-btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(242, 139, 130, 0.2);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(242, 139, 130, 0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .icon-btn:hover::before,
 .icon-btn:active::before {
-    opacity: 1;
+  opacity: 1;
 }
 
 .icon-btn svg {
-    position: relative;
-    z-index: 1;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
 .icon-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px var(--color-shadow);
-    background: var(--color-vibrant-orange);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--color-shadow);
+  background: var(--color-vibrant-orange);
 }
 
 .icon-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px var(--color-shadow);
+  transform: translateY(0);
+  box-shadow: 0 2px 8px var(--color-shadow);
 }
 
 /* Specific icon button colors */
 .icon-btn-hint {
-    background: var(--color-muted-teal);
+  background: var(--color-muted-teal);
 }
 
 .icon-btn-hint:hover {
-    background: var(--color-deep-teal);
-    box-shadow: 0 6px 16px var(--color-shadow);
+  background: var(--color-deep-teal);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
 .icon-btn-check {
-    background: var(--color-creamy-yellow);
+  background: var(--color-creamy-yellow);
 }
 
 .icon-btn-check:hover {
-    background: var(--color-vibrant-orange);
-    box-shadow: 0 6px 16px var(--color-shadow);
+  background: var(--color-vibrant-orange);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
 .icon-btn-new {
-    background: var(--color-soft-coral);
+  background: var(--color-soft-coral);
 }
 
 .icon-btn-new:hover {
-    background: var(--color-vibrant-orange);
-    box-shadow: 0 6px 16px var(--color-shadow);
+  background: var(--color-vibrant-orange);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
 .icon-btn-login {
-    background: var(--color-soft-coral);
+  background: var(--color-soft-coral);
 }
 
 .icon-btn-login:hover {
-    background: var(--color-vibrant-orange);
-    box-shadow: 0 6px 16px var(--color-shadow);
+  box-shadow: 0 6px 16px var(--color-shadow);
 }
 
+/* SVG Button Styles - for img elements used as buttons */
+.svg-button {
+  transition: all 0.3s ease;
+  user-select: none;
+  cursor: pointer;
+}
+
+.svg-button:hover {
+  transform: translateY(-2px);
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  opacity: 0.9;
+}
+
+.svg-button:active {
+  transform: translateY(0);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+/* Controls bar SVG buttons */
+.controls-bar .svg-button {
+  height: 48px;
+  width: auto;
+}
+
+/* Sidebar SVG buttons */
+.sidebar-section .svg-button {
+  height: auto;
+  width: 100%;
+  max-width: 100%;
+  max-height: 100px;
+  min-height: 40px;
+  margin-bottom: 2vh;
+  box-sizing: border-box;
+  object-fit: contain;
+  aspect-ratio: 1;
+}
+
+/* Sign in button */
+#signInBtn {
+  height: 100px;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+
+/* Mobile action icons */
+.mobile-action-icons .svg-button {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Clues toggle button */
+.clues-toggle-btn {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* Admin link */
+#adminLink {
+  text-align: center;
+}
+
+/* Login icon - no button box styling */
+#signInBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  height: 100px;
+  width: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+  object-fit: contain;
+}
+
+#signInBtn:hover {
+  transform: none;
+  filter: none;
+  opacity: 0.8;
+}
+
+#signInBtn:active {
+  transform: none;
+  filter: none;
+}
+
+/* Tooltip wrapper for sidebar buttons */
+.tooltip-wrapper {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+
+/* Custom tooltip styles for desktop sidebar buttons */
+@media (min-width: 1025px) {
+  .custom-tooltip {
+    position: fixed;
+    padding: 8px 12px;
+    background-color: var(--color-deep-teal);
+    color: var(--color-paper-white);
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    white-space: nowrap;
+    border-radius: 6px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 99999;
+    min-width: max-content;
+    display: block;
+    visibility: hidden;
+  }
+
+  .custom-tooltip-arrow {
+    position: fixed;
+    border: 6px solid transparent;
+    border-right-color: var(--color-deep-teal);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 100000;
+    display: block;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+  }
+}

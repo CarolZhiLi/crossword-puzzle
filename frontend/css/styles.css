@@ -14,9 +14,9 @@
 @import url('./controls.css');
 @import url('./modals.css');
 
-/* Size-specific styles - Organized by screen size */
+/* Size-specific styles */
 @import url('./desktop.css');  /* Desktop: > 1024px */
-@import url('./tablet.css');  /* Tablet/iPad: 769px - 1024px */
+@import url('./tablet.css');  /* Tablet/iPad: 768px - 1024px */
 @import url('./mobile.css');  /* Mobile: ≤ 768px */
 /* Usage + Free banner styles */
 .api-usage { font-weight: 600; }

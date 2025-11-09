@@ -32,6 +32,18 @@
     --color-text-light: rgba(0, 106, 113, 0.7);
     --color-border: rgba(0, 106, 113, 0.2);
     --color-shadow: rgba(0, 106, 113, 0.1);
+
+    /* Font Size System - Base sizes (will be overridden by device-specific files) */
+    --font-size-xs: 0.75rem;      /* 12px */
+    --font-size-sm: 0.875rem;     /* 14px */
+    --font-size-base: 1rem;       /* 16px */
+    --font-size-md: 1.125rem;     /* 18px */
+    --font-size-lg: 1.25rem;      /* 20px */
+    --font-size-xl: 1.5rem;       /* 24px */
+    --font-size-2xl: 1.875rem;    /* 30px */
+    --font-size-3xl: 2.25rem;     /* 36px */
+    --font-size-4xl: 3rem;        /* 48px */
+    --font-size-5xl: 3.75rem;     /* 60px */
 }
 
 * {
@@ -41,7 +53,9 @@
 }
 
 body {
-    font-family: 'Bangers', cursive;
+    font-family: 'Ubuntu', sans-serif;
+    font-weight: 400;
+    font-size: var(--font-size-base);
     background: var(--color-background);
     min-height: 100vh;
     margin: 0;
@@ -51,12 +65,78 @@ body {
     display: block;
 }
 
+/* Ubuntu Font Family Classes */
+.ubuntu-light {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 300;
+    font-style: normal;
+}
+
+.ubuntu-regular {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.ubuntu-medium {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+}
+
+.ubuntu-bold {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 700;
+    font-style: normal;
+}
+
+.ubuntu-light-italic {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 300;
+    font-style: italic;
+}
+
+.ubuntu-regular-italic {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 400;
+    font-style: italic;
+}
+
+.ubuntu-medium-italic {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 500;
+    font-style: italic;
+}
+
+.ubuntu-bold-italic {
+    font-family: "Ubuntu", sans-serif;
+    font-weight: 700;
+    font-style: italic;
+}
+
 /* Utility Classes - Base (will be overridden by size-specific files) */
 .desktop-only {
     display: block;
 }
 
 .mobile-only {
+    display: none;
+}
+
+/* Utility classes */
+.hidden {
+    display: none;
+}
+
+.hidden-dropdown {
+    display: none;
+}
+
+/* Hide tablet clue panel elements by default - shown only in tablet view */
+.tablet-clue-header,
+.tablet-clue-panel,
+.tablet-header-layout,
+.tablet-bottom-actions {
     display: none;
 }
 

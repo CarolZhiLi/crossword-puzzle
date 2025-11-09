@@ -4,29 +4,24 @@
    ============================================ */
 
 .clues-panel {
-    backdrop-filter: blur(10px);
-    background: var(--color-paper-white);
     border-radius: 20px;
     padding: 15px;
-    box-shadow: 0 10px 40px var(--color-shadow);
+    border-style: solid;
+    background-color: transparent;
+    border-color: var(--color-deep-teal);
+    border-width: 2px;
+    box-shadow: 0 4px 12px var(--color-shadow);
     height: 100%;
-    min-height: 0;
-    max-height: 100%;
     position: relative;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    align-self: stretch;
 }
 
 #allClues {
     flex: 1;
-    overflow-y: auto;
-    min-height: 0;
-    overflow-x: hidden;
 }
 
-.clues-close-btn {
+/* .clues-close-btn {
     display: none;
     position: absolute;
     top: 10px;
@@ -42,7 +37,7 @@
     z-index: 100;
     transition: all 0.2s;
     color: var(--color-text);
-}
+} */
 
 .clues-close-btn:hover {
     background: var(--color-paper-white);
@@ -51,61 +46,6 @@
     transform: scale(1.1);
 }
 
-.clues-toggle-btn {
-    display: none;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--color-soft-coral);
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    width: 64px;
-    height: 64px;
-    cursor: pointer;
-    align-items: center;
-    justify-content: center;
-    z-index: 998;
-    box-shadow: 0 6px 20px var(--color-shadow);
-    transition: all 0.3s ease;
-    color: var(--color-text);
-}
-
-.clues-toggle-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 24px var(--color-shadow);
-    background: var(--color-vibrant-orange);
-}
-
-.clues-toggle-btn:active {
-    transform: scale(0.95);
-}
-
-.clues-toggle-btn svg {
-    transition: transform 0.3s ease;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
-}
-
-.clues-panel.mobile-open + .clues-toggle-btn svg {
-    transform: rotate(180deg);
-}
-
-.clues-backdrop {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 999;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-    pointer-events: none;
-}
-
-.clues-backdrop.active {
-    opacity: 1;
-    pointer-events: auto;
-}
 
 .clues-section {
     margin-bottom: 25px;
