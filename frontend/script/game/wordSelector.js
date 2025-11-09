@@ -42,7 +42,7 @@ export class WordSelector {
     // Clear previous selections
     this.clearSelections();
 
-    // Find which word this cell belongs to
+    // Find which word this cell belongs to (row, col are puzzle coordinates)
     const wordInfo = this.getWordAt(row, col);
     if (wordInfo) {
       this.game.currentWord = wordInfo.number;
@@ -51,9 +51,10 @@ export class WordSelector {
       this.highlightClue(wordInfo.number);
     }
 
-    // Highlight the cell
-    if (this.game.grid[row] && this.game.grid[row][col]) {
-      this.game.grid[row][col].classList.add("active");
+    // Highlight the cell (translate puzzle coords to grid coords)
+    const cell = this.game.getGridCell(row, col);
+    if (cell) {
+      cell.classList.add("active");
     }
   }
 
@@ -67,10 +68,10 @@ export class WordSelector {
     this.highlightWord(wordNum, word.direction);
     this.highlightClue(wordNum);
 
-    // Focus on first cell of the word
+    // Focus on first cell of the word (use puzzle coordinates)
     const [startRow, startCol] = word.start;
-    if (this.game.grid[startRow] && this.game.grid[startRow][startCol]) {
-      const firstCell = this.game.grid[startRow][startCol];
+    const firstCell = this.game.getGridCell(startRow, startCol);
+    if (firstCell) {
       const input = firstCell.querySelector("input");
       if (input) {
         input.focus();
@@ -85,8 +86,9 @@ export class WordSelector {
     for (let i = 0; i < word.length; i++) {
       const row = direction === "across" ? startRow : startRow + i;
       const col = direction === "across" ? startCol + i : startCol;
-      if (this.game.grid[row] && this.game.grid[row][col]) {
-        this.game.grid[row][col].classList.add("highlighted");
+      const cell = this.game.getGridCell(row, col);
+      if (cell) {
+        cell.classList.add("highlighted");
       }
     }
   }

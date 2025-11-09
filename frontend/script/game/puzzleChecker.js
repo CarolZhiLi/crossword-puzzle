@@ -49,16 +49,16 @@ export class PuzzleChecker {
         const row = word.direction === "across" ? startRow : startRow + i;
         const col = word.direction === "across" ? startCol + i : startCol;
 
-        // Validate grid coordinates
-        if (!this.game.grid[row] || !this.game.grid[row][col]) {
+        // Use puzzle coordinates to get grid cell
+        const cell = this.game.getGridCell(row, col);
+        if (!cell) {
           console.error(
-            `Cell not found at [${row}][${col}] for word ${wordNum}`
+            `Cell not found at puzzle coords [${row}][${col}] for word ${wordNum}`
           );
           wordComplete = false;
           continue;
         }
 
-        const cell = this.game.grid[row][col];
         const input = cell ? cell.querySelector("input") : null;
         const value = input ? input.value.trim() : "";
 
@@ -102,15 +102,15 @@ export class PuzzleChecker {
         const row = word.direction === "across" ? startRow : startRow + i;
         const col = word.direction === "across" ? startCol + i : startCol;
 
-        // Validate grid coordinates
-        if (!this.game.grid[row] || !this.game.grid[row][col]) {
+        // Use puzzle coordinates to get grid cell
+        const cell = this.game.getGridCell(row, col);
+        if (!cell) {
           console.error(
-            `Cell not found at [${row}][${col}] for word ${wordNum}`
+            `Cell not found at puzzle coords [${row}][${col}] for word ${wordNum}`
           );
           continue;
         }
 
-        const cell = this.game.grid[row][col];
         const input = cell ? cell.querySelector("input") : null;
         const value = input ? input.value.trim().toUpperCase() : "";
         userWord += value;
@@ -123,8 +123,8 @@ export class PuzzleChecker {
           const row = word.direction === "across" ? startRow : startRow + i;
           const col = word.direction === "across" ? startCol + i : startCol;
 
-          if (this.game.grid[row] && this.game.grid[row][col]) {
-            const cell = this.game.grid[row][col];
+          const cell = this.game.getGridCell(row, col);
+          if (cell) {
             cell.classList.add("correct");
             cell.classList.remove("incorrect");
           }
@@ -136,8 +136,8 @@ export class PuzzleChecker {
           const row = word.direction === "across" ? startRow : startRow + i;
           const col = word.direction === "across" ? startCol + i : startCol;
 
-          if (this.game.grid[row] && this.game.grid[row][col]) {
-            const cell = this.game.grid[row][col];
+          const cell = this.game.getGridCell(row, col);
+          if (cell) {
             cell.classList.add("incorrect");
             cell.classList.remove("correct");
           }

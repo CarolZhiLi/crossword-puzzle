@@ -41,7 +41,8 @@ export class InputHandler {
             if (nextRow >= startRow + word.length) return;
         }
         
-        const nextCell = this.game.grid[nextRow][nextCol];
+        // Use puzzle coordinates to get grid cell
+        const nextCell = this.game.getGridCell(nextRow, nextCol);
         if (nextCell && !nextCell.classList.contains('black')) {
             const input = nextCell.querySelector('input');
             if (input) {
@@ -67,7 +68,8 @@ export class InputHandler {
             if (prevRow < startRow) return;
         }
         
-        const prevCell = this.game.grid[prevRow][prevCol];
+        // Use puzzle coordinates to get grid cell
+        const prevCell = this.game.getGridCell(prevRow, prevCol);
         if (prevCell && !prevCell.classList.contains('black')) {
             const input = prevCell.querySelector('input');
             if (input) {

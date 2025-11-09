@@ -127,42 +127,95 @@ export default class CrosswordGame {
 
     // Keep video visible - will hide after grid is fully rendered
 
-    // Set grid template based on current solution grid size
-    this.gridSize = this.solutionGrid.length;
+    // Get puzzle dimensions
+    const puzzleRows = this.solutionGrid.length;
+    const puzzleCols = this.solutionGrid[0] ? this.solutionGrid[0].length : 0;
 
-    // Set grid template based on current grid size
-    gridContainer.style.gridTemplateColumns = `repeat(${this.gridSize}, 1fr)`;
-    gridContainer.style.gridTemplateRows = `repeat(${this.gridSize}, 1fr)`;
+    // Calculate max visible cells if not already calculated
+    if (
+      this.gridSizing.maxVisibleRows === 0 ||
+      this.gridSizing.maxVisibleCols === 0
+    ) {
+      this.gridSizing.calculateMaxVisibleCells();
+    }
 
-    // Create grid
-    for (let row = 0; row < this.gridSize; row++) {
+    // Fit or Scroll: Use Math.max to determine final grid size
+    // If puzzle is smaller than container, grid fills container
+    // If puzzle is larger than container, grid is puzzle size (scrollable)
+    const finalRows = Math.max(puzzleRows, this.gridSizing.maxVisibleRows);
+    const finalCols = Math.max(puzzleCols, this.gridSizing.maxVisibleCols);
+
+    // Calculate centering offsets when puzzle is smaller than container
+    const rowOffset = Math.floor((finalRows - puzzleRows) / 2);
+    const colOffset = Math.floor((finalCols - puzzleCols) / 2);
+
+    // Store original puzzle size for reference
+    this.gridSize = puzzleRows;
+    this.finalGridRows = finalRows;
+    this.finalGridCols = finalCols;
+    this.puzzleRowOffset = rowOffset;
+    this.puzzleColOffset = colOffset;
+    this.puzzleRows = puzzleRows;
+    this.puzzleCols = puzzleCols;
+
+    console.log("Fit or Scroll calculation:", {
+      puzzleRows,
+      puzzleCols,
+      maxVisibleRows: this.gridSizing.maxVisibleRows,
+      maxVisibleCols: this.gridSizing.maxVisibleCols,
+      finalRows,
+      finalCols,
+      rowOffset,
+      colOffset,
+    });
+
+    // Set grid template based on final calculated size
+    gridContainer.style.gridTemplateColumns = `repeat(${finalCols}, 1fr)`;
+    gridContainer.style.gridTemplateRows = `repeat(${finalRows}, 1fr)`;
+
+    // Create grid - use final size for DOM, but only populate puzzle cells
+    for (let row = 0; row < this.finalGridRows; row++) {
       this.grid[row] = [];
-      for (let col = 0; col < this.gridSize; col++) {
+      for (let col = 0; col < this.finalGridCols; col++) {
         const cell = document.createElement("div");
         cell.className = "grid-cell";
         cell.dataset.row = row;
         cell.dataset.col = col;
 
-        // Add black cells for empty spaces
-        if (
-          !this.solutionGrid[row][col] ||
-          this.solutionGrid[row][col] === ""
+        // Calculate puzzle coordinates (accounting for centering offset)
+        const puzzleRow = row - rowOffset;
+        const puzzleCol = col - colOffset;
+
+        // Check if this cell is within the puzzle bounds
+        const isWithinPuzzle =
+          puzzleRow >= 0 &&
+          puzzleRow < puzzleRows &&
+          puzzleCol >= 0 &&
+          puzzleCol < puzzleCols;
+
+        if (!isWithinPuzzle) {
+          // Cell is outside puzzle bounds - add as black/empty cell
+          cell.classList.add("black");
+        } else if (
+          !this.solutionGrid[puzzleRow][puzzleCol] ||
+          this.solutionGrid[puzzleRow][puzzleCol] === ""
         ) {
+          // Within puzzle bounds but empty - black cell
           cell.classList.add("black");
         } else {
           const input = document.createElement("input");
           input.type = "text";
           input.maxLength = 1;
           input.addEventListener("input", (e) =>
-            this.inputHandler.handleInput(e, row, col)
+            this.inputHandler.handleInput(e, puzzleRow, puzzleCol)
           );
           input.addEventListener("keydown", (e) =>
-            this.inputHandler.handleKeyDown(e, row, col)
+            this.inputHandler.handleKeyDown(e, puzzleRow, puzzleCol)
           );
           cell.appendChild(input);
 
-          // Add cell numbers
-          const number = this.wordSelector.getCellNumber(row, col);
+          // Add cell numbers (use puzzle coordinates)
+          const number = this.wordSelector.getCellNumber(puzzleRow, puzzleCol);
           if (number) {
             const numberSpan = document.createElement("span");
             numberSpan.className = "cell-number";
@@ -179,7 +232,7 @@ export default class CrosswordGame {
         // Only add click listener to non-black cells
         if (!cell.classList.contains("black")) {
           cell.addEventListener("click", () =>
-            this.wordSelector.selectCell(row, col)
+            this.wordSelector.selectCell(puzzleRow, puzzleCol)
           );
         }
         gridContainer.appendChild(cell);
@@ -204,6 +257,24 @@ export default class CrosswordGame {
         }
       });
     });
+  }
+
+  // Helper methods for coordinate translation between puzzle and grid coordinates
+  getGridCell(puzzleRow, puzzleCol) {
+    // Translate puzzle coordinates to grid coordinates
+    const gridRow = puzzleRow + (this.puzzleRowOffset || 0);
+    const gridCol = puzzleCol + (this.puzzleColOffset || 0);
+    if (this.grid[gridRow] && this.grid[gridRow][gridCol]) {
+      return this.grid[gridRow][gridCol];
+    }
+    return null;
+  }
+
+  getPuzzleCoords(gridRow, gridCol) {
+    // Translate grid coordinates to puzzle coordinates
+    const puzzleRow = gridRow - (this.puzzleRowOffset || 0);
+    const puzzleCol = gridCol - (this.puzzleColOffset || 0);
+    return [puzzleRow, puzzleCol];
   }
 
   setupEventListeners() {

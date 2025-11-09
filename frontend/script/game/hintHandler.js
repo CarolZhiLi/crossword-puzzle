@@ -37,9 +37,9 @@ export class HintHandler {
     const { word, start } = wordData;
     const [startRow, startCol] = start;
 
-    // Reveal first letter as hint
-    if (this.game.grid[startRow] && this.game.grid[startRow][startCol]) {
-      const firstCell = this.game.grid[startRow][startCol];
+    // Reveal first letter as hint (use puzzle coordinates)
+    const firstCell = this.game.getGridCell(startRow, startCol);
+    if (firstCell) {
       const input = firstCell.querySelector("input");
       if (input && !input.value) {
         input.value = word[0];
@@ -75,9 +75,9 @@ export class HintHandler {
       const row = direction === "across" ? startRow : startRow + i;
       const col = direction === "across" ? startCol + i : startCol;
 
-      // Safety check: ensure the cell exists in our grid array
-      if (this.game.grid[row] && this.game.grid[row][col]) {
-        const cell = this.game.grid[row][col];
+      // Use puzzle coordinates to get grid cell
+      const cell = this.game.getGridCell(row, col);
+      if (cell) {
         const input = cell.querySelector("input");
         if (input) {
           input.value = word[i];
@@ -85,7 +85,7 @@ export class HintHandler {
         }
       } else {
         console.error(
-          `Hint failed: Attempted to access non-existent cell at [${row}, ${col}]`
+          `Hint failed: Attempted to access non-existent cell at puzzle coords [${row}, ${col}]`
         );
       }
     }

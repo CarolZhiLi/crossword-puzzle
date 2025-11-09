@@ -2,16 +2,70 @@
 export class GridSizing {
   constructor(gameInstance) {
     this.game = gameInstance;
+    this.maxVisibleRows = 0;
+    this.maxVisibleCols = 0;
   }
 
   setupResponsiveGrid() {
     // Handle window resize to maintain grid responsiveness
     window.addEventListener("resize", () => {
+      this.calculateMaxVisibleCells();
       this.adjustGridSize();
     });
 
+    // Calculate max visible cells on initial load
+    this.calculateMaxVisibleCells();
+
     // Initial adjustment
     this.adjustGridSize();
+  }
+
+  calculateMaxVisibleCells() {
+    const container = document.querySelector(".crossword-container");
+    if (!container) {
+      console.warn("Container not found for max visible cells calculation");
+      return;
+    }
+
+    // Determine device type and get cell size
+    const isDesktop = window.innerWidth >= 1025;
+    const isTablet = window.innerWidth > 768 && window.innerWidth <= 1024;
+    const isMobile = window.innerWidth <= 768;
+
+    let baseCellSize;
+    if (isDesktop) {
+      baseCellSize = 50;
+    } else if (isTablet) {
+      baseCellSize = 30;
+    } else {
+      baseCellSize = 30;
+    }
+
+    // Get container dimensions
+    const containerRect = container.getBoundingClientRect();
+    const containerWidth = containerRect.width || window.innerWidth * 0.9;
+    const containerHeight = containerRect.height || window.innerHeight * 0.9;
+
+    // Grid internal spacing
+    const gridPadding = 20; // 10px padding * 2
+    const gridGap = 4; // gap between cells
+
+    // Calculate how many cells can fit
+    const availableWidth = containerWidth - gridPadding;
+    const availableHeight = containerHeight - gridPadding;
+
+    this.maxVisibleCols = Math.floor(availableWidth / (baseCellSize + gridGap));
+    this.maxVisibleRows = Math.floor(
+      availableHeight / (baseCellSize + gridGap)
+    );
+
+    console.debug("Max visible cells calculated:", {
+      maxVisibleRows: this.maxVisibleRows,
+      maxVisibleCols: this.maxVisibleCols,
+      containerWidth,
+      containerHeight,
+      baseCellSize,
+    });
   }
 
   adjustGridSize() {
@@ -21,8 +75,11 @@ export class GridSizing {
       return;
     }
 
-    if (!this.game.gridSize) {
-      console.warn("Grid size not set:", this.game.gridSize);
+    if (!this.game.finalGridRows || !this.game.finalGridCols) {
+      console.warn("Final grid size not set:", {
+        finalGridRows: this.game.finalGridRows,
+        finalGridCols: this.game.finalGridCols,
+      });
       return;
     }
 
@@ -52,17 +109,20 @@ export class GridSizing {
 
     // Grid internal spacing
     const gridPadding = 20; // 10px padding * 2
-    const gridGap = 4 * (this.game.gridSize - 1); // gap between cells
-    const gridInternalSpace = gridPadding + gridGap;
+    const gridGap = 4; // gap between cells
+    const gridGapTotalCols = gridGap * (this.game.finalGridCols - 1);
+    const gridGapTotalRows = gridGap * (this.game.finalGridRows - 1);
+    const gridInternalSpaceCols = gridPadding + gridGapTotalCols;
+    const gridInternalSpaceRows = gridPadding + gridGapTotalRows;
 
-    // Calculate actual grid size based on FIXED cell size and grid dimensions
+    // Calculate actual grid size based on FIXED cell size and final grid dimensions
     // Grid can be larger than container if needed (will scroll)
-    const calculatedGridWidth = baseCellSize * this.game.gridSize;
-    const calculatedGridHeight = baseCellSize * this.game.gridSize;
+    const calculatedGridWidth = baseCellSize * this.game.finalGridCols;
+    const calculatedGridHeight = baseCellSize * this.game.finalGridRows;
 
     // Total grid size including padding and gaps
-    const totalGridWidth = calculatedGridWidth + gridInternalSpace;
-    const totalGridHeight = calculatedGridHeight + gridInternalSpace;
+    const totalGridWidth = calculatedGridWidth + gridInternalSpaceCols;
+    const totalGridHeight = calculatedGridHeight + gridInternalSpaceRows;
 
     // Set grid dimensions (can exceed container for scrolling)
     gridContainer.style.width = `${totalGridWidth}px`;
@@ -73,8 +133,8 @@ export class GridSizing {
     gridContainer.style.maxHeight = "none";
 
     // Set grid template columns and rows with fixed cell size
-    gridContainer.style.gridTemplateColumns = `repeat(${this.game.gridSize}, ${baseCellSize}px)`;
-    gridContainer.style.gridTemplateRows = `repeat(${this.game.gridSize}, ${baseCellSize}px)`;
+    gridContainer.style.gridTemplateColumns = `repeat(${this.game.finalGridCols}, ${baseCellSize}px)`;
+    gridContainer.style.gridTemplateRows = `repeat(${this.game.finalGridRows}, ${baseCellSize}px)`;
 
     // Set cell size CSS variable for font sizing
     if (Number.isFinite(baseCellSize) && baseCellSize > 0) {
@@ -90,7 +150,9 @@ export class GridSizing {
 
     console.debug("Crossword sizing", {
       device: isDesktop ? "desktop" : isTablet ? "tablet" : "mobile",
-      gridSize: this.game.gridSize,
+      puzzleSize: this.game.gridSize,
+      finalGridRows: this.game.finalGridRows,
+      finalGridCols: this.game.finalGridCols,
       baseCellSize,
       calculatedGridWidth,
       calculatedGridHeight,
