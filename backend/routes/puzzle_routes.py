@@ -4,7 +4,7 @@ from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
 from services.usage_service import UsageService
 from extensions import db
-from models import GameSession, User, UserRole, UserQuota, AppSetting, ApiUsage
+from models import GameSession, User, UserRole, UserQuota, AppSetting, ApiUsage, SavedGame
 from utils.tokens import estimate_tokens
 from datetime import datetime, timedelta
 from constants import DEFAULT_DAILY_FREE_LIMIT
@@ -320,33 +320,8 @@ WORD - Clue"""
                 completion_tokens = estimate_tokens(completion_text)
                 total_tokens = prompt_tokens + completion_tokens
 
-                # Persist a game session snapshot (best-effort; ignore failures if table/perm missing)
-                try:
-                    if user:
-                        sess = GameSession(
-                            user_id=user.id,
-                            topic=topic,
-                            difficulty=(data.get('difficulty') or 'easy'),
-                            model='gpt.newbio.net',
-                            tokens_prompt=prompt_tokens,
-                            tokens_completion=completion_tokens,
-                            tokens_total=total_tokens,
-                            words_count=len(valid_words),
-                            placed_words=len(used_words),
-                            grid_size=size,
-                            words_json=None,
-                            definitions_json=None,
-                            grid_json=None,
-                            started_at=t0,
-                            finished_at=datetime.utcnow(),
-                            duration_ms=int(max(0, (datetime.utcnow() - t0).total_seconds() * 1000)),
-                            status='completed'
-                        )
-                        db.session.add(sess)
-                        db.session.commit()
-                except Exception:
-                    # Do not fail the API if we cannot record session
-                    db.session.rollback()
+                # No longer persist automatic game sessions here.
+                # Game data will be saved only when user explicitly clicks save.
         except Exception:
             pass
 
@@ -356,4 +331,47 @@ WORD - Clue"""
         error_trace = traceback.format_exc()
         print(f"Error in generate_crossword route: {e}")
         print(f"Traceback: {error_trace}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@puzzle_bp.route('/save-game', methods=['POST'])
+def save_game():
+    """Persist the current game only when user clicks save.
+
+    Expects JSON body with keys: topic, difficulty, words, definitions, grid.
+    Requires authentication; associates saved game with the current user.
+    """
+    try:
+        verify_jwt_in_request()
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        payload = flask_request.get_json(silent=True) or {}
+        topic = payload.get('topic')
+        difficulty = payload.get('difficulty')
+        words = payload.get('words')
+        definitions = payload.get('definitions')
+        grid = payload.get('grid')
+
+        # Basic validation
+        if grid is None or definitions is None or words is None:
+            return jsonify({'success': False, 'error': 'Missing required fields: words, definitions, grid'}), 400
+
+        # Persist to saved_games
+        row = SavedGame(
+            user_id=user.id,
+            topic=topic,
+            difficulty=difficulty,
+            words_json=words,
+            definitions_json=definitions,
+            grid_json=grid,
+        )
+        db.session.add(row)
+        db.session.commit()
+
+        return jsonify({'success': True, 'id': row.id}), 201
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500

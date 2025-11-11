@@ -325,6 +325,15 @@ export default class CrosswordGame {
     // Check/submit puzzle button handlers - delegated to PuzzleChecker
     this.puzzleChecker.setupEventListeners();
 
+    // Save game buttons
+    document.querySelectorAll('.js-save-game-btn').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        this.gameApi.saveCurrentGame();
+      });
+    });
+
     document
       .getElementById("restartBtn")
       ?.addEventListener("click", () => this.restartGame());

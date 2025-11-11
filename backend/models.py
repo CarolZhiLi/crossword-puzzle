@@ -105,3 +105,17 @@ class PasswordReset(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
 
     user = db.relationship('User')
+
+
+class SavedGame(db.Model):
+    __tablename__ = 'saved_games'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False, index=True)
+    topic = db.Column(db.String(100))
+    difficulty = db.Column(db.String(20))
+    words_json = db.Column(db.JSON)
+    definitions_json = db.Column(db.JSON)
+    grid_json = db.Column(db.JSON)
+    started_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+    user = db.relationship('User')

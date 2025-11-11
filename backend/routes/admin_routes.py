@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from extensions import db
 from utils.db_admin import admin_session_scope
-from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset
+from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset, SavedGame
 from constants import DEFAULT_DAILY_FREE_LIMIT
  
 
@@ -218,6 +218,7 @@ def delete_user_and_related():
 
             deleted = {}
             deleted['api_usage'] = s.query(ApiUsage).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
+            deleted['saved_games'] = s.query(SavedGame).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
             deleted['game_sessions'] = s.query(GameSession).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
             deleted['password_resets'] = s.query(PasswordReset).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
             deleted['user_daily_resets'] = s.query(UserDailyReset).filter_by(user_id=user.id).delete(synchronize_session=False) or 0

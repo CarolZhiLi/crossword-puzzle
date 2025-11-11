@@ -51,6 +51,9 @@ export class GameApi {
     // Fetch and render new puzzle
     const diffMap = { Easy: "easy", Medium: "medium", Hard: "hard" };
     const mapped = diffMap[difficulty] || "easy";
+    // Remember current topic/difficulty for potential save
+    this.game.currentTopic = topic;
+    this.game.currentDifficulty = mapped;
     const headers = { "Content-Type": "application/json" };
     try {
       const token = localStorage.getItem("token");
@@ -232,5 +235,67 @@ export class GameApi {
           err.message || t("error_generating_puzzle");
         alert(errorMsg);
       });
+  }
+
+  saveCurrentGame() {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Trigger login if not authenticated
+        const signInBtn = document.getElementById("signInBtn");
+        if (signInBtn) signInBtn.click();
+        else alert("Please sign in to save your game.");
+        return;
+      }
+
+      // Validate there is a game to save
+      if (!this.game || !this.game.solutionGrid || this.game.solutionGrid.length === 0) {
+        alert("No game to save. Start a game first.");
+        return;
+      }
+
+      // Prepare payload
+      const topic = this.game.currentTopic || this.game.topicDifficulty.getCurrentTopic();
+      const difficulty = this.game.currentDifficulty || this.game.topicDifficulty.getCurrentDifficulty();
+      const grid = this.game.solutionGrid;
+      const definitions = this.game.definitionsData || {};
+      const wordsArr = Object.entries(this.game.words || {}).map(([n, w]) => ({
+        number: parseInt(n, 10),
+        word: w.word,
+        row: Array.isArray(w.start) ? w.start[0] : 0,
+        col: Array.isArray(w.start) ? w.start[1] : 0,
+        direction: w.direction,
+        length: w.length || (w.word ? w.word.length : 0),
+      }));
+
+      fetch(`${window.API_BASE}/api/save-game`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ topic, difficulty, words: wordsArr, definitions, grid }),
+      })
+        .then((r) => r.json().then((data) => ({ ok: r.ok, status: r.status, data })))
+        .then(({ ok, status, data }) => {
+          if (!ok) {
+            if (status === 401) {
+              const signInBtn = document.getElementById("signInBtn");
+              if (signInBtn) signInBtn.click();
+              else alert("Please sign in to save your game.");
+              return;
+            }
+            throw new Error(data && data.error ? data.error : `Failed to save game (${status})`);
+          }
+          alert("Game saved successfully.");
+        })
+        .catch((err) => {
+          console.error("Save game error:", err);
+          alert(err.message || "Failed to save game.");
+        });
+    } catch (e) {
+      console.error("Save game unexpected error:", e);
+      alert("Failed to save game.");
+    }
   }
 }
