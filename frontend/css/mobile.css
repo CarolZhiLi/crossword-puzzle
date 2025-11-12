@@ -1,7 +1,7 @@
 /* ============================================
    MOBILE STYLES (≤ 768px)
    Phone-specific styles - Portrait orientation only
-   Grid row template: 20% timer/icons, 80% game area
+   Grid row template: 15% timer/icons, 85% game area
    ============================================ */
 
 /* Mobile Portrait Orientation Only (≤ 768px) */
@@ -49,7 +49,7 @@
     padding: 0;
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: 15% 85%;
+    grid-template-rows: 10% 90%;
     gap: 0;
     box-sizing: border-box;
   }
@@ -63,7 +63,7 @@
     display: none !important;
   }
 
-  /* Mobile header - takes 15% of height, first row */
+  /* Mobile header - takes 10% of height, first row */
   .mobile-header {
     display: flex !important;
     grid-row: 1;
@@ -98,8 +98,8 @@
   }
 
   .tablet-logo {
-    max-height: 60%;
-    max-width: 60%;
+    max-height: 70%;
+    max-width: 70%;
     height: auto;
     width: auto;
     object-fit: contain;
@@ -128,7 +128,7 @@
     height: 50px;
   }
 
-  /* Game area - takes 85% of height, second row */
+  /* Game area - second row */
   .game-area {
     grid-row: 2;
     width: 100%;
@@ -149,11 +149,11 @@
   /* Crossword container - fixed size: same approach as tablet */
   .crossword-container {
     width: 90%;
-    height: 85%;
+    height: 70%;
     max-width: 90%;
-    max-height: 85%;
+    max-height: 70%;
     min-width: 90%;
-    min-height: 85%;
+    min-height: 70%;
     align-self: start;
     display: flex;
     position: relative;
@@ -193,14 +193,14 @@
     bottom: 0;
     left: 0;
     width: 30%;
-    height: 10%;
-    padding-bottom: 3px;
+    height: 30%;
     background-color: var(--color-deep-teal);
     border-top-right-radius: 15px;
-    align-items: center;
+    align-items: start;
     justify-content: center;
     cursor: pointer;
     z-index: 200;
+    padding: 20px;
     box-shadow: 0 -2px 8px var(--color-shadow);
     transition: background-color 0.3s ease;
   }
@@ -210,10 +210,7 @@
   }
 
   .tablet-clue-header-icon {
-    width: 70%;
-    height: 70%;
-    object-fit: contain;
-    display: block;
+    height: 23%;
   }
 
   /* Tablet Slide-in Clue Panel */
@@ -292,10 +289,13 @@
     position: absolute;
     bottom: 0;
     right: 0;
+    height: 30%;
     display: flex;
     flex-direction: row;
-    gap: 15px;
-    padding: 20px;
+    align-items: start;
+    justify-content: center;
+    gap: 5px;
+    padding: 20px 5px;
     z-index: 200;
   }
 

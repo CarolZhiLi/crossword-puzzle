@@ -210,7 +210,7 @@
     padding-left: 20px;
     background-color: var(--color-deep-teal);
     border-top-right-radius: 15px;
-    align-items: center;
+    align-items: start;
     justify-content: center;
     cursor: pointer;
     z-index: 200;
@@ -226,7 +226,6 @@
     height: 100%;
     width: 100%;
     object-fit: contain;
-    padding: 10px;
     display: block;
   }
 
