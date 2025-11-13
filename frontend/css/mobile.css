@@ -99,7 +99,7 @@
   }
 
   .tablet-logo {
-    height: 80%;
+    height: 85%;
     object-fit: contain;
     flex: 0 0 auto;
   }
@@ -208,7 +208,7 @@
   }
 
   .tablet-clue-header-icon {
-    height: 23%;
+    height: 25%;
   }
 
   /* Tablet Slide-in Clue Panel */
