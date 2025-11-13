@@ -83,7 +83,7 @@
     border: none;
     background: transparent;
     text-align: center;
-    font-size: clamp(14px, calc(var(--cell-size, 36px) * 0.6), 32px);
+    font-size: clamp(10px, calc(var(--cell-size, 50px) * 0.6), 32px);
     font-weight: bold;
     color: var(--color-text);
     text-transform: uppercase;

@@ -38,7 +38,7 @@ export class GridSizing {
     } else if (isTablet) {
       baseCellSize = 30;
     } else {
-      baseCellSize = 30;
+      baseCellSize = 50;
     }
 
     // Get container dimensions
@@ -47,7 +47,7 @@ export class GridSizing {
     const containerHeight = containerRect.height || window.innerHeight * 0.9;
 
     // Grid internal spacing
-    const gridPadding = 20; // 10px padding * 2
+    const gridPadding = 20;
     const gridGap = 4; // gap between cells
 
     // Calculate how many cells can fit
@@ -104,11 +104,11 @@ export class GridSizing {
       baseCellSize = 30; // Fixed 30px per cell
     } else {
       // Mobile: Fixed smaller cell size
-      baseCellSize = 30; // Fixed 30px per cell
+      baseCellSize = 50; // Fixed 50px per cell
     }
 
     // Grid internal spacing
-    const gridPadding = 20; // 10px padding * 2
+    const gridPadding = 20;
     const gridGap = 4; // gap between cells
     const gridGapTotalCols = gridGap * (this.game.finalGridCols - 1);
     const gridGapTotalRows = gridGap * (this.game.finalGridRows - 1);
