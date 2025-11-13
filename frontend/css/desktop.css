@@ -95,8 +95,8 @@
   }
 
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    width: 100%;
-    max-width: 100%;
+    width: 80%;
+    max-width: 80%;
     height: auto;
     max-height: clamp(
       32px,
@@ -227,7 +227,7 @@
     height: 90vh !important;
     max-height: 100vh !important;
     width: 100% !important;
-    max-width: 90% !important;
+    max-width: 100% !important;
     min-height: 0;
     min-width: 0;
     box-sizing: border-box;
