@@ -74,7 +74,12 @@ export class WordSelector {
     if (firstCell) {
       const input = firstCell.querySelector("input");
       if (input) {
-        input.focus();
+        // Prevent scroll on mobile when focusing
+        if (window.innerWidth <= 768) {
+          input.focus({ preventScroll: true });
+        } else {
+          input.focus();
+        }
       }
     }
   }

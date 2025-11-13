@@ -285,7 +285,9 @@ export default class CrosswordGame {
 
     // Clue click handlers
     document.querySelectorAll(".clue-item").forEach((item) => {
-      item.addEventListener("click", () => {
+      item.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         const wordNum = item.dataset.word;
         this.wordSelector.selectWord(wordNum);
       });

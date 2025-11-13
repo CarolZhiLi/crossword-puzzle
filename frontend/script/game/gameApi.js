@@ -183,7 +183,9 @@ export class GameApi {
         }
         // Add event listeners to all clue items (both desktop and tablet)
         document.querySelectorAll(".clue-item").forEach((item) => {
-          item.addEventListener("click", () => {
+          item.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             const wordNum = item.dataset.word;
             this.game.wordSelector.selectWord(wordNum);
           });
