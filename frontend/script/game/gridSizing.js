@@ -38,7 +38,7 @@ export class GridSizing {
     } else if (isTablet) {
       baseCellSize = 30;
     } else {
-      baseCellSize = 50;
+      baseCellSize = 45;
     }
 
     // Get container dimensions
@@ -104,7 +104,7 @@ export class GridSizing {
       baseCellSize = 30; // Fixed 30px per cell
     } else {
       // Mobile: Fixed smaller cell size
-      baseCellSize = 50; // Fixed 50px per cell
+      baseCellSize = 45; // Fixed 45px per cell
     }
 
     // Grid internal spacing

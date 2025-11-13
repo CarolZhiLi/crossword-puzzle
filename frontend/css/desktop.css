@@ -23,6 +23,7 @@
     height: 100vh;
     max-height: 100vh;
     overflow: hidden;
+    position: fixed;
     margin: 0;
     box-sizing: border-box;
     font-size: var(--font-size-base);
@@ -32,6 +33,7 @@
     height: 100vh;
     max-height: 100vh;
     overflow: hidden;
+    position: fixed;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
