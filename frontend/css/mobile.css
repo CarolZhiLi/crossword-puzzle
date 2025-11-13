@@ -207,9 +207,6 @@
     transition: background-color 0.3s ease;
   }
 
-  .tablet-clue-header:hover {
-    background-color: var(--color-muted-teal);
-  }
 
   .tablet-clue-header-icon {
     height: 25%;
@@ -218,17 +215,17 @@
   /* Tablet Slide-in Clue Panel */
   .tablet-clue-panel {
     position: absolute;
-    bottom: 0;
+    bottom: 10%;
     left: 0;
     width: 63%;
-    height: 80%;
+    height: 70%;
     background-color: var(--color-paper-white);
     border-top-left-radius: 20px;
     border-top-right-radius: 20px;
     box-shadow: 0 -4px 16px var(--color-shadow);
     z-index: 200;
     flex-direction: column;
-    transform: translateY(100%);
+    transform: translateY(calc(100% + 10%)); /* Move down by panel height + bottom offset to hide completely */
     transition: transform 0.3s ease-in-out;
     overflow: hidden;
     opacity: 0.9;
