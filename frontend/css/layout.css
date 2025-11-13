@@ -82,7 +82,7 @@
 }
 
 .sidebar-section .btn {
-  width: 80%;
+  width: 100%;
 }
 
 .sidebar-login {
@@ -93,7 +93,7 @@
 .sidebar-login .free-banner,
 .sidebar-login .api-usage {
   margin-bottom: 10px;
-  width: 80%;
+  width: 100%;
   text-align: center;
 }
 

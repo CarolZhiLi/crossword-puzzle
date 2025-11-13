@@ -74,7 +74,12 @@
     max-height: 90vh;
     box-sizing: border-box;
     border-color: var(--color-muted-teal);
+    display: flex;
+    flex-direction: column;
     align-self: center;
+    justify-self: center;
+    margin: auto;
+    padding: 10px;
     overflow-y: auto;
     overflow-x: visible;
   }
@@ -86,7 +91,14 @@
     box-sizing: border-box;
     overflow-x: visible;
     overflow-y: hidden;
-    gap: 5px; /* Reduced from 10px in layout.css */
+    gap: 8px;
+    display: flex !important; /* Override base layout */
+    flex-direction: column !important; /* Vertical layout - stack buttons */
+    justify-content: flex-start !important; /* Align items from top */
+    align-items: center !important; /* Center buttons horizontally */
+    flex-wrap: nowrap;
+    margin: 0 auto; /* Center the section itself */
+    padding: 0; /* Remove any padding that might offset centering */
   }
 
   /* Allow tooltips to overflow on hover */
@@ -94,21 +106,27 @@
     overflow-x: visible;
   }
 
+  /* Fix tooltip wrapper width to allow button centering */
+  .left-sidebar.desktop-only .sidebar-section .tooltip-wrapper {
+    width: auto !important; /* Override 100% width from buttons.css */
+    display: inline-block;
+    flex-shrink: 0;
+    max-width: 40px; /* Match button size */
+    max-height: 40px; /* Match button size */
+  }
+
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    width: 80%;
-    max-width: 80%;
-    height: auto;
-    max-height: clamp(
-      32px,
-      6.4vw,
-      80px
-    ); /* 20% smaller: was clamp(40px, 8vw, 100px) */
-    min-height: 32px; /* 20% smaller: was 40px */
+    width: 40px !important; /* Fixed size to match all buttons */
+    height: 40px !important; /* Fixed size to match all buttons */
+    max-width: 40px !important;
+    max-height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
     object-fit: contain;
     box-sizing: border-box;
-    aspect-ratio: 1;
-    flex-shrink: 1; /* Allow this button to shrink if space is tight */
-    margin-bottom: 0.5vh; /* Reduced from 2vh in buttons.css */
+    flex-shrink: 0; /* Don't shrink buttons */
+    margin-bottom: 0; /* No bottom margin for horizontal layout */
+    margin-right: 0; /* Gap handles spacing */
   }
 
   .left-sidebar.desktop-only .sidebar-header {
@@ -142,17 +160,36 @@
   }
 
   .left-sidebar.desktop-only #signInBtn {
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: 100px;
+    width: 40px !important; /* Fixed size to match other buttons */
+    height: 40px !important; /* Fixed size to match other buttons */
+    max-width: 40px !important;
+    max-height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
     object-fit: contain;
     box-sizing: border-box;
   }
 
-  /* Make the login/logout button shrink more aggressively */
+  /* Make the login/logout button the same size as other SVG buttons */
   .left-sidebar.desktop-only .sidebar-login .svg-button {
-    flex-shrink: 2; /* Make this shrink more readily than other buttons */
+    width: 40px !important; /* Fixed size to match other buttons */
+    height: 40px !important; /* Fixed size to match other buttons */
+    max-width: 40px !important;
+    max-height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    object-fit: contain;
+    box-sizing: border-box;
+    flex-shrink: 0; /* Don't shrink, same as other buttons */
+  }
+
+  /* Fix tooltip wrapper width for login button too */
+  .left-sidebar.desktop-only .sidebar-login .tooltip-wrapper {
+    width: auto !important; /* Override 100% width from buttons.css */
+    display: inline-block;
+    flex-shrink: 0;
+    max-width: 40px; /* Match button size */
+    max-height: 40px; /* Match button size */
   }
 
   /* Make the admin-specific info flexible and smaller */
@@ -320,32 +357,23 @@
   }
 
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(
-      32px,
-      6vw,
-      72px
-    ); /* 20% smaller: was clamp(40px, 7.5vw, 90px) */
+    max-width: 40px;
+    max-height: 40px;
   }
 }
 
 /* Small Desktop (1201px - 1400px) */
 @media (min-width: 1201px) and (max-width: 1400px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(
-      40px,
-      6.8vw,
-      76px
-    ); /* 20% smaller: was clamp(50px, 8.5vw, 95px) */
+    max-width: 40px;
+    max-height: 40px;
   }
 }
 
 /* Large Desktop (> 1400px) */
 @media (min-width: 1401px) {
   .left-sidebar.desktop-only .sidebar-section .svg-button {
-    max-height: clamp(
-      48px,
-      7.2vw,
-      80px
-    ); /* 20% smaller: was clamp(60px, 9vw, 100px) */
+    max-width: 40px;
+    max-height: 40px;
   }
 }

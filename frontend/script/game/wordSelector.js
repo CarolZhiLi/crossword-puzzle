@@ -72,9 +72,6 @@ export class WordSelector {
     const [startRow, startCol] = word.start;
     const firstCell = this.game.getGridCell(startRow, startCol);
     if (firstCell) {
-      // Scroll first cell to center of crossword container
-      this.scrollCellToCenter(firstCell);
-      
       const input = firstCell.querySelector("input");
       if (input) {
         // Prevent scroll on mobile when focusing
@@ -85,38 +82,6 @@ export class WordSelector {
         }
       }
     }
-  }
-
-  scrollCellToCenter(cell) {
-    const crosswordContainer = document.querySelector(".crossword-container");
-    if (!crosswordContainer || !cell) return;
-
-    // Get cell position relative to the container (accounting for current scroll)
-    const cellRect = cell.getBoundingClientRect();
-    const containerRect = crosswordContainer.getBoundingClientRect();
-    
-    // Calculate cell position relative to container's scrollable content
-    const cellRelativeLeft = cellRect.left - containerRect.left + crosswordContainer.scrollLeft;
-    const cellRelativeTop = cellRect.top - containerRect.top + crosswordContainer.scrollTop;
-    
-    // Calculate cell center position
-    const cellCenterX = cellRelativeLeft + cellRect.width / 2;
-    const cellCenterY = cellRelativeTop + cellRect.height / 2;
-    
-    // Calculate container center position (in scroll coordinates)
-    const containerCenterX = crosswordContainer.scrollLeft + containerRect.width / 2;
-    const containerCenterY = crosswordContainer.scrollTop + containerRect.height / 2;
-    
-    // Calculate scroll offset needed to center the cell
-    const scrollX = cellCenterX - containerRect.width / 2;
-    const scrollY = cellCenterY - containerRect.height / 2;
-    
-    // Smooth scroll to center the cell
-    crosswordContainer.scrollTo({
-      left: scrollX,
-      top: scrollY,
-      behavior: 'smooth'
-    });
   }
 
   highlightWord(wordNum, direction) {
