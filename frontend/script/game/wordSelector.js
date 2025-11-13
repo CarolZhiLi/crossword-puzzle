@@ -69,19 +69,20 @@ export class WordSelector {
     this.highlightClue(wordNum);
 
     // Focus on first cell of the word (use puzzle coordinates)
-    const [startRow, startCol] = word.start;
-    const firstCell = this.game.getGridCell(startRow, startCol);
-    if (firstCell) {
-      const input = firstCell.querySelector("input");
-      if (input) {
-        // Prevent scroll on mobile when focusing
-        if (window.innerWidth <= 768) {
-          input.focus({ preventScroll: true });
-        } else {
-          input.focus();
-        }
-      }
-    }
+    // COMMENTED OUT to prevent keyboard from showing on mobile when clicking clues
+    // const [startRow, startCol] = word.start;
+    // const firstCell = this.game.getGridCell(startRow, startCol);
+    // if (firstCell) {
+    //   const input = firstCell.querySelector("input");
+    //   if (input) {
+    //     // Prevent scroll on mobile when focusing
+    //     if (window.innerWidth <= 768) {
+    //       input.focus({ preventScroll: true });
+    //     } else {
+    //       input.focus();
+    //     }
+    //   }
+    // }
   }
 
   highlightWord(wordNum, direction) {

@@ -38,6 +38,10 @@
     box-sizing: border-box;
     font-size: var(--font-size-base);
     overflow: hidden; /* disables scrolling */
+    position: fixed; /* Prevent scroll when keyboard appears */
+    width: 100%;
+    top: 0;
+    left: 0;
   }
 
   /* Game container - row-based grid layout */
