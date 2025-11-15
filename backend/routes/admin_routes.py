@@ -5,7 +5,7 @@ from sqlalchemy import func
 
 from extensions import db
 from utils.db_admin import admin_session_scope
-from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset, SavedGame
+from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset, ApiStatistic, SavedGame
 from constants import DEFAULT_DAILY_FREE_LIMIT
  
 
@@ -193,7 +193,30 @@ def reset_usage_today():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
-
+@admin_bp.route('/admin/usage/stats', methods=['GET'])
+@jwt_required()
+def get_api_usage_stats():
+    print("Admin API usage stats requested")
+    if not require_admin():
+        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    try:
+        with admin_session_scope() as s:
+            stats = s.query(
+                ApiStatistic.method,
+                ApiStatistic.endpoint,
+                ApiStatistic.count
+            )
+            result = [
+                {
+                    'method': row.method,
+                    'endpoint': row.endpoint,
+                    'count': row.count
+                }
+                for row in stats
+            ]
+            return jsonify({'success': True, 'stats': result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @admin_bp.route('/admin/users/delete', methods=['POST'])
 @jwt_required()

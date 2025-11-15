@@ -14,6 +14,17 @@ class ApiUsage(db.Model):
         db.UniqueConstraint('user_id', 'endpoint', name='uq_api_usage_user_endpoint'),
     )
 
+class ApiStatistic(db.Model):
+    __tablename__ = 'api_statistics'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    method = db.Column(db.String(10), nullable=False)
+    endpoint = db.Column(db.String(128), nullable=False)
+    count = db.Column(db.Integer, nullable=False, default=0)
+    recorded_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
+
+    __table_args__ = (
+        db.UniqueConstraint('method', 'endpoint', name='uq_api_statistics_method_endpoint'),
+    )
 
 class GameSession(db.Model):
     __tablename__ = 'game_sessions'
