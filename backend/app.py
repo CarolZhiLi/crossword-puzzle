@@ -1,4 +1,4 @@
-import os
+﻿import os
 from flask import Flask
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -9,6 +9,8 @@ from routes.auth_routes import auth_bp
 from routes.puzzle_routes import puzzle_bp
 from routes.usage_routes import usage_bp
 from routes.admin_routes import admin_bp
+
+from hooks.hooks import record_api_call
 
 
 def create_app() -> Flask:
@@ -37,6 +39,8 @@ def create_app() -> Flask:
     if (os.getenv('DB_AUTO_CREATE') or 'false').strip().lower() == 'true':
         with app.app_context():
             db.create_all()
+
+    app.after_request(record_api_call)
 
     return app
 

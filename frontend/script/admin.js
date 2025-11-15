@@ -66,6 +66,41 @@
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load');
     state.rows = data.results || [];
     applyFilter(state);
+    await loadAPIStats(state);
+  }
+
+  async function loadAPIStats(state) {
+    const res = await fetch(`${window.API_BASE}/api/admin/usage/stats`, {
+      method: 'GET',
+      headers: { 'Authorization': `Bearer ${state.token}` }
+    }).then(r => {
+      console.log("API stats response:", r);
+      return r;
+    }); 
+    if (res.status === 401) {
+      try { localStorage.removeItem('token'); } catch(_) {}
+      alert('Session expired or not authorized. Please log in as admin.');
+      window.location.href = './gameplay.html';
+      return;
+    }
+    const data = await res.json();
+    if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load API stats');
+    const table = document.getElementById('apiStatsTable');
+    if (!table) return;
+    const tbody = table.querySelector('tbody') || document.createElement('tbody');
+    tbody.innerHTML = '';
+    (data.stats || []).forEach((stat, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${stat.method || ''}</td>
+        <td>${stat.endpoint || ''}</td>
+        <td>${Number(stat.count || 0)}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+    if (!table.querySelector('tbody')) {
+      table.appendChild(tbody);
+    }
   }
 
   function applyFilter(state) {
