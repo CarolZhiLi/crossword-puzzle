@@ -15,7 +15,6 @@ def record_api_call(response):
         method=req_method, 
         endpoint=req_endpoint
         ).first()
-    print(stat)
 
     if stat:
       # Increment count

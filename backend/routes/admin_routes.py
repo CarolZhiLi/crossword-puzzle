@@ -196,7 +196,6 @@ def reset_usage_today():
 @admin_bp.route('/admin/usage/stats', methods=['GET'])
 @jwt_required()
 def get_api_usage_stats():
-    print("Admin API usage stats requested")
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     try:
