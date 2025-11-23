@@ -27,7 +27,6 @@ def record_api_call(response):
       new_stat = ApiStatistic(method=req_method, endpoint=req_endpoint, count=1, recorded_at=datetime.utcnow())
       with admin_session_scope() as s:
         s.add(new_stat)
-        print("added new :)")
 
     db.session.commit()
 
