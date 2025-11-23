@@ -62,6 +62,8 @@ CrossyThink is a two-part application that lets players generate and solve AI-as
 - `POST /api/auth/forgot-password` - start the password reset process (email or username).
 - `POST /api/auth/reset-password` - finish the reset using the token from the email/link.
 
+To see the full API documentation, go to `http://localhost:5050/api/v1/docs`
+
 ## Development Tips
 - The crossword word list comes from an external service (`request.py`). Network failures or rate limits will bubble up as `Word generation failed` responses; inspect the backend console for details.
 - Modify difficulty-to-word-count mapping in `backend/app.py` (`diff_levels` dict) if you need more or fewer words per puzzle.

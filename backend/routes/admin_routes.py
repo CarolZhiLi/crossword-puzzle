@@ -43,6 +43,31 @@ def require_admin() -> User | None:
 @admin_bp.route('/admin/settings', methods=['GET'])
 @jwt_required()
 def get_settings():
+    """Get application settings.
+    Retrieves all application-wide settings, such as daily usage limits.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    responses:
+      200:
+        description: Settings retrieved successfully.
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            settings:
+              type: object
+              properties:
+                DAILY_FREE_LIMIT:
+                  type: string
+                  description: The global daily limit for free puzzle generations per user.
+      403:
+        description: Forbidden. The current user is not an admin.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     settings = { s.key: s.value for s in AppSetting.query.all() }
@@ -55,6 +80,39 @@ def get_settings():
 @admin_bp.route('/admin/settings', methods=['PUT'])
 @jwt_required()
 def update_settings():
+    """Update application settings.
+    Updates one or more application-wide settings.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          properties:
+            DAILY_FREE_LIMIT:
+              type: integer
+              description: The new global daily limit for free puzzle generations.
+              example: 25
+    responses:
+      200:
+        description: Settings updated successfully.
+        schema:
+          type: object
+          properties:
+            success:
+              type: boolean
+            changed:
+              type: object
+              description: A map of the settings that were successfully changed.
+      403:
+        description: Forbidden. The current user is not an admin.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
@@ -76,6 +134,40 @@ def update_settings():
 @admin_bp.route('/admin/users/role', methods=['POST'])
 @jwt_required()
 def set_user_role():
+    """Set a user's role.
+    Assigns a role ('user' or 'admin') to a specific user.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username, role]
+          properties:
+            username:
+              type: string
+              description: The username of the target user.
+            role:
+              type: string
+              description: The role to assign.
+              enum: ['user', 'admin']
+    responses:
+      200:
+        description: User role updated successfully.
+      400:
+        description: Invalid role specified.
+      403:
+        description: Forbidden. The current user is not an admin.
+      404:
+        description: User not found.
+
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
@@ -99,6 +191,38 @@ def set_user_role():
 @admin_bp.route('/admin/users/quota', methods=['POST'])
 @jwt_required()
 def set_user_quota():
+    """Set a user's daily puzzle generation quota.
+    Overrides the global daily limit for a specific user.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username, daily_limit]
+          properties:
+            username:
+              type: string
+              description: The username of the target user.
+            daily_limit:
+              type: integer
+              description: The custom daily limit to set for the user.
+    responses:
+      200:
+        description: User quota updated successfully.
+      400:
+        description: Invalid limit provided.
+      403:
+        description: Forbidden. The current user is not an admin.
+      404:
+        description: User not found.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
@@ -122,6 +246,40 @@ def set_user_quota():
 @admin_bp.route('/admin/usage/reset', methods=['POST'])
 @jwt_required()
 def reset_usage():
+    """Reset API usage counts.
+    Resets the historical API usage counts for a specific user or all users.
+    This is a legacy endpoint and `reset-today` is generally preferred.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: false
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              description: The username to reset. If omitted or set to '*', resets all users.
+              example: 'testuser'
+    responses:
+      200:
+        description: Usage counts reset successfully.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            reset: { type: string, description: "Username or 'all' that was reset." }
+            rows: { type: integer, description: "Number of records updated." }
+      403:
+        description: Forbidden. The current user is not an admin.
+      404:
+        description: User not found (if a specific username was provided).
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}
@@ -157,6 +315,36 @@ def reset_usage():
 @admin_bp.route('/admin/usage/reset-today', methods=['POST'])
 @jwt_required()
 def reset_usage_today():
+    """Reset today's daily puzzle limit for a user.
+    Allows a user to bypass the daily generation limit for the current day.
+    This works by creating a reset marker; it does not delete any history.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: false
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              description: The username to reset for today. If omitted or set to '*', resets all users.
+              example: 'testuser'
+    responses:
+      200:
+        description: Daily limit reset successfully for the user(s).
+      403:
+        description: Forbidden. The current user is not an admin.
+      404:
+        description: User not found (if a specific username was provided).
+      500:
+        description: Internal server error during the reset operation.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     from datetime import datetime
@@ -196,6 +384,32 @@ def reset_usage_today():
 @admin_bp.route('/admin/usage/stats', methods=['GET'])
 @jwt_required()
 def get_api_usage_stats():
+    """Get API endpoint usage statistics.
+    Retrieves the total call count for each API endpoint recorded by the system.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    responses:
+      200:
+        description: API statistics retrieved successfully.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            stats:
+              type: array
+              items:
+                type: object
+                properties:
+                  method: { type: string }
+                  endpoint: { type: string }
+                  count: { type: integer }
+      403:
+        description: Forbidden. The current user is not an admin.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     try:
@@ -220,6 +434,43 @@ def get_api_usage_stats():
 @admin_bp.route('/admin/users/delete', methods=['POST'])
 @jwt_required()
 def delete_user_and_related():
+    """Delete a user and all their associated data.
+    Permanently removes a user and all related records (saved games, usage data, roles, etc.).
+    This action is irreversible. Admins cannot be deleted via this endpoint.
+    Requires admin privileges.
+    ---
+    tags:
+      - Admin
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [username]
+          properties:
+            username:
+              type: string
+              description: The username of the user to delete.
+    responses:
+      200:
+        description: User and all related data deleted successfully.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            deleted:
+              type: object
+              description: A count of deleted records from each database table.
+      400:
+        description: Username is required.
+      403:
+        description: Forbidden. The current user is not an admin or is trying to delete another admin.
+      404:
+        description: User not found.
+    """
     if not require_admin():
         return jsonify({'success': False, 'error': 'Forbidden'}), 403
     data = request.get_json(silent=True) or {}

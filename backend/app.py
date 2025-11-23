@@ -12,6 +12,8 @@ from routes.admin_routes import admin_bp
 
 from hooks.hooks import record_api_call
 
+from flasgger import Swagger
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -27,6 +29,28 @@ def create_app() -> Flask:
     jwt.init_app(app)
     # Allow Authorization headers for cross-origin requests (frontend served on different port)
     CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
+
+    # Init Flasgger for API documentation
+    swagger_config = {
+        # The title and version of your API
+        "title": "Crossword Puzzle API",
+        "uiversion": 3,
+        # The URL path for the Swagger UI
+        "specs_route": "/api/v1/docs/",
+        # The specs for the Swagger UI
+        "specs": [
+            {
+                "endpoint": 'apispec_1',
+                "route": '/api/v1/docs/apispec_1.json',
+                "rule_filter": lambda rule: True,  # all in
+                "model_filter": lambda tag: True,  # all in
+            }
+        ],
+        "headers": [],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+    }
+    Swagger(app, config=swagger_config)
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')

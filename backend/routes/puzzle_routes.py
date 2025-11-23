@@ -60,6 +60,80 @@ def _clean_llm_term(raw_string: str) -> str:
 
 @puzzle_bp.route('/generate-crossword', methods=['POST'])
 def generate_crossword():
+    """
+    Generate a new crossword puzzle.
+    Creates a crossword puzzle based on a given topic and difficulty.
+    This endpoint can be used by guests, but authenticated users are subject to daily usage limits.
+    ---
+    tags:
+      - Puzzle
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: PuzzleGenerationRequest
+          type: object
+          properties:
+            topic:
+              type: string
+              description: The topic for the crossword puzzle.
+              default: 'JavaScript'
+            difficulty:
+              type: string
+              description: The desired difficulty level, which determines the number of words.
+              enum: ['easy', 'medium', 'hard']
+              default: 'easy'
+    security:
+      - bearerAuth: []
+    responses:
+      200:
+        description: Crossword puzzle generated successfully.
+        schema:
+          id: PuzzleGenerationResponse
+          type: object
+          properties:
+            success:
+              type: boolean
+            grid:
+              type: array
+              items:
+                type: array
+                items:
+                  type: string
+              description: The 2D array representing the crossword grid.
+            words:
+              type: array
+              items:
+                type: object
+                properties:
+                  word: { type: string }
+                  direction: { type: string, enum: ['across', 'down'] }
+                  row: { type: integer }
+                  col: { type: integer }
+                  length: { type: integer }
+            definitions:
+              type: object
+              additionalProperties:
+                type: string
+              description: A map of words to their definitions.
+            total_words: { type: integer }
+            placed_words: { type: integer }
+            grid_size: { type: integer }
+            daily:
+              type: object
+              description: (Authenticated users only) Daily usage statistics.
+              properties:
+                limit: { type: integer }
+                used: { type: integer }
+                remaining: { type: integer }
+      429:
+        description: Daily free limit reached for the authenticated user.
+      500:
+        description: Internal server error, such as a failure in the crossword generation logic.
+      502:
+        description: The upstream word generation service is unavailable or returned an error.
+    """
     try:
         data = flask_request.get_json() or {}
 
@@ -336,10 +410,55 @@ WORD - Clue"""
 
 @puzzle_bp.route('/save-game', methods=['POST'])
 def save_game():
-    """Persist the current game only when user clicks save.
-
-    Expects JSON body with keys: topic, difficulty, words, definitions, grid.
-    Requires authentication; associates saved game with the current user.
+    """
+    Save a generated crossword puzzle.
+    Saves the state of a generated crossword puzzle for the currently authenticated user.
+    This endpoint requires a valid JWT token.
+    ---
+    tags:
+      - Puzzle
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: SaveGameRequest
+          type: object
+          required: [words, definitions, grid]
+          properties:
+            topic:
+              type: string
+              description: The topic of the saved puzzle.
+            difficulty:
+              type: string
+              description: The difficulty of the saved puzzle.
+            words:
+              type: object
+              description: The words list from the generated puzzle response.
+            definitions:
+              type: object
+              description: The definitions map from the generated puzzle response.
+            grid:
+              type: object
+              description: The grid array from the generated puzzle response.
+    security:
+      - bearerAuth: []
+    responses:
+      201:
+        description: Game saved successfully.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            id: { type: integer, description: "The ID of the saved game record." }
+      400:
+        description: Bad request, missing required fields in the payload.
+      401:
+        description: Unauthorized, JWT token is missing or invalid.
+      404:
+        description: User not found.
+      500:
+        description: Internal server error during the save operation.
     """
     try:
         verify_jwt_in_request()
