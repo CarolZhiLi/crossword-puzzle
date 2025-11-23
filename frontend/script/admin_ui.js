@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const translations = [
         "adminHeader", "range_all_time", "range_today", "refreshBtn", "exportBtn", "resetCallsBtn",
         "resetTodayBtn", "backBtn", "api_calls_subtitle", "number_col", "username_col", "email_col",
-        "calls_col", "tokens_col", "games_col", "actions_col", "api_usage_subtitle", "method_col",
+        "calls_col", "tokens_col", "games_col", "api_usage_subtitle", "method_col",
         "endpoint_col", "request_col", "apiStatsPrevBtn", "apiStatsNextBtn"
     ];
 

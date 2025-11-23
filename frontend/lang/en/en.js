@@ -118,7 +118,6 @@
     calls_col: "Calls",
     tokens_col: "Tokens",
     games_col: "Games",
-    actions_col: "Actions",
     api_usage_subtitle: "Shows API Usage Totals",
     method_col: "Method",
     endpoint_col: "Endpoint",
