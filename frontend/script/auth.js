@@ -62,148 +62,113 @@ class AuthManager {
 
   refreshAuthState() {
     try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        // Fetch current user from backend (DB-sourced role)
-        fetch(`${window.API_BASE}/api/auth/me`, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        })
-          .then((r) => {
-            if (r.status === 401) {
-              // Token is invalid or expired, clear it
-              console.log("Token invalid or expired, clearing authentication");
-              try {
-                localStorage.removeItem("token");
-                localStorage.removeItem("user");
-              } catch (_) {}
-              this.isAuthenticated = false;
-              this.currentUser = null;
+      return new Promise((resolve) => {
+        const token = localStorage.getItem("token");
+        if (token) {
+          fetch(`${window.API_BASE}/api/auth/me`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${token}` },
+          })
+            .then((r) => {
+              if (r.status === 401) {
+                console.log("Token invalid or expired, clearing authentication");
+                try {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("user");
+                } catch (_) {}
+                this.isAuthenticated = false;
+                this.currentUser = null;
+                this.updateUI();
+                return null;
+              }
+              return r.json();
+            })
+            .then((data) => {
+              if (!data) return resolve();
+              if (data && data.success && data.user) {
+                this.currentUser = data.user;
+                try {
+                  localStorage.setItem("user", JSON.stringify(data.user));
+                } catch (_) {}
+                this.isAuthenticated = true;
+              } else {
+                this.isAuthenticated = true;
+              }
               this.updateUI();
-              return null;
-            }
-            return r.json();
-          })
-          .then((data) => {
-            if (!data) return; // Already handled 401 case
-            if (data && data.success && data.user) {
-              this.currentUser = data.user;
-              try {
-                localStorage.setItem("user", JSON.stringify(data.user));
-              } catch (_) {}
-              this.isAuthenticated = true;
-            } else {
-              this.isAuthenticated = true; // token existed; keep until invalidated elsewhere
-            }
-            this.updateUI();
-          })
-          .catch(() => {
-            // Network error or other issue - don't clear token on network errors
-            this.updateUI();
-          });
-      } else {
-        this.isAuthenticated = false;
-        this.currentUser = null;
-        this.updateUI();
-      }
+              resolve();
+            })
+            .catch(() => {
+              this.updateUI();
+              resolve();
+            });
+        } else {
+          this.isAuthenticated = false;
+          this.currentUser = null;
+          this.updateUI();
+          resolve();
+        }
+      });
     } catch (_) {
       this.updateUI();
+      return Promise.resolve();
+    }
+  }
+
+  _updateAuthButton(btn, isMobile = false) {
+    if (!btn) return;
+
+    const t = window.t || ((key) => key.replace(/_/g, " "));
+    const isAuthenticated = this.isAuthenticated;
+
+    const states = {
+      authenticated: {
+        src: "./assets/profile.svg", // Or keep as login.svg if you prefer
+        alt: t("profile"),
+        text: t("profile"),
+        className: "btn btn-primary", // Keep consistent style
+        tooltip: t("profile"),
+        action: () => this.showProfileModal(),
+      },
+      unauthenticated: {
+        src: "./assets/login.svg",
+        alt: t("login"),
+        text: t("login"),
+        className: "btn btn-primary",
+        tooltip: t("login"),
+        action: () => this.showSignInForm(),
+      },
+    };
+
+    const state = isAuthenticated ? states.authenticated : states.unauthenticated;
+
+    if (btn.tagName === "IMG") {
+      btn.src = state.src;
+      btn.alt = state.alt;
+      // For mobile/tablet, the 'title' attribute acts as a simple tooltip
+      if (isMobile) {
+        btn.title = state.tooltip;
+      }
+    } else {
+      btn.textContent = state.text;
+      btn.className = state.className;
+    }
+
+    btn.onclick = state.action;
+
+    const tooltipWrapper = btn.closest(".tooltip-wrapper");
+    if (tooltipWrapper) {
+      tooltipWrapper.setAttribute("data-tooltip", state.tooltip);
     }
   }
 
   updateUI() {
-    const signInBtn = document.getElementById("signInBtn");
-    const mobileSignInBtn = document.getElementById("mobileSignInBtn");
-    const tabletSignInBtn = document.getElementById("tabletSignInBtn");
-    const apiUsageEl = document.getElementById("apiUsage");
-    const freeBanner = document.getElementById("freeBanner");
-    const adminLink = document.getElementById("adminLink");
-
-    // Update desktop sign in button (img element)
-    if (signInBtn) {
-      if (this.isAuthenticated) {
-        // Change to logout icon
-        if (signInBtn.tagName === "IMG") {
-          signInBtn.src = "./assets/logout.svg";
-          signInBtn.alt = window.t ? t("logout") : "Log Out";
-        } else {
-          signInBtn.textContent = window.t ? t("logout") : "Log Out";
-          signInBtn.className = "btn btn-success";
-        }
-        signInBtn.onclick = () => this.signOut();
-        // Update tooltip wrapper if it exists
-        const tooltipWrapper = signInBtn.closest(".tooltip-wrapper");
-        if (tooltipWrapper) {
-          tooltipWrapper.setAttribute(
-            "data-tooltip",
-            window.t ? t("logout") : "Log Out"
-          );
-        }
-      } else {
-        // Change to login icon
-        if (signInBtn.tagName === "IMG") {
-          signInBtn.src = "./assets/login.svg";
-          signInBtn.alt = window.t ? t("login") : "Log In";
-        } else {
-          signInBtn.textContent = window.t ? t("login") : "Log In";
-          signInBtn.className = "btn btn-primary";
-        }
-        signInBtn.onclick = () => this.showSignInForm();
-        // Update tooltip wrapper if it exists
-        const tooltipWrapper = signInBtn.closest(".tooltip-wrapper");
-        if (tooltipWrapper) {
-          tooltipWrapper.setAttribute(
-            "data-tooltip",
-            window.t ? t("login") : "Log In"
-          );
-        }
-      }
-    }
-
-    // Reflect auth state on mobile login icon via title and click behavior
-    if (mobileSignInBtn) {
-      if (this.isAuthenticated) {
-        if (mobileSignInBtn.tagName === "IMG") {
-          mobileSignInBtn.src = "./assets/logout.svg";
-          mobileSignInBtn.alt = window.t ? t("logout") : "Log Out";
-        }
-        mobileSignInBtn.title = window.t ? t("logout") : "Log Out";
-      } else {
-        if (mobileSignInBtn.tagName === "IMG") {
-          mobileSignInBtn.src = "./assets/login.svg";
-          mobileSignInBtn.alt = window.t ? t("login") : "Log In";
-        }
-        mobileSignInBtn.title = window.t ? t("login") : "Log In";
-      }
-      mobileSignInBtn.onclick = () => {
-        if (this.isAuthenticated) this.signOut();
-        else this.showSignInForm();
-      };
-    }
-
-    // Update tablet sign in button
-    if (tabletSignInBtn) {
-      if (this.isAuthenticated) {
-        if (tabletSignInBtn.tagName === "IMG") {
-          tabletSignInBtn.src = "./assets/logout.svg";
-          tabletSignInBtn.alt = window.t ? t("logout") : "Log Out";
-        }
-        tabletSignInBtn.title = window.t ? t("logout") : "Log Out";
-      } else {
-        if (tabletSignInBtn.tagName === "IMG") {
-          tabletSignInBtn.src = "./assets/login.svg";
-          tabletSignInBtn.alt = window.t ? t("login") : "Log In";
-        }
-        tabletSignInBtn.title = window.t ? t("login") : "Log In";
-      }
-      tabletSignInBtn.onclick = () => {
-        if (this.isAuthenticated) this.signOut();
-        else this.showSignInForm();
-      };
-    }
+    this._updateAuthButton(document.getElementById("signInBtn"));
+    this._updateAuthButton(document.getElementById("mobileSignInBtn"), true);
+    this._updateAuthButton(document.getElementById("tabletSignInBtn"), true);
 
     // Admin link visibility from DB role
     try {
+      const adminLink = document.getElementById("adminLink");
       if (adminLink)
         adminLink.style.display =
           this.currentUser && this.currentUser.role === "admin"
@@ -216,6 +181,8 @@ class AuthManager {
 
     // Usage + daily banner (backend only)
     try {
+      const apiUsageEl = document.getElementById("apiUsage");
+      const freeBanner = document.getElementById("freeBanner");
       const token = localStorage.getItem("token");
       if (!token || !apiUsageEl) {
         if (apiUsageEl) apiUsageEl.style.display = "none";
@@ -228,7 +195,6 @@ class AuthManager {
       })
         .then((r) => {
           if (r.status === 401) {
-            // Token is invalid, but don't clear it here (already handled in refreshAuthState)
             if (apiUsageEl) apiUsageEl.style.display = "none";
             if (freeBanner) freeBanner.style.display = "none";
             return null;
@@ -285,6 +251,9 @@ class AuthManager {
   showForgotPasswordForm() {
     this.createModal("forgot");
   }
+  showProfileModal() {
+    this.createModal("profile");
+  }
 
   createModal(type = "signIn") {
     const existing = document.querySelector(".auth-modal");
@@ -294,6 +263,14 @@ class AuthManager {
     modal.innerHTML = this.getModalHTML(type);
     document.body.appendChild(modal);
     setTimeout(() => modal.classList.add("show"), 10);
+    
+    // Bind events for sub-modals within the profile view
+    if (['changePassword', 'modifyUsername', 'savedGames', 'logoutConfirm', 'deleteGameConfirm', 'loadGameConfirm'].includes(type)) {
+      this.bindProfileSubModalEvents(type);
+    }
+    if (type === 'profile') {
+      this.bindProfileModalEvents();
+    }
   }
 
   getModalHTML(type) {
@@ -395,6 +372,162 @@ class AuthManager {
             _("brand_name") || "CrossyThink"
           }</h3><p>${
         _("reset_right_panel") || "We'll help you get back in."
+      }</p></div></div>
+        </div>
+      </div>`;
+    if (type === "profile")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("profile_title") || "User Profile"}</h2></div>
+            <div class="profile-details">
+              <p><strong>${_("username")}:</strong> <span id="profileUsername">${this.currentUser?.username || '...'}</span></p>
+              <p><strong>${_("email")}:</strong> <span id="profileEmail">${this.currentUser?.email || '...'}</span></p>
+            </div>
+            <div class="profile-actions">
+              <button type="button" class="btn btn-secondary" id="profileModifyUsernameBtn">${_("modify_username") || "Modify Username"}</button>
+              <button type="button" class="btn btn-secondary" id="profileSavedGamesBtn">${_("saved_games") || "Saved Games"}</button>
+              <button type="button" class="btn btn-secondary" id="profileChangePasswordBtn">${_("change_password") || "Change Password"}</button>
+              <button type="button" class="btn btn-danger" id="profileLogoutBtn">${_("logout") || "Log Out"}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${
+            _("brand_name") || "CrossyThink"
+          }</h3><p>${
+        _("profile_tagline") || "Manage your account and game progress."
+      }</p></div></div>
+        </div>
+      </div>`;
+    if (type === "modifyUsername")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("modify_username")}</h2></div>
+            <form id="modifyUsernameFormElement" class="auth-form">
+              <div class="form-group">
+                <label for="newUsername">${_("new_username")}</label>
+                <input type="text" id="newUsername" name="newUsername" required minlength="6" maxlength="12" value="${this.currentUser?.username || ''}">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">${_("save_changes")}</button>
+                <button type="button" class="btn btn-secondary" id="backToProfile">${_("back_to_profile")}</button>
+              </div>
+            </form>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+    if (type === "changePassword")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("change_password")}</h2></div>
+            <form id="changePasswordFormElement" class="auth-form">
+              <div class="form-group">
+                <label for="currentPassword">${_("current_password")}</label>
+                <input type="password" id="currentPassword" name="currentPassword" required>
+              </div>
+              <div class="form-group">
+                <label for="newPassword">${_("new_password")}</label>
+                <input type="password" id="newPassword" name="newPassword" required minlength="6" maxlength="15">
+              </div>
+              <div class="form-group">
+                <label for="confirmNewPassword">${_("confirm_new_password")}</label>
+                <input type="password" id="confirmNewPassword" name="confirmNewPassword" required minlength="6" maxlength="15">
+              </div>
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">${_("update_password")}</button>
+                <button type="button" class="btn btn-secondary" id="backToProfile">${_("back_to_profile")}</button>
+              </div>
+            </form>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+    if (type === "savedGames")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("saved_games")}</h2></div>
+            <div class="saved-games-container">
+              <div class="saved-game-card-wrapper" data-slot="1">
+                <div class="saved-game-card"><div class="card-content">${_("empty_slot")}</div></div>
+              </div>
+              <div class="saved-game-card-wrapper" data-slot="2">
+                <div class="saved-game-card"><div class="card-content">${_("empty_slot")}</div></div>
+              </div>
+              <div class="saved-game-card-wrapper" data-slot="3">
+                <div class="saved-game-card"><div class="card-content">${_("empty_slot")}</div></div>
+              </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="backToProfile">${_("back_to_profile")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+    if (type === "logoutConfirm")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("confirm_logout_title")}</h2></div>
+            <p class="text-center">${_("confirm_logout_text")}</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-danger" id="confirmLogoutYes">${_("yes")}</button>
+                <button type="button" class="btn btn-secondary" id="backToProfile">${_("no")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${
+            _("brand_name") || "CrossyThink"
+          }</h3><p>${
+        _("profile_tagline") || "Manage your account and game progress."
+      }</p></div></div>
+        </div>
+      </div>`;
+    if (type === "deleteGameConfirm")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("confirm_delete_title")}</h2></div>
+            <p class="text-center">${_("confirm_delete_text")}</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-danger" id="confirmDeleteYes">${_("yes_delete")}</button>
+                <button type="button" class="btn btn-secondary" id="backToSavedGames">${_("no_cancel")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+    if (type === "loadGameConfirm")
+      return `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("confirm_load_title")}</h2></div>
+            <p class="text-center">${_("confirm_load_game")}</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="confirmLoadYes">${_("yes_load")}</button>
+                <button type="button" class="btn btn-secondary" id="backToSavedGames">${_("no_cancel")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${
+            _("brand_name") || "CrossyThink"
+          }</h3><p>${
+        _("profile_tagline") || "Manage your account and game progress."
       }</p></div></div>
         </div>
       </div>`;
@@ -572,6 +705,186 @@ class AuthManager {
         "success"
       );
     }
+  }
+
+  bindProfileSubModalEvents(type) {
+    document.getElementById('backToProfile')?.addEventListener('click', () => this.showProfileModal());
+    document.getElementById('backToSavedGames')?.addEventListener('click', () => this.createModal('savedGames'));
+    // Retrieve gameId from a temporary storage if needed for confirmation modals
+    const gameIdForConfirm = sessionStorage.getItem('gameIdForConfirm');
+
+    const token = localStorage.getItem("token");
+
+    if (type === 'modifyUsername') {
+      document.getElementById('modifyUsernameFormElement')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const newUsername = (new FormData(form).get('newUsername') || '').toString().trim();
+        if (!newUsername) {
+          this.showMessage(t('fill_all_fields'), 'error');
+          return;
+        }
+
+        this.showMessage(t('saving_changes'), 'info');
+        fetch(`${window.API_BASE}/api/auth/change-username`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ newUsername }),
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Failed to change username.');
+          // Check for a new token in the response and update localStorage
+          if (data.access_token) {
+            localStorage.setItem('token', data.access_token);
+          }
+          this.showMessage(t('username_change_success'), 'success');
+          // Wait for the success message to show, then refresh state and show the modal
+          setTimeout(() => {
+            this.refreshAuthState().then(() => this.showProfileModal());
+          }, 1500);
+        })
+        .catch(err => this.showMessage(err.message, 'error'));
+      });
+    }
+
+    if (type === 'changePassword') {
+      document.getElementById('changePasswordFormElement')?.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const fd = new FormData(form);
+        const currentPassword = fd.get('currentPassword');
+        const newPassword = fd.get('newPassword');
+        const confirmNewPassword = fd.get('confirmNewPassword');
+
+        if (!currentPassword || !newPassword || !confirmNewPassword) {
+          this.showMessage(t('fill_all_fields'), 'error');
+          return;
+        }
+        if (newPassword !== confirmNewPassword) {
+          this.showMessage(t('passwords_no_match'), 'error');
+          return;
+        }
+
+        this.showMessage(t('updating_password_msg'), 'info');
+        fetch(`${window.API_BASE}/api/auth/change-password`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ currentPassword, newPassword }),
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Failed to update password.');
+          this.showMessage(t('password_change_success'), 'success');
+          setTimeout(() => this.showProfileModal(), 1500);
+        })
+        .catch(err => this.showMessage(err.message, 'error'));
+      });
+    }
+
+    if (type === 'savedGames') {
+      const cardWrappers = document.querySelectorAll('.saved-game-card-wrapper');
+      cardWrappers.forEach(wrapper => wrapper.querySelector('.saved-game-card').innerHTML = `<div class="card-content">${t('loading')}...</div>`);
+
+      fetch(`${window.API_BASE}/api/saved-games`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      .then(r => r.json())
+      .then(result => {
+        if (!result.success) throw new Error(result.error || 'Failed to load saved games.');
+        const games = result.saved_games;
+        cardWrappers.forEach((wrapper, index) => {
+          const game = games[index];
+          const card = wrapper.querySelector('.saved-game-card');
+          if (game) {
+            card.dataset.gameId = game.id;
+            card.innerHTML = `<div class="card-content"><strong>${game.topic}</strong><br>${game.difficulty}<br><small>${new Date(game.started_at).toLocaleDateString()}</small></div>`;
+            // Add delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger btn-delete-game';
+            deleteBtn.textContent = t('delete');
+            deleteBtn.dataset.gameId = game.id;
+            wrapper.appendChild(deleteBtn);
+          } else {
+            card.innerHTML = `<div class="card-content">${t('no_saved_game')}</div>`;
+          }
+        });
+
+        // Add event listeners after elements are created
+        document.querySelectorAll('.saved-game-card').forEach(card => {
+          card.addEventListener('click', () => {
+            const gameId = card.dataset.gameId;
+            if (gameId) {
+              sessionStorage.setItem('gameIdForConfirm', gameId);
+              this.createModal('loadGameConfirm');
+            }
+          });
+        });
+        document.querySelectorAll('.btn-delete-game').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent card click
+            const gameId = btn.dataset.gameId;
+            if (gameId) {
+              sessionStorage.setItem('gameIdForConfirm', gameId);
+              this.createModal('deleteGameConfirm');
+            }
+          });
+        });
+      })
+      .catch(err => {
+        console.error(err);
+        cardWrappers.forEach(wrapper => wrapper.querySelector('.saved-game-card').innerHTML = `<div class="card-content">${t('error_loading_games')}</div>`);
+      });
+    }
+
+    if (type === 'deleteGameConfirm' && gameIdForConfirm) {
+      document.getElementById('confirmDeleteYes')?.addEventListener('click', () => {
+        this.showMessage(t('deleting_game'), 'info');
+        fetch(`${window.API_BASE}/api/saved-games/${gameIdForConfirm}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then(r => r.json().then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+          if (!ok) throw new Error(data.error || 'Failed to delete game.');
+          this.showMessage(t('game_deleted_success'), 'success');
+          setTimeout(() => this.createModal('savedGames'), 1000);
+        })
+        .catch(err => this.showMessage(err.message, 'error'));
+      });
+    }
+    if (type === 'loadGameConfirm' && gameIdForConfirm) {
+      document.getElementById('confirmLoadYes')?.addEventListener('click', () => {
+        if (window.__game) {
+          this.closeModal();
+          window.__game.gameApi.loadSavedGame(gameIdForConfirm);
+        }
+      });
+    }
+
+    if (type === 'logoutConfirm') {
+      document.getElementById('confirmLogoutYes')?.addEventListener('click', () => {
+        this.signOut();
+        window.location.reload();
+      });
+    } 
+  }
+
+  bindProfileModalEvents() {
+    const logoutBtn = document.getElementById('profileLogoutBtn');
+    const modifyUsernameBtn = document.getElementById('profileModifyUsernameBtn');
+    const savedGamesBtn = document.getElementById('profileSavedGamesBtn');
+    const changePasswordBtn = document.getElementById('profileChangePasswordBtn');
+
+    if (logoutBtn) {
+      logoutBtn.addEventListener('click', () => {
+        this.createModal('logoutConfirm');
+      });
+    }
+
+    modifyUsernameBtn?.addEventListener('click', () => this.createModal('modifyUsername'));
+    savedGamesBtn?.addEventListener('click', () => this.createModal('savedGames'));
+    changePasswordBtn?.addEventListener('click', () => this.createModal('changePassword'));
   }
 
   signOut() {

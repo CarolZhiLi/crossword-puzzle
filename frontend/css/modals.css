@@ -253,6 +253,114 @@
   border: 1px solid var(--color-deep-teal);
 }
 
+.text-center {
+  text-align: center;
+}
+
+.profile-modal .form-actions {
+  /* Ensure buttons in profile modals are centered */
+  align-items: center;
+}
+
+/* Profile Modal Specifics */
+.profile-modal .auth-form-section {
+  justify-content: flex-start;
+  padding-top: 80px;
+}
+
+.profile-details {
+  margin-bottom: 30px;
+  font-size: var(--font-size-lg);
+  color: var(--color-text);
+}
+
+.profile-details p {
+  margin: 10px 0;
+}
+
+.profile-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+  align-items: center;
+}
+
+.profile-actions .btn {
+  width: 80%;
+  max-width: 300px;
+  justify-content: center;
+  height: auto; /* Let padding define height */
+}
+
+.saved-games-container {
+  display: flex;
+  justify-content: space-around;
+  gap: 20px;
+  width: 100%;
+  margin-bottom: 30px;
+}
+
+.saved-game-card {
+  flex: 1;
+  aspect-ratio: 1 / 1;
+  max-width: 120px;
+  background: var(--color-creamy-yellow);
+  border: 2px solid var(--color-border);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 10px;
+}
+
+.saved-game-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px var(--color-shadow);
+  border-color: var(--color-deep-teal);
+}
+
+.saved-game-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-delete-game {
+  width: 80%;
+  padding: 6px 12px;
+  font-size: var(--font-size-sm);
+  height: auto;
+  background-color: var(--color-soft-coral);
+  border-color: var(--color-soft-coral);
+  color: var(--color-paper-white);
+  align-self: center;
+}
+
+.progress-bar-container {
+  width: 80%;
+  height: 20px;
+  background-color: var(--color-border);
+  border-radius: 10px;
+  margin: 20px auto;
+  overflow: hidden;
+}
+
+.progress-bar {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-muted-teal), var(--color-deep-teal));
+  border-radius: 10px;
+  transition: width 0.5s ease-in-out;
+  text-align: center;
+  color: white;
+  font-weight: bold;
+}
+
 /* ============================================
    GAME CONTROLS MODAL
    ============================================ */

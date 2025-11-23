@@ -74,11 +74,9 @@ export class PuzzleChecker {
 
     // If puzzle is not complete, show message
     if (incompleteWords.length > 0) {
-      const msg = t("puzzle_incomplete", {
-        incomplete: incompleteWords.length,
-        total: Object.keys(this.game.words).length,
-      });
-      alert(msg);
+      const msg = t("puzzle_incomplete");
+      const title = t("puzzle_incomplete_title");
+      this.game.showInfoModal(title, msg);
       return;
     }
 
@@ -151,32 +149,29 @@ export class PuzzleChecker {
     if (correctWords === totalWords) {
       // Puzzle is completely correct
       const msg = t("puzzle_solved");
-      alert(msg);
+      this.game.showInfoModal(msg, ""); // Title only for this one
       this.game.timerHandler.stopTimer();
     } else {
       // Some words are incorrect
-      const percentage = Math.round((correctWords / totalWords) * 100);
-      const msg = t("puzzle_results", {
-        correct: correctWords,
-        total: totalWords,
-        percent: percentage,
-      });
-      alert(msg);
+      const msg = t("puzzle_results");
+      const title = t("puzzle_results_title");
+      this.game.showInfoModal(title, msg);
     }
   }
 
   applyI18n() {
     // Update all check/submit puzzle buttons using class selector
-    const submitText =
-      t("btn_submit_puzzle") || t("btn_check_puzzle") || "Submit Puzzle";
+    const buttonText = t("btn_check_puzzle");
+    const tooltipText = t("tooltip_check_puzzle");
     document.querySelectorAll(".js-check-puzzle-btn").forEach((check) => {
       if (check.tagName === "IMG") {
-        check.alt = submitText;
-        check.title = submitText;
+        check.alt = buttonText;
+        check.title = tooltipText; // For mobile/tablet hover
+        const wrapper = check.closest(".tooltip-wrapper");
+        if (wrapper) wrapper.setAttribute("data-tooltip", tooltipText); // For desktop hover
       } else {
-        check.textContent = submitText;
+        check.textContent = buttonText;
       }
     });
   }
 }
-

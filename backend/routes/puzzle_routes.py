@@ -1,5 +1,5 @@
 from flask import Blueprint, request as flask_request, jsonify
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, jwt_required
 from crossword_grid_generator import CrosswordGenerator
 from request import request as generate_words
 from services.usage_service import UsageService
@@ -491,6 +491,118 @@ def save_game():
         db.session.commit()
 
         return jsonify({'success': True, 'id': row.id}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@puzzle_bp.route('/saved-games', methods=['GET'])
+@jwt_required()
+def get_saved_games():
+    """Fetches a summary of the current user's saved games."""
+    try:
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        # Fetch the first 3 saved games, ordered by when they were saved
+        saved_games = SavedGame.query.filter_by(user_id=user.id).order_by(SavedGame.id.asc()).limit(3).all()
+
+        games_summary = []
+        for game in saved_games:
+            games_summary.append({
+                'id': game.id,
+                'topic': game.topic,
+                'difficulty': game.difficulty,
+                'started_at': game.started_at.isoformat()
+            })
+
+        return jsonify({'success': True, 'saved_games': games_summary})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@puzzle_bp.route('/saved-games/<int:game_id>', methods=['GET'])
+@jwt_required()
+def get_saved_game_by_id(game_id):
+    """Fetches the full data for a single saved game, ensuring it belongs to the current user."""
+    try:
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        # Fetch the specific game and verify ownership
+        game = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
+        if not game:
+            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+
+        # The JSON columns are already stored as JSON, so we can return them directly
+        game_data = {
+            'id': game.id,
+            'grid': game.grid_json,
+            'words': game.words_json,
+            'definitions': game.definitions_json
+        }
+
+        return jsonify({'success': True, 'game': game_data})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@puzzle_bp.route('/saved-games/<int:game_id>', methods=['PUT'])
+@jwt_required()
+def override_saved_game(game_id):
+    """Overrides an existing saved game with new data."""
+    try:
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        # Fetch the specific game and verify ownership
+        game_to_override = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
+        if not game_to_override:
+            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+
+        payload = flask_request.get_json(silent=True) or {}
+        
+        # Update the fields of the existing game record
+        game_to_override.topic = payload.get('topic')
+        game_to_override.difficulty = payload.get('difficulty')
+        game_to_override.words_json = payload.get('words')
+        game_to_override.definitions_json = payload.get('definitions')
+        game_to_override.grid_json = payload.get('grid')
+        # Update the timestamp to reflect the new save time
+        game_to_override.started_at = datetime.utcnow()
+
+        db.session.commit()
+
+        return jsonify({'success': True, 'id': game_to_override.id, 'message': 'Game overridden successfully.'}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@puzzle_bp.route('/saved-games/<int:game_id>', methods=['DELETE'])
+@jwt_required()
+def delete_saved_game(game_id):
+    """Deletes a single saved game, ensuring it belongs to the current user."""
+    try:
+        username = get_jwt_identity()
+        user = User.query.filter_by(username=username).first()
+        if not user:
+            return jsonify({'success': False, 'error': 'User not found'}), 404
+
+        # Fetch the specific game and verify ownership before deleting
+        game = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
+        if not game:
+            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+
+        db.session.delete(game)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Game deleted successfully.'})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500

@@ -1,4 +1,5 @@
 from extensions import db
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class ApiUsage(db.Model):
@@ -105,6 +106,22 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, server_default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, server_default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
+    def set_password(self, password):
+        """Create hashed password."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        """Check hashed password."""
+        return check_password_hash(self.password_hash, password)
+
+    def to_dict(self):
+        """Return user data as a dictionary."""
+        return {
+            'id': self.id,
+            'username': self.username,
+            'email': self.email,
+            'role': 'user'  # Default role, can be expanded later
+        }
 
 class PasswordReset(db.Model):
     __tablename__ = 'password_resets'

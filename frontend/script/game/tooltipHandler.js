@@ -24,10 +24,12 @@ export class TooltipHandler {
         if (!tooltipEl) {
           tooltipEl = document.createElement("div");
           tooltipEl.className = "custom-tooltip";
-          tooltipEl.textContent = wrapper.getAttribute("data-tooltip");
           document.body.appendChild(tooltipEl);
           wrapper._tooltipEl = tooltipEl;
         }
+
+        // Always update the text content in case it has changed
+        tooltipEl.textContent = wrapper.getAttribute("data-tooltip");
 
         // Position tooltip to the right of the button
         const left = rect.right + 12;
@@ -68,4 +70,3 @@ export class TooltipHandler {
     });
   }
 }
-

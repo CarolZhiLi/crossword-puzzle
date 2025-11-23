@@ -21,7 +21,8 @@ export class HintHandler {
   showHint() {
     if (!this.game.currentWord) {
       const msg = t("select_word_first");
-      alert(msg);
+      const title = t("select_word_first_title");
+      this.game.showInfoModal(title, msg);
       return;
     }
 
@@ -55,7 +56,8 @@ export class HintHandler {
   hintWord() {
     if (!this.game.currentWord) {
       const msg = t("select_word_first");
-      alert(msg);
+      const title = t("select_word_first_title");
+      this.game.showInfoModal(title, msg);
       return;
     }
 
@@ -106,4 +108,3 @@ export class HintHandler {
     }
   }
 }
-
