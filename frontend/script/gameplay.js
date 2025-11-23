@@ -254,6 +254,7 @@ export default class CrosswordGame {
         if (gridContainer) {
           gridContainer.style.display = "grid";
           console.log("Grid container display set to grid");
+          this.updateSaveGameButtonVisibility(); // Show save button now that game is active
         }
       });
     });
@@ -328,11 +329,12 @@ export default class CrosswordGame {
     this.puzzleChecker.setupEventListeners();
 
     // Save game buttons
+    this.updateSaveGameButtonVisibility(); // Initial check
     document.querySelectorAll('.js-save-game-btn').forEach((el) => {
       el.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
-        this.gameApi.saveCurrentGame();
+        this.showSaveGameModal();
       });
     });
 
@@ -471,18 +473,24 @@ export default class CrosswordGame {
     if (!isAuth) {
       // Guest user - show login modal
       console.log("User not authenticated, showing login modal");
-      const signInBtn = document.getElementById("signInBtn");
-      if (signInBtn) {
-        signInBtn.click();
-      } else {
-        console.error("signInBtn not found!");
-      }
+      // Directly call the auth manager to show the sign-in form
+      if (window.__auth) window.__auth.showSignInForm();
+      else console.error("Auth manager not found!");
       return;
     }
 
     // Registered user - show game controls modal
     console.log("User authenticated, showing game controls modal");
     this.topicDifficulty.showGameControlsModal();
+  }
+
+  showSaveGameModal() {
+    if (!this.isAuthenticated()) {
+      alert(t('login_to_save'));
+      return;
+    }
+    // For now, this will call the existing save logic.
+    this.createSaveGameModal();
   }
 
   restartGame() {
@@ -499,6 +507,299 @@ export default class CrosswordGame {
       // Reset timer
       this.timerHandler.resetTimer();
     }
+  }
+
+  createSaveGameModal() {
+    const existing = document.querySelector(".auth-modal");
+    if (existing) existing.remove();
+
+    const _ = (k) => (window.t ? t(k) : k);
+
+    const modal = document.createElement("div");
+    modal.className = "auth-modal";
+    modal.innerHTML = `
+      <div class="auth-modal-content profile-modal" id="saveGameModalContent">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${_("save_current_game")}</h2></div>
+            <div class="saved-games-container">
+              <div class="saved-game-card-wrapper" data-slot="1">
+                <div class="saved-game-card"><div class="card-content">${_("loading")}...</div></div>
+              </div>
+              <div class="saved-game-card-wrapper" data-slot="2">
+                <div class="saved-game-card"><div class="card-content">${_("loading")}...</div></div>
+              </div>
+              <div class="saved-game-card-wrapper" data-slot="3">
+                <div class="saved-game-card"><div class="card-content">${_("loading")}...</div></div>
+              </div>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" id="backToGameBtn">${_("back_to_game")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3><p>${_("save_game_tagline")}</p></div></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add("show"), 10);
+
+    // --- Event Listeners ---
+    modal.querySelector('.close-btn')?.addEventListener('click', () => this.closeSaveGameModal());
+    modal.querySelector('#backToGameBtn')?.addEventListener('click', () => this.closeSaveGameModal());
+
+    // --- Fetch Saved Games and Populate ---
+    const token = localStorage.getItem("token");
+    fetch(`${window.API_BASE}/api/saved-games`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(result => {
+      if (!result.success) throw new Error(result.error || 'Failed to load saved games.');
+      const games = result.saved_games;
+      const cardWrappers = modal.querySelectorAll('.saved-game-card-wrapper');
+      let emptySlots = 3 - games.length;
+
+      cardWrappers.forEach((wrapper, index) => {
+        const game = games[index];
+        const card = wrapper.querySelector('.saved-game-card');
+        
+        if (game) {
+          // Populate card with existing game data
+          card.dataset.gameId = game.id;
+          card.innerHTML = `<div class="card-content"><strong>${game.topic}</strong><br>${game.difficulty}<br><small>${new Date(game.started_at).toLocaleDateString()}</small></div>`;
+          
+          const deleteBtn = document.createElement('button');
+          deleteBtn.className = 'btn btn-danger btn-delete-game';
+          deleteBtn.textContent = _('delete');
+          deleteBtn.dataset.gameId = game.id;
+          wrapper.appendChild(deleteBtn);
+
+        } else if (emptySlots > 0) {
+          // This is an available empty slot
+          card.innerHTML = `<div class="card-content">${_("empty_slot")}</div>`;
+          card.classList.add('empty-slot');
+          emptySlots--;
+        } else {
+          // All 3 slots are full, and this is beyond the 3rd slot
+           card.innerHTML = `<div class="card-content">${_("no_saved_game")}</div>`;
+           card.style.cursor = 'default';
+           card.style.opacity = '0.6';
+        }
+      });
+
+      // --- Add Event Listeners After Population ---
+      modal.querySelectorAll('.saved-game-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const gameId = card.dataset.gameId;
+          const _ = (k, p) => (window.t ? t(k, p) : k);
+
+          if (card.classList.contains('empty-slot')) {
+            // Clicked an empty slot -> Save new game
+            this.createConfirmationModal(
+              _('save_current_game'),
+              _('confirm_save_new'),
+              () => {
+              this.gameApi.saveCurrentGame();
+              this.closeSaveGameModal();
+            }
+            );
+          } else if (gameId) {
+            // Clicked an existing game -> Confirm override
+            this.createConfirmationModal(
+              _('confirm_override_title'),
+              _('confirm_override_save', { topic: card.querySelector('strong').textContent }),
+              () => {
+              this.gameApi.saveCurrentGame(gameId); // Pass gameId to override
+              this.closeSaveGameModal();
+            }
+            );
+          }
+        });
+      });
+
+      modal.querySelectorAll('.btn-delete-game').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const gameId = btn.dataset.gameId;
+          const _ = (k) => (window.t ? t(k) : k);
+          if (gameId) {
+            this.createConfirmationModal(
+              _('confirm_delete_title'),
+              _('confirm_delete_text'),
+              () => {
+                this.showMessageInModal(_('deleting_game'), 'info');
+                fetch(`${window.API_BASE}/api/saved-games/${gameId}`, {
+                  method: 'DELETE',
+                  headers: { Authorization: `Bearer ${token}` },
+                })
+                .then(r => r.json().then(data => ({ ok: r.ok, data })))
+                .then(({ ok, data }) => {
+                  if (!ok) throw new Error(data.error || 'Failed to delete game.');
+                  this.showMessageInModal(_('game_deleted_success'), 'success');
+                  setTimeout(() => this.createSaveGameModal(), 1000); // Refresh modal
+                })
+                .catch(err => this.showMessageInModal(err.message, 'error'));
+              }
+            );
+          }
+        });
+      });
+    })
+    .catch(err => {
+      console.error(err);
+      modal.querySelectorAll('.saved-game-card').forEach(card => card.innerHTML = `<div class="card-content">${_('error_loading_games')}</div>`);
+    });
+  }
+
+  closeSaveGameModal() {
+    const m = document.querySelector(".auth-modal");
+    if (!m) return;
+    m.classList.remove("show");
+    setTimeout(() => m.remove(), 250);
+  }
+
+  createConfirmationModal(title, text, onConfirm) {
+    // Close any existing save modal first
+    this.closeSaveGameModal();
+
+    const _ = (k) => (window.t ? t(k) : k);
+
+    const modal = document.createElement("div");
+    modal.className = "auth-modal";
+    modal.innerHTML = `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${title}</h2></div>
+            <p class="text-center">${text}</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="confirmActionYes">${_("yes")}</button>
+                <button type="button" class="btn btn-secondary" id="confirmActionNo">${_("no")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add("show"), 10);
+
+    const closeModal = () => {
+      modal.classList.remove("show");
+      setTimeout(() => modal.remove(), 250);
+    };
+
+    modal.querySelector('.close-btn')?.addEventListener('click', closeModal);
+    modal.querySelector('#confirmActionNo')?.addEventListener('click', () => {
+      // Re-open the save game modal instead of closing completely
+      closeModal();
+      this.createSaveGameModal();
+    });
+    modal.querySelector('#confirmActionYes')?.addEventListener('click', () => {
+      closeModal();
+      if (typeof onConfirm === 'function') {
+        onConfirm();
+      }
+    });
+  }
+
+  showInfoModal(title, text) {
+    const _ = (k) => (window.t ? t(k) : k);
+
+    const modal = document.createElement("div");
+    modal.className = "auth-modal";
+    modal.innerHTML = `
+      <div class="auth-modal-content profile-modal">
+        <button class="close-btn">&times;</button>
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${title}</h2></div>
+            <p class="text-center">${text}</p>
+            <div class="form-actions">
+                <button type="button" class="btn btn-primary" id="infoModalOkBtn">${_("ok")}</button>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add("show"), 10);
+
+    const closeModal = () => {
+      modal.classList.remove("show");
+      setTimeout(() => modal.remove(), 250);
+    };
+
+    modal.querySelector('.close-btn')?.addEventListener('click', closeModal);
+    modal.querySelector('#infoModalOkBtn')?.addEventListener('click', closeModal);
+  }
+
+  showProgressModal(title) {
+    // Close any other modals first
+    this.closeSaveGameModal();
+    this.topicDifficulty.closeGameModal();
+
+    const _ = (k) => (window.t ? t(k) : k);
+
+    const modal = document.createElement("div");
+    modal.className = "auth-modal";
+    modal.id = "progressModal"; // Add an ID for easy selection
+    modal.innerHTML = `
+      <div class="auth-modal-content profile-modal">
+        <div class="auth-modal-body">
+          <div class="auth-form-section">
+            <div class="auth-form-header"><h2>${title}</h2></div>
+            <p class="text-center" id="progressText"></p>
+            <div class="progress-bar-container">
+              <div class="progress-bar" id="progressBar"></div>
+            </div>
+          </div>
+          <div class="auth-logo-section"><div class="logo-container"><img src="./assets/crossythink_logo.png" class="modal-logo"><h3>${_("brand_name")}</h3></div></div>
+        </div>
+      </div>`;
+
+    document.body.appendChild(modal);
+    setTimeout(() => modal.classList.add("show"), 10);
+  }
+
+  updateProgressModal(text, percentage) {
+    const progressTextEl = document.getElementById("progressText");
+    const progressBarEl = document.getElementById("progressBar");
+
+    if (progressTextEl) {
+      progressTextEl.textContent = text;
+    }
+    if (progressBarEl) {
+      progressBarEl.style.width = `${percentage}%`;
+    }
+  }
+
+  closeProgressModal() {
+    const modal = document.getElementById("progressModal");
+    if (modal) {
+      modal.classList.remove("show");
+      setTimeout(() => {
+        modal.remove();
+      }, 300);
+    }
+  }
+
+  showMessageInModal(msg, type = "info") {
+    const content = document.getElementById("saveGameModalContent");
+    if (!content) return;
+    const existing = content.querySelector(".auth-message");
+    if (existing) existing.remove();
+    const div = document.createElement("div");
+    div.className = `auth-message auth-message-${type}`;
+    div.textContent = msg;
+    content.insertBefore(div, content.firstChild);
+    setTimeout(() => {
+      if (div.parentNode) div.remove();
+    }, 3000);
   }
 
   clearGame() {
@@ -534,6 +835,23 @@ export default class CrosswordGame {
   syncPanelHeightWithGrid() {
     // Delegate to gridSizing module
     this.gridSizing.syncPanelHeightWithGrid();
+  }
+
+  onAuthChange() {
+    // This method can be called from auth.js when the user logs in or out
+    this.updateSaveGameButtonVisibility();
+  }
+
+  updateSaveGameButtonVisibility() {
+    const isAuthenticated = this.isAuthenticated();
+    const isGameActive = this.solutionGrid && this.solutionGrid.length > 0;
+    document.querySelectorAll('.js-save-game-btn').forEach(btn => {
+      // Hide the button if the user is not authenticated
+      const wrapper = btn.closest('.tooltip-wrapper') || btn;
+      // Show only if logged in AND a game is active
+      wrapper.style.display =
+        isAuthenticated && isGameActive ? "inline-flex" : "none";
+    });
   }
 
   applyI18nUI() {

@@ -25,14 +25,20 @@ def create_app() -> Flask:
     # Init extensions
     db.init_app(app)
     jwt.init_app(app)
-    # Allow Authorization headers for cross-origin requests (frontend served on different port)
-    CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=False)
 
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(puzzle_bp, url_prefix='/api')
     app.register_blueprint(usage_bp, url_prefix='/api')
     app.register_blueprint(admin_bp, url_prefix='/api')
+
+    # Initialize CORS after blueprints are registered to ensure all routes are covered
+    CORS(app,
+         resources={r"/api/*": {
+             "origins": ["http://localhost:5500"],
+             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+             "allow_headers": ["Content-Type", "Authorization"]
+         }}, supports_credentials=True)
 
     # Create tables on first run (opt-in)
     # Set DB_AUTO_CREATE=true in backend/.env to enable automatic table creation.

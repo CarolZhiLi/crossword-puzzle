@@ -5,11 +5,10 @@ import { t } from "../strings.js";
 export class GameApi {
   constructor(gameInstance) {
     this.game = gameInstance;
+    this.maxGenerationAttempts = 5;
   }
 
   startGame() {
-    // Keep video visible until grid is ready - don't hide it here
-    // Video will be hidden in initializeGrid() when grid is actually created
 
     // Get topic and difficulty from TopicDifficulty helper
     let topic = this.game.topicDifficulty.getCurrentTopic();
@@ -46,9 +45,23 @@ export class GameApi {
     // Reset start time and display 00:00
     this.game.timerHandler.resetTimer();
 
-    // Frontend does not enforce daily limits; backend is the source of truth
+    // Show progress modal
+    this.game.showProgressModal(t('generating_puzzle_title'));
 
-    // Fetch and render new puzzle
+    // Start the generation process with retry logic
+    this._tryGeneratePuzzle(topic, difficulty, 1);
+  }
+
+  _tryGeneratePuzzle(topic, difficulty, attempt) {
+    if (attempt > this.maxGenerationAttempts) {
+      this.game.closeProgressModal();
+      this.game.showInfoModal(t('error_generating_puzzle'), t('generation_failed_final'));
+      this.game.clearGame();
+      return;
+    }
+
+    this.game.updateProgressModal(t('generating_words'), 25);
+
     const diffMap = { Easy: "easy", Medium: "medium", Hard: "hard" };
     const mapped = diffMap[difficulty] || "easy";
     // Remember current topic/difficulty for potential save
@@ -109,6 +122,14 @@ export class GameApi {
               ? data.error
               : `Failed to generate puzzle (${status})`
           );
+        }
+
+        // --- Check for generation failure that requires a retry ---
+        if (status === 500 && data.error && data.error.includes("Could only place")) {
+            console.warn(`Attempt ${attempt} failed. Retrying...`);
+            this.game.updateProgressModal(t('generation_failed_retrying', { attempt, maxAttempts: this.maxGenerationAttempts }), 0);
+            setTimeout(() => this._tryGeneratePuzzle(topic, difficulty, attempt + 1), 1000);
+            return; // Stop processing this failed attempt
         }
 
         console.log("API response received, data:", data);
@@ -190,6 +211,9 @@ export class GameApi {
             this.game.wordSelector.selectWord(wordNum);
           });
         });
+
+        this.game.updateProgressModal(t('building_grid'), 75);
+
         // Initialize grid (video is already showing from startGame, will be hidden when grid is ready)
         this.game.initializeGrid();
 
@@ -202,6 +226,9 @@ export class GameApi {
             this.game.timerHandler.startTimer();
           });
         });
+
+        // Close the progress modal
+        this.game.closeProgressModal();
 
         // Count this successful start toward free-play limits
         try {
@@ -235,11 +262,113 @@ export class GameApi {
         // Show user-friendly error message
         const errorMsg =
           err.message || t("error_generating_puzzle");
-        alert(errorMsg);
+        
+        this.game.closeProgressModal();
+        this.game.showInfoModal(t('error_generating_puzzle'), errorMsg);
       });
   }
 
-  saveCurrentGame() {
+  loadSavedGame(gameId) {
+    console.log(`Loading saved game with ID: ${gameId}`);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Authentication error. Please log in again.");
+      return;
+    }
+
+    // Reset game state and show loading animation
+    this.game.timerHandler.stopTimer();
+    this.game.timerHandler.resetTimer();
+    const gridContainer = document.getElementById("crosswordGrid");
+    if (gridContainer) {
+      gridContainer.style.display = "none";
+      gridContainer.innerHTML = "";
+    }
+    this.game.videoHandler.showAnimationVideo();
+
+    fetch(`${window.API_BASE}/api/saved-games/${gameId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+      if (!ok || !data.success) {
+        throw new Error(data.error || 'Failed to load game data.');
+      }
+
+      const gameData = data.game;
+      console.log("Saved game data received:", gameData);
+
+      // Use the loaded data to set up the game state
+      this.game.solutionGrid = gameData.grid;
+      this.game.gridSize = gameData.grid.length;
+      this.game.words = {};
+      let num = 1;
+      (gameData.words || []).forEach((item) => {
+        this.game.words[num] = {
+          word: item.word,
+          start: [item.row, item.col],
+          direction: item.direction,
+          length: item.length,
+        };
+        num++;
+      });
+
+      this.game.definitionsData = gameData.definitions;
+
+      // Populate the clues panel
+      const allCluesEl = document.getElementById("allClues");
+      const tabletClueContent = document.getElementById("tabletClueContent");
+      if (allCluesEl) {
+        const allClues = Object.entries(this.game.words)
+          .map(([n, w]) => ({
+            number: parseInt(n, 10),
+            word: n,
+            text: gameData.definitions[w.word] || "",
+          }))
+          .sort((a, b) => a.number - b.number)
+          .map(
+            (item) =>
+              `<div class="clue-item" data-word="${item.word}"><span class="clue-number">${item.word}.</span><span class="clue-text">${item.text}</span></div>`
+          )
+          .join("");
+        allCluesEl.innerHTML = allClues;
+
+        if (tabletClueContent) {
+          tabletClueContent.innerHTML = allClues;
+        }
+      }
+
+      // Add event listeners to the new clue items
+      document.querySelectorAll(".clue-item").forEach((item) => {
+        item.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const wordNum = item.dataset.word;
+          this.game.wordSelector.selectWord(wordNum);
+        });
+      });
+
+      // Initialize the grid with the loaded data
+      this.game.initializeGrid();
+
+      // Start the timer after the grid is visible
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          this.game.timerHandler.resetTimer();
+          this.game.timerHandler.startTimer();
+        });
+      });
+
+      this.game.definitions.ensureDefinitionsVisible();
+    })
+    .catch(err => {
+      console.error("Error loading saved game:", err);
+      alert(err.message);
+      this.game.clearGame(); // Clear the board and show the main video
+    });
+  }
+
+  saveCurrentGame(gameIdToOverride = null) {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -270,15 +399,19 @@ export class GameApi {
         length: w.length || (w.word ? w.word.length : 0),
       }));
 
-      fetch(`${window.API_BASE}/api/save-game`, {
-        method: "POST",
+      const isOverride = gameIdToOverride !== null;
+      const url = isOverride ? `${window.API_BASE}/api/saved-games/${gameIdToOverride}` : `${window.API_BASE}/api/save-game`;
+      const method = isOverride ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method: method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ topic, difficulty, words: wordsArr, definitions, grid }),
       })
-        .then((r) => r.json().then((data) => ({ ok: r.ok, status: r.status, data })))
+        .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })))
         .then(({ ok, status, data }) => {
           if (!ok) {
             if (status === 401) {
@@ -289,7 +422,9 @@ export class GameApi {
             }
             throw new Error(data && data.error ? data.error : `Failed to save game (${status})`);
           }
-          alert("Game saved successfully.");
+          const successMsg = isOverride ? t('game_override_success') : t('game_save_success');
+          const successTitle = isOverride ? t('game_override_success_title') : t('game_save_success_title');
+          this.game.showInfoModal(successTitle, successMsg);
         })
         .catch((err) => {
           console.error("Save game error:", err);
