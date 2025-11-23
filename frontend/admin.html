@@ -97,6 +97,17 @@
       color: #fff;
       border-color: #c53030;
     }
+
+    .pagination-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .pagination-controls .btn {
+      width: 100px;
+      font-size: 14px;
+    }
   </style>
 </head>
 
@@ -141,7 +152,13 @@
           <th id="request_col">  </th>
         </tr>
       </thead>
+      <tbody></tbody>
     </table>
+    <div class="pagination-controls">
+      <button id="apiStatsPrevBtn" class="btn"></button>
+      <span id="apiStatsPageNum"></span>
+      <button id="apiStatsNextBtn" class="btn"></button>
+    </div>
   </div>
 
   <script src="./config.js"></script>

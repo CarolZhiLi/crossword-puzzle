@@ -418,7 +418,7 @@ def get_api_usage_stats():
                 ApiStatistic.method,
                 ApiStatistic.endpoint,
                 ApiStatistic.count
-            )
+            ).filter(ApiStatistic.endpoint.startswith('/api'))
             result = [
                 {
                     'method': row.method,

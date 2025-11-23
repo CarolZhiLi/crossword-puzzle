@@ -2,16 +2,22 @@
   window.I18N = window.I18N || {};
   window.I18N.en = {
     // General/gameplay
-    guest_free_over: "Your free trial has ended. Please sign up or log in to play 3 free games per day.",
-    user_daily_limit: "You've used your 3 free plays for today. Paid play is coming soon.",
+    guest_free_over:
+      "Your free trial has ended. Please sign up or log in to play 3 free games per day.",
+    user_daily_limit:
+      "You've used your 3 free plays for today. Paid play is coming soon.",
     select_word_first: "Please select a word first!",
     correct: "Correct!",
     incorrect: "Incorrect. Try again!",
-    puzzle_progress: "Puzzle Progress: {correct}/{total} words correct ({percent}%)",
+    puzzle_progress:
+      "Puzzle Progress: {correct}/{total} words correct ({percent}%)",
     puzzle_solved: "Congratulations! You solved the puzzle!",
-    topic_changed: "Topic changed to: {topic}. New puzzle will be generated based on this topic.",
-    grid_size_changed: "Grid size changed to {size}x{size} for {difficulty} difficulty.",
-    confirm_new_game: "Are you sure you want to start a new game? Your progress will be lost.",
+    topic_changed:
+      "Topic changed to: {topic}. New puzzle will be generated based on this topic.",
+    grid_size_changed:
+      "Grid size changed to {size}x{size} for {difficulty} difficulty.",
+    confirm_new_game:
+      "Are you sure you want to start a new game? Your progress will be lost.",
     confirm_restart: "Are you sure you want to restart this puzzle?",
     error_generating_puzzle: "Error generating puzzle",
 
@@ -42,7 +48,8 @@
     signin_title: "Sign in to continue your crossword journey",
     register_title: "Create your account and start solving puzzles",
     forgot_title: "Reset your password",
-    forgot_instructions: "Enter your email or username and we'll send a reset link.",
+    forgot_instructions:
+      "Enter your email or username and we'll send a reset link.",
     username_or_email: "Username or Email",
     username: "Username",
     email: "Email",
@@ -59,17 +66,20 @@
     login_failed: "Login failed",
     welcome_back: "Welcome back, {username}!",
     all_fields_required: "All fields are required",
-    username_requirements: "Username must be 6-12 chars, letters and numbers, and include both.",
+    username_requirements:
+      "Username must be 6-12 chars, letters and numbers, and include both.",
     invalid_email: "Please enter a valid email address",
     password_requirements: "Password must be 6-15 characters",
     passwords_no_match: "Passwords do not match",
     creating_account: "Creating account...",
     registration_failed: "Registration failed",
-    account_created_welcome: "Account created successfully! Welcome, {username}!",
+    account_created_welcome:
+      "Account created successfully! Welcome, {username}!",
     enter_email_or_username: "Please enter your email or username",
     sending_reset_link: "Sending reset link...",
     reset_failed: "Failed to request password reset",
-    reset_link_generic_ok: "If that account exists, a reset link has been sent.",
+    reset_link_generic_ok:
+      "If that account exists, a reset link has been sent.",
     signed_out: "You have been signed out",
 
     // Reset page
@@ -113,6 +123,8 @@
     method_col: "Method",
     endpoint_col: "Endpoint",
     request_col: "Requests",
+    apiStatsPrevBtn: "Previous",
+    apiStatsNextBtn: "Next",
   };
 
   window.t = function(key, params){

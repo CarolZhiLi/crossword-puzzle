@@ -73,10 +73,7 @@
     const res = await fetch(`${window.API_BASE}/api/admin/usage/stats`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${state.token}` }
-    }).then(r => {
-      console.log("API stats response:", r);
-      return r;
-    }); 
+    });
     if (res.status === 401) {
       try { localStorage.removeItem('token'); } catch(_) {}
       alert('Session expired or not authorized. Please log in as admin.');
@@ -85,11 +82,25 @@
     }
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load API stats');
+    
+    state.apiStats = data.stats || [];
+    state.apiStatsPage = 0;
+    state.apiStatsPageSize = 8;
+    
+    renderAPIStats(state);
+  }
+
+  function renderAPIStats(state) {
     const table = document.getElementById('apiStatsTable');
     if (!table) return;
     const tbody = table.querySelector('tbody') || document.createElement('tbody');
     tbody.innerHTML = '';
-    (data.stats || []).forEach((stat, i) => {
+
+    const start = state.apiStatsPage * state.apiStatsPageSize;
+    const end = start + state.apiStatsPageSize;
+    const statsPage = state.apiStats.slice(start, end);
+
+    statsPage.forEach((stat, i) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${stat.method || ''}</td>
@@ -98,8 +109,25 @@
       `;
       tbody.appendChild(tr);
     });
+
     if (!table.querySelector('tbody')) {
       table.appendChild(tbody);
+    }
+
+    const pageNum = document.getElementById('apiStatsPageNum');
+    if (pageNum) {
+      pageNum.textContent = `Page ${state.apiStatsPage + 1} of ${Math.ceil(state.apiStats.length / state.apiStatsPageSize)}`;
+    }
+
+    const prevBtn = document.getElementById('apiStatsPrevBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.apiStatsPage === 0;
+    }
+
+    const nextBtn = document.getElementById('apiStatsNextBtn');
+    if (nextBtn) {
+      const lastPage = Math.ceil(state.apiStats.length / state.apiStatsPageSize) - 1;
+      nextBtn.disabled = state.apiStatsPage >= lastPage;
     }
   }
 
@@ -171,12 +199,39 @@
       state.range = rangeSelect.value === 'today' ? 'today' : 'all';
       loadData(state).catch(()=>{});
     });
+
+    const apiStatsPrevBtn = document.getElementById('apiStatsPrevBtn');
+    if (apiStatsPrevBtn) {
+      apiStatsPrevBtn.addEventListener('click', () => {
+        if (state.apiStatsPage > 0) {
+          state.apiStatsPage--;
+          renderAPIStats(state);
+        }
+      });
+    }
+
+    const apiStatsNextBtn = document.getElementById('apiStatsNextBtn');
+    if (apiStatsNextBtn) {
+      apiStatsNextBtn.addEventListener('click', () => {
+        const lastPage = Math.ceil(state.apiStats.length / state.apiStatsPageSize) - 1;
+        if (state.apiStatsPage < lastPage) {
+          state.apiStatsPage++;
+          renderAPIStats(state);
+        }
+      });
+    }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     const auth = ensureAdmin();
     if (!auth) return;
-    const state = { token: auth.token, rows: [], range: 'all' };
+    const state = { 
+      token: auth.token, 
+      rows: [], 
+      apiStats: [],
+      apiStatsPage: 0,
+      apiStatsPageSize: 8
+    };
     bindUI(state);
     loadData(state).catch(err => alert(err.message));
   });
