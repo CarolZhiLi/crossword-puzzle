@@ -393,6 +393,10 @@ export default class CrosswordGame {
     const tabletClueHeader = document.getElementById("tabletClueHeader");
     const tabletCluePanel = document.getElementById("tabletCluePanel");
     const tabletClueClose = document.getElementById("tabletClueClose");
+    const tabletCluePanelHeader = document.getElementById("tabletCluePanelHeader");
+    if (tabletCluePanelHeader) {
+      tabletCluePanelHeader.textContent = t("clue_panel_title");
+    }
 
     const openTabletCluePanel = () => {
       if (tabletCluePanel) {

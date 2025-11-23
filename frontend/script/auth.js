@@ -209,6 +209,9 @@ class AuthManager {
           this.currentUser && this.currentUser.role === "admin"
             ? "inline-block"
             : "none";
+        if (adminLink && this.currentUser && this.currentUser.role === "admin") {
+          document.getElementById("adminLink").innerHTML = t("adminLink");
+        }
     } catch (_) {}
 
     // Usage + daily banner (backend only)

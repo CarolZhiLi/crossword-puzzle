@@ -103,49 +103,51 @@
 <body>
   <div class="admin-container">
     <div class="admin-header">
-      <h2>Admin - Usage Monitor</h2>
+      <h2 id="adminHeader"></h2>
       <div class="admin-actions">
         <input id="searchBox" class="input" placeholder="Search username/email" />
         <select id="rangeSelect" class="input">
-          <option value="all" selected>All time</option>
-          <option value="today">Today</option>
+          <option value="all" id="range_all_time" selected></option>
+          <option value="today" id="range_today"></option>
         </select>
-        <button id="refreshBtn" class="btn">Refresh</button>
-        <button id="exportBtn" class="btn">Export CSV</button>
-        <button id="resetCallsBtn" class="btn btn-warning">Reset Calls</button>
-        <button id="resetTodayBtn" class="btn btn-warning">Reset Today</button>
-        <a href="./gameplay.html" class="btn">Back</a>
+        <button id="refreshBtn" class="btn"></button>
+        <button id="exportBtn" class="btn"></button>
+        <button id="resetCallsBtn" class="btn btn-warning"></button>
+        <button id="resetTodayBtn" class="btn btn-warning"></button>
+        <a href="./gameplay.html" class="btn" id="backBtn"></a>
       </div>
     </div>
-    <div class="muted">Shows per-user API calls and token totals (approx.).</div>
+    <div class="muted" id="api_calls_subtitle"></div>
     <table class="table" id="usageTable">
       <thead>
         <tr>
-          <th>#</th>
-          <th>Username</th>
-          <th>Email</th>
-          <th>Calls</th>
-          <th>Tokens</th>
-          <th>Games</th>
-          <th>Actions</th>
+          <th id="number_col"></th>
+          <th id="username_col"></th>
+          <th id="email_col"></th>
+          <th id="calls_col"></th>
+          <th id="tokens_col"></th>
+          <th id="games_col"></th>
+          <th id="actions_col"></th>
         </tr>
       </thead>
       <tbody></tbody>
     </table>
-    <div class="muted">Shows API Usage Totals</div>
+    <div class="muted" id="api_usage_subtitle"></div>
     <table class="table" id="apiStatsTable">
       <thead>
         <tr>
-          <th>Method</th>
-          <th>Endpoint</th>
-          <th>Requests  </th>
+          <th id="method_col"></th>
+          <th id="endpoint_col"></th>
+          <th id="request_col">  </th>
         </tr>
       </thead>
     </table>
   </div>
 
   <script src="./config.js"></script>
+  <script src="lang/en/en.js"></script>
   <script src="./script/admin.js"></script>
+  <script src="./script/admin_ui.js"></script>
 </body>
 
 </html>

@@ -31,6 +31,7 @@
     diff_medium: "Medium",
     diff_hard: "Hard",
     diff_expert: "Expert",
+    clue_panel_title: "Clue Panel",
 
     // Auth UI
     brand_name: "CrossyThink",
@@ -84,7 +85,33 @@
     reset_password_length: "Password must be 6-15 characters.",
     reset_passwords_no_match: "Passwords do not match.",
     reset_success: "Password reset successful. You can now sign in.",
-    reset_invalid_or_expired: "Invalid or expired token."
+    reset_invalid_or_expired: "Invalid or expired token.",
+
+    // Landing page
+    video_not_supported: "Your browser does not support the video tag.",
+    adminLink: "Admin",
+
+    // Admin page
+    adminHeader: "Admin - Usage Monitor",
+    range_all_time: "All Time",
+    range_today: "Today",
+    refreshBtn: "Refresh",
+    exportBtn: "Export CSV",
+    resetCallsBtn: "Reset Calls",
+    resetTodayBtn: "Reset Today",
+    backBtn: "Back",
+    api_calls_subtitle: "Shows per-user API calls and token totals (approx.).",
+    number_col: "#",
+    username_col: "Username",
+    email_col: "Email",
+    calls_col: "Calls",
+    tokens_col: "Tokens",
+    games_col: "Games",
+    actions_col: "Actions",
+    api_usage_subtitle: "Shows API Usage Totals",
+    method_col: "Method",
+    endpoint_col: "Endpoint",
+    request_col: "Requests",
   };
 
   window.t = function(key, params){

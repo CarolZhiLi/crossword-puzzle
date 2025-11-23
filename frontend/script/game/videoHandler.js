@@ -14,6 +14,8 @@ export class VideoHandler {
       container.style.opacity = "1";
       container.style.visibility = "visible";
       console.log("Video container made visible on page load");
+    } else {
+      document.getElementById("introAnimation").innerHTML = t("video_not_supported");
     }
   }
 

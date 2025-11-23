@@ -104,8 +104,7 @@
         <!-- Login Section -->
         <div class="sidebar-section sidebar-login">
           <span id="freeBanner" class="free-banner hidden"></span>
-          <a id="adminLink" href="./admin.html" class="btn btn-info hidden"
-            >Admin</a
+          <a id="adminLink" href="./admin.html" class="btn btn-info hidden"></a
           >
           <span id="apiUsage" class="api-usage hidden"></span>
           <div class="tooltip-wrapper" data-tooltip="Sign In">
@@ -191,16 +190,16 @@
         <div class="crossword-container">
           <!-- Hidden select elements for topic and difficulty (used by JavaScript) -->
           <select id="topicSelect" class="dropdown hidden-dropdown">
-            <option value="JavaScript">JavaScript</option>
-            <option value="Science">Science</option>
-            <option value="History">History</option>
-            <option value="Animals">Animals</option>
-            <option value="General">Customize</option>
+            <option value="JavaScript"></option>
+            <option value="Science"></option>
+            <option value="History"></option>
+            <option value="Animals"></option>
+            <option value="General"></option>
           </select>
           <select id="difficultySelect" class="dropdown hidden-dropdown">
-            <option value="Easy">Easy</option>
-            <option value="Medium">Medium</option>
-            <option value="Hard">Hard</option>
+            <option value="Easy"></option>
+            <option value="Medium"></option>
+            <option value="Hard"></option>
           </select>
           <!-- Animation Video - shown when grid is empty -->
           <div
@@ -217,7 +216,6 @@
               loop
             >
               <source src="./assets/animation.mp4" type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
           </div>
           <div class="crossword-grid" id="crosswordGrid">
@@ -240,7 +238,7 @@
         <!-- Tablet Slide-in Clue Panel (80% height from bottom) -->
         <div class="tablet-clue-panel" id="tabletCluePanel">
           <div class="tablet-clue-panel-header">
-            <h2>Clue Panel</h2>
+            <h2 id="tabletCluePanelHeader"></h2>
             <button class="tablet-clue-close" id="tabletClueClose">
               &times;
             </button>
