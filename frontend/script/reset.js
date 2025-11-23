@@ -27,7 +27,8 @@ class ResetPage {
       submitBtn: document.getElementById('resetSubmitBtn'),
       backToGameBtn: document.getElementById('backToGameBtn'),
       rightPanel: document.getElementById('resetRightPanel'),
-      closeBtn: document.getElementById('resetCloseBtn')
+      closeBtn: document.getElementById('resetCloseBtn'),
+      branding: document.getElementById('crossythinkBranding'),
     };
   }
 
@@ -41,6 +42,7 @@ class ResetPage {
       setText(this.el.submitBtn, 'reset_button');
       setText(this.el.backToGameBtn, 'back_to_game');
       setText(this.el.rightPanel, 'reset_right_panel');
+      setText(this.el.branding, 'crossythink_branding');
       if (this.el.closeBtn) this.el.closeBtn.setAttribute('aria-label', t('back_to_game'));
     } catch (_) {}
   }

@@ -86,6 +86,7 @@
     reset_passwords_no_match: "Passwords do not match.",
     reset_success: "Password reset successful. You can now sign in.",
     reset_invalid_or_expired: "Invalid or expired token.",
+    crossythink_branding: "CrossyThink",
 
     // Landing page
     video_not_supported: "Your browser does not support the video tag.",
