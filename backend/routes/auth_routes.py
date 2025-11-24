@@ -158,7 +158,41 @@ def me():
 @auth_bp.route('/change-username', methods=['PUT'])
 @jwt_required()
 def change_username():
-    """Changes the username for the currently authenticated user."""
+    """Changes the username for the currently authenticated user.
+    ---
+    tags:
+      - Authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [newUsername]
+          properties:
+            newUsername:
+              type: string
+              description: The new desired username.
+    responses:
+      200:
+        description: Username changed successfully.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            message: { type: string }
+            access_token: { type: string, description: "A new JWT with the updated username." }
+      400:
+        description: Bad request (e.g., new username is too short).
+      401:
+        description: Unauthorized, token is missing or invalid.
+      404:
+        description: User not found.
+      409:
+        description: Username is already taken.
+    """
     current_username = get_jwt_identity()
     user = User.query.filter_by(username=current_username).first()
     if not user:
@@ -186,7 +220,36 @@ def change_username():
 @auth_bp.route('/change-password', methods=['PUT'])
 @jwt_required()
 def change_password():
-    """Changes the password for the currently authenticated user."""
+    """Changes the password for the currently authenticated user.
+    ---
+    tags:
+      - Authentication
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          type: object
+          required: [currentPassword, newPassword]
+          properties:
+            currentPassword:
+              type: string
+              description: The user's current password.
+            newPassword:
+              type: string
+              description: The new password (min 6 characters).
+    responses:
+      200:
+        description: Password updated successfully.
+      400:
+        description: Bad request (e.g., new password is too short).
+      401:
+        description: Unauthorized, or wrong current password.
+      404:
+        description: User not found.
+    """
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
     if not user:

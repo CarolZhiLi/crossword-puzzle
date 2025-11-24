@@ -499,7 +499,34 @@ def save_game():
 @puzzle_bp.route('/saved-games', methods=['GET'])
 @jwt_required()
 def get_saved_games():
-    """Fetches a summary of the current user's saved games."""
+    """Fetches a summary of the current user's saved games.
+    Retrieves a list of saved games for the authenticated user, showing basic info for each.
+    ---
+    tags:
+      - Puzzle
+    security:
+      - bearerAuth: []
+    responses:
+      200:
+        description: A list of saved games.
+        schema:
+          type: object
+          properties:
+            success: { type: boolean }
+            saved_games:
+              type: array
+              items:
+                type: object
+                properties:
+                  id: { type: integer }
+                  topic: { type: string }
+                  difficulty: { type: string }
+                  started_at: { type: string, format: 'date-time' }
+      401:
+        description: Unauthorized, token is missing or invalid.
+      404:
+        description: User not found.
+    """
     try:
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
@@ -526,7 +553,40 @@ def get_saved_games():
 @puzzle_bp.route('/saved-games/<int:game_id>', methods=['GET'])
 @jwt_required()
 def get_saved_game_by_id(game_id):
-    """Fetches the full data for a single saved game, ensuring it belongs to the current user."""
+    """Fetches the full data for a single saved game.
+    Retrieves the complete grid, words, and definitions for a specific saved game,
+    ensuring it belongs to the currently authenticated user.
+    ---
+    tags:
+      - Puzzle
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: game_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the saved game to retrieve.
+    responses:
+      200:
+        description: The full saved game data.
+        schema:
+          id: SavedGameData
+          type: object
+          properties:
+            success: { type: boolean }
+            game:
+              type: object
+              properties:
+                id: { type: integer }
+                grid: { type: object }
+                words: { type: object }
+                definitions: { type: object }
+      401:
+        description: Unauthorized, token is missing or invalid.
+      404:
+        description: User not found or the saved game does not exist for this user.
+    """
     try:
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
@@ -554,7 +614,48 @@ def get_saved_game_by_id(game_id):
 @puzzle_bp.route('/saved-games/<int:game_id>', methods=['PUT'])
 @jwt_required()
 def override_saved_game(game_id):
-    """Overrides an existing saved game with new data."""
+    """Overrides an existing saved game with new data.
+    Updates the specified saved game with a new puzzle state. The request body
+    should contain the full puzzle data, similar to the initial save request.
+    ---
+    tags:
+      - Puzzle
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: game_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the saved game to override.
+      - name: body
+        in: body
+        required: true
+        schema:
+          # Re-using the structure from the save-game endpoint
+          id: OverrideGameRequest
+          type: object
+          properties:
+            topic:
+              type: string
+            difficulty:
+              type: string
+            words:
+              type: object
+            definitions:
+              type: object
+            grid:
+              type: object
+    responses:
+      200:
+        description: Game overridden successfully.
+      401:
+        description: Unauthorized, token is missing or invalid.
+      404:
+        description: User not found or the saved game does not exist for this user.
+      500:
+        description: Internal server error.
+    """
     try:
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
@@ -588,7 +689,28 @@ def override_saved_game(game_id):
 @puzzle_bp.route('/saved-games/<int:game_id>', methods=['DELETE'])
 @jwt_required()
 def delete_saved_game(game_id):
-    """Deletes a single saved game, ensuring it belongs to the current user."""
+    """Deletes a single saved game.
+    Permanently removes a saved game record, ensuring it belongs to the
+    currently authenticated user before deletion.
+    ---
+    tags:
+      - Puzzle
+    security:
+      - bearerAuth: []
+    parameters:
+      - name: game_id
+        in: path
+        type: integer
+        required: true
+        description: The ID of the saved game to delete.
+    responses:
+      200:
+        description: Game deleted successfully.
+      401:
+        description: Unauthorized, token is missing or invalid.
+      404:
+        description: User not found or the saved game does not exist for this user.
+    """
     try:
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
