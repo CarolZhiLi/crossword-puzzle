@@ -89,7 +89,7 @@ class ResetPage {
     if (!this.validate(password, confirmPassword)) return;
 
     try {
-      const res = await fetch(`${window.API_BASE}/api/auth/reset-password`, {
+      const res = await fetch(`${window.API_BASE}/api/v1/auth/reset-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: this.token, password, confirmPassword })

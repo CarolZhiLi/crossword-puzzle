@@ -555,7 +555,7 @@ export default class CrosswordGame {
 
     // --- Fetch Saved Games and Populate ---
     const token = localStorage.getItem("token");
-    fetch(`${window.API_BASE}/api/saved-games`, {
+    fetch(`${window.API_BASE}/api/v1/saved-games`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(r => r.json())
@@ -634,7 +634,7 @@ export default class CrosswordGame {
               _('confirm_delete_text'),
               () => {
                 this.showMessageInModal(_('deleting_game'), 'info');
-                fetch(`${window.API_BASE}/api/saved-games/${gameId}`, {
+                fetch(`${window.API_BASE}/api/v1/saved-games/${gameId}`, {
                   method: 'DELETE',
                   headers: { Authorization: `Bearer ${token}` },
                 })

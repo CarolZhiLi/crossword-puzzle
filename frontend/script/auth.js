@@ -65,7 +65,7 @@ class AuthManager {
       return new Promise((resolve) => {
         const token = localStorage.getItem("token");
         if (token) {
-          fetch(`${window.API_BASE}/api/auth/me`, {
+          fetch(`${window.API_BASE}/api/v1/auth/me`, {
             method: "GET",
             headers: { Authorization: `Bearer ${token}` },
           })
@@ -189,7 +189,7 @@ class AuthManager {
         if (freeBanner) freeBanner.style.display = "none";
         return;
       }
-      fetch(`${window.API_BASE}/api/usage/me`, {
+      fetch(`${window.API_BASE}/api/v1/usage/me`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -577,7 +577,7 @@ class AuthManager {
     }
     this.showMessage(window.t ? t("signing_in") : "Signing in...", "info");
     try {
-      const r = await fetch(`${window.API_BASE}/api/auth/login`, {
+      const r = await fetch(`${window.API_BASE}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password }),
@@ -630,7 +630,7 @@ class AuthManager {
       "info"
     );
     try {
-      const r = await fetch(`${window.API_BASE}/api/auth/register`, {
+      const r = await fetch(`${window.API_BASE}/api/v1/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, email, password }),
@@ -681,7 +681,7 @@ class AuthManager {
       const payload = /@/.test(identifier)
         ? { email: identifier }
         : { username: identifier };
-      const r = await fetch(`${window.API_BASE}/api/auth/forgot-password`, {
+      const r = await fetch(`${window.API_BASE}/api/v1/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -726,7 +726,7 @@ class AuthManager {
         }
 
         this.showMessage(t('saving_changes'), 'info');
-        fetch(`${window.API_BASE}/api/auth/change-username`, {
+        fetch(`${window.API_BASE}/api/v1/auth/change-username`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ newUsername }),
@@ -767,7 +767,7 @@ class AuthManager {
         }
 
         this.showMessage(t('updating_password_msg'), 'info');
-        fetch(`${window.API_BASE}/api/auth/change-password`, {
+        fetch(`${window.API_BASE}/api/v1/auth/change-password`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
           body: JSON.stringify({ currentPassword, newPassword }),
@@ -786,7 +786,7 @@ class AuthManager {
       const cardWrappers = document.querySelectorAll('.saved-game-card-wrapper');
       cardWrappers.forEach(wrapper => wrapper.querySelector('.saved-game-card').innerHTML = `<div class="card-content">${t('loading')}...</div>`);
 
-      fetch(`${window.API_BASE}/api/saved-games`, {
+      fetch(`${window.API_BASE}/api/v1/saved-games`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       .then(r => r.json())
@@ -840,7 +840,7 @@ class AuthManager {
     if (type === 'deleteGameConfirm' && gameIdForConfirm) {
       document.getElementById('confirmDeleteYes')?.addEventListener('click', () => {
         this.showMessage(t('deleting_game'), 'info');
-        fetch(`${window.API_BASE}/api/saved-games/${gameIdForConfirm}`, {
+        fetch(`${window.API_BASE}/api/v1/saved-games/${gameIdForConfirm}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` },
         })

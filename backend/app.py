@@ -51,10 +51,10 @@ def create_app() -> Flask:
     Swagger(app, config=swagger_config)
 
     # Register blueprints
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(puzzle_bp, url_prefix='/api')
-    app.register_blueprint(usage_bp, url_prefix='/api')
-    app.register_blueprint(admin_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp, url_prefix='/api/v1/auth')
+    app.register_blueprint(puzzle_bp, url_prefix='/api/v1')
+    app.register_blueprint(usage_bp, url_prefix='/api/v1')
+    app.register_blueprint(admin_bp, url_prefix='/api/v1')
 
     # Initialize CORS after blueprints are registered to ensure all routes are covered
     CORS(app,

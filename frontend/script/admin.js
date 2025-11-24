@@ -52,7 +52,7 @@
 
   async function loadData(state) {
     const q = state.range === 'today' ? '?range=today' : '';
-    const res = await fetch(`${window.API_BASE}/api/usage/all${q}`, {
+    const res = await fetch(`${window.API_BASE}/api/v1/usage/all${q}`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
@@ -70,7 +70,7 @@
   }
 
   async function loadAPIStats(state) {
-    const res = await fetch(`${window.API_BASE}/api/admin/usage/stats`, {
+    const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/stats`, {
       method: 'GET',
       headers: { 'Authorization': `Bearer ${state.token}` }
     });
@@ -164,7 +164,7 @@
       const who = prompt('Enter username to reset calls (or * for all):', '*');
       if (who === null) return;
       try {
-        const res = await fetch(`${window.API_BASE}/api/admin/usage/reset`, {
+        const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/reset`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
           body: JSON.stringify({ username: who })
@@ -181,7 +181,7 @@
       const who = prompt('Enter username to reset TODAY calls (or * for all):', '*');
       if (who === null) return;
       try {
-        const res = await fetch(`${window.API_BASE}/api/admin/usage/reset-today`, {
+        const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/reset-today`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
           body: JSON.stringify({ username: who })

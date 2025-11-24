@@ -72,7 +72,7 @@ export class GameApi {
       const token = localStorage.getItem("token");
       if (token) headers["Authorization"] = `Bearer ${token}`;
     } catch (_) {}
-    fetch(`${window.API_BASE}/api/generate-crossword`, {
+    fetch(`${window.API_BASE}/api/v1/generate-crossword`, {
       method: "POST",
       headers,
       body: JSON.stringify({ topic, difficulty: mapped }),
@@ -125,11 +125,24 @@ export class GameApi {
         }
 
         // --- Check for generation failure that requires a retry ---
-        if (status === 500 && data.error && data.error.includes("Could only place")) {
-            console.warn(`Attempt ${attempt} failed. Retrying...`);
-            this.game.updateProgressModal(t('generation_failed_retrying', { attempt, maxAttempts: this.maxGenerationAttempts }), 0);
-            setTimeout(() => this._tryGeneratePuzzle(topic, difficulty, attempt + 1), 1000);
-            return; // Stop processing this failed attempt
+        if (
+          status === 500 &&
+          data.error &&
+          data.error.includes("Could only place")
+        ) {
+          console.warn(`Attempt ${attempt} failed. Retrying...`);
+          this.game.updateProgressModal(
+            t("generation_failed_retrying", {
+              attempt,
+              maxAttempts: this.maxGenerationAttempts,
+            }),
+            0
+          );
+          setTimeout(
+            () => this._tryGeneratePuzzle(topic, difficulty, attempt + 1),
+            1000
+          );
+          return; // Stop processing this failed attempt
         }
 
         console.log("API response received, data:", data);
@@ -212,7 +225,7 @@ export class GameApi {
           });
         });
 
-        this.game.updateProgressModal(t('building_grid'), 75);
+        this.game.updateProgressModal(t("building_grid"), 75);
 
         // Initialize grid (video is already showing from startGame, will be hidden when grid is ready)
         this.game.initializeGrid();
@@ -253,18 +266,21 @@ export class GameApi {
         console.error("Error generating crossword:", err);
         // Close the modal if it's open
         try {
-          if (this.game && this.game.topicDifficulty && typeof this.game.topicDifficulty.closeGameModal === "function") {
+          if (
+            this.game &&
+            this.game.topicDifficulty &&
+            typeof this.game.topicDifficulty.closeGameModal === "function"
+          ) {
             this.game.topicDifficulty.closeGameModal();
           }
         } catch (e) {
           console.warn("Could not close modal:", e);
         }
         // Show user-friendly error message
-        const errorMsg =
-          err.message || t("error_generating_puzzle");
-        
+        const errorMsg = err.message || t("error_generating_puzzle");
+
         this.game.closeProgressModal();
-        this.game.showInfoModal(t('error_generating_puzzle'), errorMsg);
+        this.game.showInfoModal(t("error_generating_puzzle"), errorMsg);
       });
   }
 
@@ -286,7 +302,7 @@ export class GameApi {
     }
     this.game.videoHandler.showAnimationVideo();
 
-    fetch(`${window.API_BASE}/api/saved-games/${gameId}`, {
+    fetch(`${window.API_BASE}/api/v1/saved-games/${gameId}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     .then(r => r.json().then(data => ({ ok: r.ok, data })))
@@ -400,7 +416,7 @@ export class GameApi {
       }));
 
       const isOverride = gameIdToOverride !== null;
-      const url = isOverride ? `${window.API_BASE}/api/saved-games/${gameIdToOverride}` : `${window.API_BASE}/api/save-game`;
+      const url = isOverride ? `${window.API_BASE}/api/v1/saved-games/${gameIdToOverride}` : `${window.API_BASE}/api/v1/save-game`;
       const method = isOverride ? 'PUT' : 'POST';
 
       fetch(url, {

@@ -45,7 +45,7 @@ class UsageService:
             games_count = 0
         # Fallback: if no sessions recorded, approximate games from endpoint usage
         if games_count == 0:
-            games_count = int(by_endpoint.get('/api/generate-crossword', 0))
+            games_count = int(by_endpoint.get('/api/v1/generate-crossword', 0))
         # Fallback tokens approximation per game if tokens_total is 0 but we have games
         if tokens_total == 0 and games_count > 0:
             tokens_total = int(games_count * 1000)  # coarse approx
@@ -128,7 +128,7 @@ class UsageService:
         for uid, data in per_user.items():
             u = users.get(uid)
             # Fallback derive games from endpoint usage if sessions absent (all-time only)
-            fallback_games = int(data['by_endpoint'].get('/api/generate-crossword', 0))
+            fallback_games = int(data['by_endpoint'].get('/api/v1/generate-crossword', 0))
             if range_opt == 'today':
                 games = int(by_user_games.get(uid, 0))
             else:

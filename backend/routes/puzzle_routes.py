@@ -354,7 +354,7 @@ WORD - Clue"""
             if username:
                 user = User.query.filter_by(username=username).first()
                 # Increment usage first
-                usage.increment(username, '/api/generate-crossword')
+                usage.increment(username, '/api/v1/generate-crossword')
 
                 # Compute daily info (server local midnight): sessions today + 1 (including this request)
                 daily_limit = int((AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first() or type('X',(object,),{'value':'20'})()).value)
