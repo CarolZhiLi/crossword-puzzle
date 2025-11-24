@@ -61,6 +61,7 @@ def create_app() -> Flask:
          resources={r"/api/*": {
              "origins": [
                  "http://localhost:5500",  # For local development
+                 "http://127.0.0.1:5500",
                  "https://crossythink-frontend.netlify.app"  # For Netlify deployment
              ],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
