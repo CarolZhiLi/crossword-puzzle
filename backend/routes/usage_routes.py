@@ -3,6 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from services.usage_service import UsageService
 from models import User, UserRole
+import strings
 
 
 usage_bp = Blueprint('usage', __name__)
@@ -93,7 +94,7 @@ def all_usage():
     user = User.query.filter_by(username=username).first()
     ur = UserRole.query.filter_by(user_id=user.id).first() if user else None
     if not ur or (ur.role or "").lower() != "admin":
-        return jsonify({ 'success': False, 'error': 'Forbidden' }), 403
+        return jsonify({ 'success': False, 'error': strings.MSG_FORBIDDEN }), 403
     range_opt = (request.args.get('range') or 'all').strip().lower()
     if range_opt not in ('all','today'):
         range_opt = 'all'

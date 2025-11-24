@@ -4,6 +4,7 @@ from extensions import db
 from models import User
 from werkzeug.security import check_password_hash, generate_password_hash
 from services.auth_service import AuthService
+import strings
 
 auth_bp = Blueprint('auth', __name__)
 service = AuthService()
@@ -60,9 +61,9 @@ def register():
         return jsonify({'success': False, 'error': str(e)}), 500
 
     if User.query.filter_by(username=username).first():
-        return jsonify({'success': False, 'error': 'Username already exists'}), 409
+        return jsonify({'success': False, 'error': strings.MSG_USERNAME_EXISTS}), 409
     if User.query.filter_by(email=email).first():
-        return jsonify({'success': False, 'error': 'Email already registered'}), 409
+        return jsonify({'success': False, 'error': strings.MSG_EMAIL_EXISTS}), 409
 
     new_user = User(username=username, email=email)
     new_user.set_password(password)
@@ -125,7 +126,7 @@ def login():
         access_token = create_access_token(identity=user.username)
         return jsonify({'success': True, 'access_token': access_token, 'user': user.to_dict()})
 
-    return jsonify({'success': False, 'error': 'Invalid username or password'}), 401
+    return jsonify({'success': False, 'error': strings.MSG_INVALID_CREDENTIALS}), 401
 
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
@@ -151,7 +152,7 @@ def me():
     current_username = get_jwt_identity()
     user_data = service.me(current_username) # Assumes service.me exists and returns a dict
     if not user_data:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
+        return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
     return jsonify({'success': True, 'user': user_data})
 
 
@@ -196,16 +197,16 @@ def change_username():
     current_username = get_jwt_identity()
     user = User.query.filter_by(username=current_username).first()
     if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
+        return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
     data = flask_request.get_json()
     new_username = data.get('newUsername')
 
     if not new_username or len(new_username) < 6:
-        return jsonify({'success': False, 'error': 'New username must be at least 6 characters'}), 400
+        return jsonify({'success': False, 'error': strings.MSG_USERNAME_MIN_LENGTH}), 400
 
     if User.query.filter(User.username == new_username).first():
-        return jsonify({'success': False, 'error': 'This user name has already been used. Please change another one.'}), 409
+        return jsonify({'success': False, 'error': strings.MSG_USERNAME_TAKEN}), 409
 
     user.username = new_username
     db.session.commit()
@@ -214,7 +215,7 @@ def change_username():
     new_access_token = create_access_token(identity=new_username)
 
     # Return the new token so the frontend can update its storage
-    return jsonify({'success': True, 'message': 'Username changed successfully.', 'access_token': new_access_token})
+    return jsonify({'success': True, 'message': strings.MSG_USERNAME_CHANGED, 'access_token': new_access_token})
 
 
 @auth_bp.route('/change-password', methods=['PUT'])
@@ -253,22 +254,22 @@ def change_password():
     username = get_jwt_identity()
     user = User.query.filter_by(username=username).first()
     if not user:
-        return jsonify({'success': False, 'error': 'User not found'}), 404
+        return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
     data = flask_request.get_json()
     current_password = data.get('currentPassword')
     new_password = data.get('newPassword')
 
     if not user.check_password(current_password):
-        return jsonify({'success': False, 'error': 'Wrong password! Please try again'}), 401
+        return jsonify({'success': False, 'error': strings.MSG_WRONG_PASSWORD}), 401
 
     if not new_password or len(new_password) < 6:
-        return jsonify({'success': False, 'error': 'New password must be at least 6 characters'}), 400
+        return jsonify({'success': False, 'error': strings.MSG_PASSWORD_MIN_LENGTH}), 400
 
     user.set_password(new_password)
     db.session.commit()
 
-    return jsonify({'success': True, 'message': 'Password updated successfully.'})
+    return jsonify({'success': True, 'message': strings.MSG_PASSWORD_UPDATED})
 
 # Placeholder for forgot-password logic
 @auth_bp.route('/forgot-password', methods=['POST'])
@@ -299,7 +300,7 @@ def forgot_password():
         identifier = (data.get('email') or data.get('username') or '').strip()
         # Always return a generic response to avoid enumeration
         service.forgot_password(identifier)
-        return jsonify({'success': True, 'message': 'If that account exists, a reset link has been sent.'}), 200
+        return jsonify({'success': True, 'message': strings.MSG_FORGOT_PASSWORD_SENT}), 200
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -343,7 +344,7 @@ def reset_password():
             data.get('password') or '',
             data.get('confirmPassword')
         )
-        return jsonify({'success': True, 'message': 'Password reset successful. You can now sign in.'}), 200
+        return jsonify({'success': True, 'message': strings.MSG_PASSWORD_RESET_SUCCESS}), 200
     except ValueError as ve:
         return jsonify({'success': False, 'error': str(ve)}), 400
     except Exception as e:

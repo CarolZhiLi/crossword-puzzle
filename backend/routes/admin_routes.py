@@ -7,7 +7,7 @@ from extensions import db
 from utils.db_admin import admin_session_scope
 from models import User, UserRole, AppSetting, UserQuota, ApiUsage, GameSession, PasswordReset, UserDailyReset, ApiStatistic, SavedGame
 from constants import DEFAULT_DAILY_FREE_LIMIT
- 
+import strings
 
 
 admin_bp = Blueprint('admin', __name__)
@@ -68,8 +68,7 @@ def get_settings():
       403:
         description: Forbidden. The current user is not an admin.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     settings = { s.key: s.value for s in AppSetting.query.all() }
     if 'DAILY_FREE_LIMIT' not in settings:
         settings['DAILY_FREE_LIMIT'] = str(DEFAULT_DAILY_FREE_LIMIT)
@@ -113,8 +112,7 @@ def update_settings():
       403:
         description: Forbidden. The current user is not an admin.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     data = request.get_json(silent=True) or {}
     changed = {}
     if 'DAILY_FREE_LIMIT' in data:
@@ -168,17 +166,15 @@ def set_user_role():
         description: User not found.
 
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     data = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
     role = (data.get('role') or 'user').strip()
     if role not in ('user', 'admin'):
-        return jsonify({'success': False, 'error': 'Invalid role'}), 400
+        return jsonify({'success': False, 'error': strings.MSG_ADMIN_INVALID_ROLE}), 400
     with admin_session_scope() as s:
         user = s.query(User).filter_by(username=username).first()
-        if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+        if not user: return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
         ur = s.query(UserRole).filter_by(user_id=user.id).first()
         if not ur:
             ur = UserRole(user_id=user.id, role=role)
@@ -223,17 +219,15 @@ def set_user_quota():
       404:
         description: User not found.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     data = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
     limit = int(data.get('daily_limit') or 0)
     if limit < 0:
-        return jsonify({'success': False, 'error': 'Invalid limit'}), 400
+        return jsonify({'success': False, 'error': strings.MSG_ADMIN_INVALID_LIMIT}), 400
     with admin_session_scope() as s:
         user = s.query(User).filter_by(username=username).first()
-        if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+        if not user: return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
         uq = s.query(UserQuota).filter_by(user_id=user.id).first()
         if not uq:
             uq = UserQuota(user_id=user.id, daily_limit=limit)
@@ -280,8 +274,7 @@ def reset_usage():
       404:
         description: User not found (if a specific username was provided).
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     data = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
 
@@ -296,8 +289,7 @@ def reset_usage():
                 return jsonify({'success': True, 'reset': 'all', 'rows': int(updated or 0)})
 
             user = s.query(User).filter_by(username=username).first()
-            if not user:
-                return jsonify({'success': False, 'error': 'User not found'}), 404
+            if not user: return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
             updated = s.query(ApiUsage).filter_by(user_id=user.id).update({
                 ApiUsage.count: 0,
@@ -308,7 +300,7 @@ def reset_usage():
         # Provide clearer guidance if UPDATE is also denied
         msg = str(e)
         if '1142' in msg and 'command denied' in msg.lower():
-            return jsonify({'success': False, 'error': 'Database permission denied for UPDATE on api_usage. Grant UPDATE or perform reset with DB admin.'}), 500
+            return jsonify({'success': False, 'error': strings.MSG_ADMIN_DB_UPDATE_PERMISSION_DENIED}), 500
         return jsonify({'success': False, 'error': msg}), 500
 
 
@@ -345,8 +337,7 @@ def reset_usage_today():
       500:
         description: Internal server error during the reset operation.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     from datetime import datetime
     from models import UserDailyReset
     data = request.get_json(silent=True) or {}
@@ -369,8 +360,7 @@ def reset_usage_today():
                 return jsonify({'success': True, 'reset_today': 'all', 'users': len(user_ids)})
 
             user = s.query(User).filter_by(username=username).first()
-            if not user:
-                return jsonify({'success': False, 'error': 'User not found'}), 404
+            if not user: return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
             row = s.query(UserDailyReset).filter_by(user_id=user.id, date=today).first()
             if not row:
                 row = UserDailyReset(user_id=user.id, date=today, reset_at=now)
@@ -410,8 +400,7 @@ def get_api_usage_stats():
       403:
         description: Forbidden. The current user is not an admin.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     try:
         with admin_session_scope() as s:
             stats = s.query(
@@ -471,23 +460,21 @@ def delete_user_and_related():
       404:
         description: User not found.
     """
-    if not require_admin():
-        return jsonify({'success': False, 'error': 'Forbidden'}), 403
+    if not require_admin(): return jsonify({'success': False, 'error': strings.MSG_FORBIDDEN}), 403
     data = request.get_json(silent=True) or {}
     username = (data.get('username') or '').strip()
     if not username:
-        return jsonify({'success': False, 'error': 'Username is required'}), 400
+        return jsonify({'success': False, 'error': strings.MSG_ADMIN_USERNAME_REQUIRED}), 400
 
     try:
         with admin_session_scope() as s:
             user = s.query(User).filter_by(username=username).first()
-            if not user:
-                return jsonify({'success': False, 'error': 'User not found'}), 404
+            if not user: return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
             # Do not allow deleting admin users
             ur = s.query(UserRole).filter_by(user_id=user.id).first()
             if ur and ur.role == 'admin':
-                return jsonify({'success': False, 'error': 'not enough privilege to delete an admin'}), 403
+                return jsonify({'success': False, 'error': strings.MSG_ADMIN_CANNOT_DELETE_ADMIN}), 403
 
             deleted = {}
             deleted['api_usage'] = s.query(ApiUsage).filter_by(user_id=user.id).delete(synchronize_session=False) or 0
@@ -503,5 +490,5 @@ def delete_user_and_related():
     except Exception as e:
         msg = str(e)
         if '1142' in msg and 'denied' in msg.lower():
-            return jsonify({'success': False, 'error': 'Database permission denied for DELETE on one or more tables. Use admin DB user or adjust grants.'}), 500
+            return jsonify({'success': False, 'error': strings.MSG_ADMIN_DB_PERMISSION_DENIED}), 500
         return jsonify({'success': False, 'error': msg}), 500

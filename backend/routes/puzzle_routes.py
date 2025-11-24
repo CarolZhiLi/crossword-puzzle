@@ -8,6 +8,7 @@ from models import GameSession, User, UserRole, UserQuota, AppSetting, ApiUsage,
 from utils.tokens import estimate_tokens
 from datetime import datetime, timedelta
 from constants import DEFAULT_DAILY_FREE_LIMIT
+import strings
 
 
 puzzle_bp = Blueprint('puzzle', __name__)
@@ -180,7 +181,7 @@ def generate_crossword():
                 if used_today_before >= daily_limit:
                     return jsonify({
                         'success': False,
-                        'error': 'Daily free limit reached',
+                        'error': strings.MSG_DAILY_LIMIT_REACHED,
                         'daily': {
                             'limit': int(daily_limit),
                             'used': int(used_today_before),
@@ -203,12 +204,12 @@ WORD - Clue"""
             print(f"Error calling word generation API: {e}")
             error_msg = str(e)
             if "timeout" in error_msg.lower() or "connection" in error_msg.lower():
-                return jsonify({'success': False, 'error': 'Failed to connect to word generation service. Please check your internet connection and try again.'}), 502
-            return jsonify({'success': False, 'error': f'Failed to connect to word generation service: {error_msg}'}), 502
+                return jsonify({'success': False, 'error': strings.MSG_GEN_SERVICE_CONNECTION_FAIL}), 502
+            return jsonify({'success': False, 'error': f'{strings.MSG_GEN_SERVICE_FAIL}: {error_msg}'}), 502
 
         if not results or len(results) == 0:
             print("Word generation API returned empty results")
-            return jsonify({'success': False, 'error': 'Word generation API returned no results. The service may be unavailable or the response format was unexpected.'}), 502
+            return jsonify({'success': False, 'error': strings.MSG_GEN_SERVICE_EMPTY}), 502
 
         pairs = []
         for item in results:
@@ -244,7 +245,7 @@ WORD - Clue"""
                 continue
 
         if not pairs:
-            return jsonify({'success': False, 'error': 'Word generation failed'}), 502
+            return jsonify({'success': False, 'error': strings.MSG_GEN_FAILED}), 502
 
         words = [w for w, _ in pairs]
         definitions = {w: d for w, d in pairs}
@@ -257,10 +258,10 @@ WORD - Clue"""
         print(f"Valid words: {valid_words[:10]}...")  # Print first 10 for debugging
         
         if not valid_words:
-            return jsonify({'success': False, 'error': 'No valid words after filtering (all words too long)'}), 502
+            return jsonify({'success': False, 'error': strings.MSG_NO_VALID_WORDS_FILTERED}), 502
 
         if len(valid_words) < 3:
-            return jsonify({'success': False, 'error': f'Too few valid words ({len(valid_words)}). Need at least 3 words to generate a crossword.'}), 502
+            return jsonify({'success': False, 'error': f'{strings.MSG_TOO_FEW_WORDS_PREFIX} ({len(valid_words)}). {strings.MSG_TOO_FEW_WORDS_SUFFIX}'}), 502
 
         generator = CrosswordGenerator(valid_words)
         success = generator.solve()
@@ -279,12 +280,12 @@ WORD - Clue"""
                 # For now, we'll still fail but with a more helpful message
                 return jsonify({
                     'success': False, 
-                    'error': f'Could only place {placed_count} out of {len(valid_words)} words. The crossword generator needs words that can intersect. Try a different topic with more common terms.'
+                    'error': strings.MSG_CROSSWORD_FAIL_PARTIAL.format(placed_count=placed_count, total_words=len(valid_words))
                 }), 500
             else:
                 return jsonify({
                     'success': False, 
-                    'error': f'Crossword generation failed. Could only place {placed_count} out of {len(valid_words)} words. The words may not have enough common letters to intersect. Try a different topic or difficulty.'
+                    'error': strings.MSG_CROSSWORD_FAIL_TOTAL.format(placed_count=placed_count, total_words=len(valid_words))
                 }), 500
 
         used_words = [word for word, _, _, _ in generator.solution_coordinates]
@@ -294,14 +295,14 @@ WORD - Clue"""
         # Validate grid format - ensure it's a 2D list
         if not grid or not isinstance(grid, list):
             print(f"Invalid grid format: {type(grid)}")
-            return jsonify({'success': False, 'error': 'Invalid grid format generated'}), 500
+            return jsonify({'success': False, 'error': strings.MSG_INVALID_GRID_FORMAT}), 500
         
         # Ensure grid cells are strings (convert empty strings to empty strings for JSON)
         grid_serializable = []
         for row in grid:
             if not isinstance(row, list):
                 print(f"Invalid grid row format: {type(row)}")
-                return jsonify({'success': False, 'error': 'Invalid grid row format'}), 500
+                return jsonify({'success': False, 'error': strings.MSG_INVALID_GRID_ROW_FORMAT}), 500
             grid_serializable.append([str(cell) if cell else '' for cell in row])
 
         # Build words list with validation
@@ -325,7 +326,7 @@ WORD - Clue"""
 
         if not words_list:
             print("No valid words in solution_coordinates")
-            return jsonify({'success': False, 'error': 'No valid word coordinates generated'}), 500
+            return jsonify({'success': False, 'error': strings.MSG_NO_VALID_WORD_COORDS}), 500
 
         # Ensure definitions are JSON serializable (all keys and values should be strings)
         definitions_serializable = {}
@@ -465,7 +466,7 @@ def save_game():
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
         payload = flask_request.get_json(silent=True) or {}
         topic = payload.get('topic')
@@ -476,7 +477,7 @@ def save_game():
 
         # Basic validation
         if grid is None or definitions is None or words is None:
-            return jsonify({'success': False, 'error': 'Missing required fields: words, definitions, grid'}), 400
+            return jsonify({'success': False, 'error': strings.MSG_SAVE_GAME_MISSING_FIELDS}), 400
 
         # Persist to saved_games
         row = SavedGame(
@@ -531,7 +532,7 @@ def get_saved_games():
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
         # Fetch the first 3 saved games, ordered by when they were saved
         saved_games = SavedGame.query.filter_by(user_id=user.id).order_by(SavedGame.id.asc()).limit(3).all()
@@ -591,12 +592,12 @@ def get_saved_game_by_id(game_id):
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
         # Fetch the specific game and verify ownership
         game = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
         if not game:
-            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_SAVE_GAME_NOT_FOUND}), 404
 
         # The JSON columns are already stored as JSON, so we can return them directly
         game_data = {
@@ -660,12 +661,12 @@ def override_saved_game(game_id):
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
         # Fetch the specific game and verify ownership
         game_to_override = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
         if not game_to_override:
-            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_SAVE_GAME_NOT_FOUND}), 404
 
         payload = flask_request.get_json(silent=True) or {}
         
@@ -680,7 +681,7 @@ def override_saved_game(game_id):
 
         db.session.commit()
 
-        return jsonify({'success': True, 'id': game_to_override.id, 'message': 'Game overridden successfully.'}), 200
+        return jsonify({'success': True, 'id': game_to_override.id, 'message': strings.MSG_SAVE_GAME_OVERRIDDEN}), 200
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
@@ -715,16 +716,16 @@ def delete_saved_game(game_id):
         username = get_jwt_identity()
         user = User.query.filter_by(username=username).first()
         if not user:
-            return jsonify({'success': False, 'error': 'User not found'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_USER_NOT_FOUND}), 404
 
         # Fetch the specific game and verify ownership before deleting
         game = SavedGame.query.filter_by(id=game_id, user_id=user.id).first()
         if not game:
-            return jsonify({'success': False, 'error': 'Saved game not found or access denied'}), 404
+            return jsonify({'success': False, 'error': strings.MSG_SAVE_GAME_NOT_FOUND}), 404
 
         db.session.delete(game)
         db.session.commit()
-        return jsonify({'success': True, 'message': 'Game deleted successfully.'})
+        return jsonify({'success': True, 'message': strings.MSG_SAVE_GAME_DELETED})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
