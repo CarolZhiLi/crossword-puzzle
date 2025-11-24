@@ -59,7 +59,10 @@ def create_app() -> Flask:
     # Initialize CORS after blueprints are registered to ensure all routes are covered
     CORS(app,
          resources={r"/api/*": {
-             "origins": ["http://localhost:5500"],
+             "origins": [
+                 "http://localhost:5500",  # For local development
+                 "https://crossythink-frontend.netlify.app"  # For Netlify deployment
+             ],
              "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
              "allow_headers": ["Content-Type", "Authorization"]
          }}, supports_credentials=True)
