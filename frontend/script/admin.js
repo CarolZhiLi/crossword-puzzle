@@ -2,12 +2,13 @@
   function ensureAdmin() {
     let user = null;
     try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
-    if (!user || user.role !== 'admin') {
+    const token = localStorage.getItem('token');
+    if (!token || !user || user.role !== 'admin') {
       alert('Admin only. Please log in as admin.');
       window.location.href = './gameplay.html';
       return null;
     }
-    return { user };
+    return { user, token };
   }
 
   function renderRows(rows) {
@@ -53,7 +54,7 @@
     const q = state.range === 'today' ? '?range=today' : '';
     const res = await fetch(`${window.API_BASE}/api/v1/usage/all${q}`, {
       method: 'GET',
-      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${state.token}` }
     });
     if (res.status === 401) {
       try { localStorage.removeItem('token'); } catch(_) {}
@@ -71,7 +72,7 @@
   async function loadAPIStats(state) {
     const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/stats`, {
       method: 'GET',
-      credentials: 'include',
+      headers: { 'Authorization': `Bearer ${state.token}` }
     });
     if (res.status === 401) {
       try { localStorage.removeItem('token'); } catch(_) {}
@@ -165,8 +166,7 @@
       try {
         const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/reset`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
           body: JSON.stringify({ username: who })
         });
         const data = await res.json();
@@ -183,8 +183,7 @@
       try {
         const res = await fetch(`${window.API_BASE}/api/v1/admin/usage/reset-today`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
           body: JSON.stringify({ username: who })
         });
         const data = await res.json();
@@ -227,6 +226,7 @@
     const auth = ensureAdmin();
     if (!auth) return;
     const state = { 
+      token: auth.token, 
       rows: [], 
       apiStats: [],
       apiStatsPage: 0,

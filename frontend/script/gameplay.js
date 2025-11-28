@@ -84,9 +84,11 @@ export default class CrosswordGame {
 
   // ---- Backend-only gating: frontend no-ops ----
   isAuthenticated() {
-    // Auth is tracked by backend via httpOnly JWT cookie;
-    // the frontend does not inspect the token directly.
-    return !!(window.__auth && window.__auth.isAuthenticated);
+    try {
+      return !!localStorage.getItem("token");
+    } catch (_) {
+      return false;
+    }
   }
 
   // Frontend no longer tracks plays; server enforces limits
@@ -552,9 +554,9 @@ export default class CrosswordGame {
     modal.querySelector('#backToGameBtn')?.addEventListener('click', () => this.closeSaveGameModal());
 
     // --- Fetch Saved Games and Populate ---
+    const token = localStorage.getItem("token");
     fetch(`${window.API_BASE}/api/v1/saved-games`, {
-      method: 'GET',
-      credentials: 'include',
+      headers: { Authorization: `Bearer ${token}` }
     })
     .then(r => r.json())
     .then(result => {

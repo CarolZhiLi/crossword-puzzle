@@ -67,10 +67,14 @@ export class GameApi {
     // Remember current topic/difficulty for potential save
     this.game.currentTopic = topic;
     this.game.currentDifficulty = mapped;
+    const headers = { "Content-Type": "application/json" };
+    try {
+      const token = localStorage.getItem("token");
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    } catch (_) {}
     fetch(`${window.API_BASE}/api/v1/generate-crossword`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      headers,
       body: JSON.stringify({ topic, difficulty: mapped }),
     })
       .then((r) => {
@@ -282,6 +286,11 @@ export class GameApi {
 
   loadSavedGame(gameId) {
     console.log(`Loading saved game with ID: ${gameId}`);
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Authentication error. Please log in again.");
+      return;
+    }
 
     // Reset game state and show loading animation
     this.game.timerHandler.stopTimer();
@@ -294,8 +303,7 @@ export class GameApi {
     this.game.videoHandler.showAnimationVideo();
 
     fetch(`${window.API_BASE}/api/v1/saved-games/${gameId}`, {
-      method: "GET",
-      credentials: "include",
+      headers: { Authorization: `Bearer ${token}` }
     })
     .then(r => r.json().then(data => ({ ok: r.ok, data })))
     .then(({ ok, data }) => {
@@ -378,6 +386,15 @@ export class GameApi {
 
   saveCurrentGame(gameIdToOverride = null) {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        // Trigger login if not authenticated
+        const signInBtn = document.getElementById("signInBtn");
+        if (signInBtn) signInBtn.click();
+        else alert("Please sign in to save your game.");
+        return;
+      }
+
       // Validate there is a game to save
       if (!this.game || !this.game.solutionGrid || this.game.solutionGrid.length === 0) {
         alert("No game to save. Start a game first.");
@@ -406,8 +423,8 @@ export class GameApi {
         method: method,
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        credentials: "include",
         body: JSON.stringify({ topic, difficulty, words: wordsArr, definitions, grid }),
       })
         .then(r => r.json().then(data => ({ ok: r.ok, status: r.status, data })))

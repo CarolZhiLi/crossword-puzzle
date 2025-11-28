@@ -1,11 +1,5 @@
 from flask import Blueprint, request as flask_request, jsonify
-from flask_jwt_extended import (
-    create_access_token,
-    jwt_required,
-    get_jwt_identity,
-    set_access_cookies,
-    unset_jwt_cookies,
-)
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from extensions import db
 from models import User
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -60,10 +54,7 @@ def register():
             (data.get('email') or '').strip(),
             data.get('password') or ''
         )
-        # Set JWT as httpOnly cookie; token is also returned in body for backward compatibility
-        resp = jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token})
-        set_access_cookies(resp, token)
-        return resp, 201
+        return jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token}), 201
     except ValueError as ve:
         return jsonify({'success': False, 'error': str(ve)}), 400
     except Exception as e:
@@ -120,10 +111,7 @@ def login():
             (data.get('username') or '').strip(),
             data.get('password') or ''
         )
-        # Set JWT as httpOnly cookie; token is also returned in body for backward compatibility
-        resp = jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token})
-        set_access_cookies(resp, token)
-        return resp, 200
+        return jsonify({'success': True, 'user': public_user, 'usage': usage, 'access_token': token}), 200
     except ValueError as ve:
         # Differentiate invalid creds vs other validation
         msg = str(ve)
@@ -282,25 +270,6 @@ def change_password():
     db.session.commit()
 
     return jsonify({'success': True, 'message': strings.MSG_PASSWORD_UPDATED})
-
-
-@auth_bp.route('/logout', methods=['POST'])
-@jwt_required()
-def logout():
-    """Logs out the current user.
-    Clears the JWT httpOnly cookie on the client.
-    ---
-    tags:
-      - Authentication
-    security:
-      - bearerAuth: []
-    responses:
-      200:
-        description: Logout successful; JWT cookie cleared.
-    """
-    resp = jsonify({'success': True, 'message': 'Logged out'})
-    unset_jwt_cookies(resp)
-    return resp, 200
 
 # Placeholder for forgot-password logic
 @auth_bp.route('/forgot-password', methods=['POST'])
