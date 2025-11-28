@@ -395,8 +395,28 @@ WORD - Clue"""
                 completion_tokens = estimate_tokens(completion_text)
                 total_tokens = prompt_tokens + completion_tokens
 
-                # No longer persist automatic game sessions here.
-                # Game data will be saved only when user explicitly clicks save.
+                # Persist a lightweight GameSession row so that daily usage
+                # can be computed from the database (used by /usage/me, admin, etc.).
+                try:
+                    session = GameSession(
+                        user_id=user.id,
+                        topic=topic,
+                        difficulty=(data.get('difficulty') or 'easy'),
+                        model='llm:newbio',
+                        tokens_prompt=int(prompt_tokens or 0),
+                        tokens_completion=int(completion_tokens or 0),
+                        tokens_total=int(total_tokens or 0),
+                        words_count=int(len(valid_words)),
+                        placed_words=int(len(used_words)),
+                        grid_size=int(size),
+                        status='completed',
+                    )
+                    db.session.add(session)
+                    db.session.commit()
+                except Exception as se:
+                    # Do not fail the request if logging the session fails
+                    db.session.rollback()
+                    print(f'Failed to record GameSession: {se}')
         except Exception:
             pass
 
