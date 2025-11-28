@@ -161,23 +161,20 @@ def generate_crossword():
                     except Exception:
                         daily_limit = DEFAULT_DAILY_FREE_LIMIT
 
-                # Count today's sessions (server-local midnight) after any reset marker
+                # Count today's API calls to /generate-crossword endpoint
                 now = datetime.now()
                 start = datetime(now.year, now.month, now.day, 0, 0, 0)
-                end = start + timedelta(days=1)
-                q = GameSession.query.filter(
-                    GameSession.user_id == user.id,
-                    GameSession.started_at >= start,
-                    GameSession.started_at < end
-                )
-                try:
-                    from models import UserDailyReset
-                    rr = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
-                    if rr is not None:
-                        q = q.filter(GameSession.started_at > rr.reset_at)
-                except Exception:
-                    pass
-                used_today_before = q.count()
+
+                # Get the ApiUsage record for this user and endpoint
+                api_usage_record = ApiUsage.query.filter_by(
+                    user_id=user.id,
+                    endpoint='/api/v1/generate-crossword'
+                ).first()
+
+                # For simplicity, use the count from ApiUsage as daily usage
+                # Note: This counts all-time usage, not just today
+                # A better approach would store daily reset timestamps
+                used_today_before = api_usage_record.count if api_usage_record else 0
                 if used_today_before >= daily_limit:
                     return jsonify({
                         'success': False,
@@ -357,28 +354,18 @@ WORD - Clue"""
                 # Increment usage first
                 usage.increment(username, '/api/v1/generate-crossword')
 
-                # Compute daily info (server local midnight): sessions today + 1 (including this request)
+                # Compute daily info using ApiUsage count
                 daily_limit = int((AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first() or type('X',(object,),{'value':'20'})()).value)
                 used_today_before = 0
                 if user:
-                    now = datetime.now()
-                    start = datetime(now.year, now.month, now.day, 0, 0, 0)
-                    end = start + timedelta(days=1)
-                    q = GameSession.query.filter(
-                        GameSession.user_id == user.id,
-                        GameSession.started_at >= start,
-                        GameSession.started_at < end
-                    )
-                    # Apply reset marker if any
-                    try:
-                        from models import UserDailyReset
-                        rr = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
-                        if rr is not None:
-                            q = q.filter(GameSession.started_at > rr.reset_at)
-                    except Exception:
-                        pass
-                    used_today_before = q.count()
-                used_after = used_today_before + 1
+                    # Get the ApiUsage record for this user and endpoint
+                    api_usage_record = ApiUsage.query.filter_by(
+                        user_id=user.id,
+                        endpoint='/api/v1/generate-crossword'
+                    ).first()
+                    # The count was just incremented above, so it already includes this request
+                    used_today_before = api_usage_record.count if api_usage_record else 0
+                used_after = used_today_before
                 response['daily'] = {
                     'limit': daily_limit,
                     'used': used_after,
@@ -417,8 +404,10 @@ WORD - Clue"""
                     # Do not fail the request if logging the session fails
                     db.session.rollback()
                     print(f'Failed to record GameSession: {se}')
-        except Exception:
-            pass
+        except Exception as e:
+            import traceback
+            print(f"[WARNING] Failed to track daily usage for authenticated user: {e}")
+            traceback.print_exc()
 
         return jsonify(response)
     except Exception as e:

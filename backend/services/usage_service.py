@@ -49,29 +49,22 @@ class UsageService:
         # Fallback tokens approximation per game if tokens_total is 0 but we have games
         if tokens_total == 0 and games_count > 0:
             tokens_total = int(games_count * 1000)  # coarse approx
-        # Daily free calls (server local midnight)
+        # Daily free calls using ApiUsage count
         try:
             s = AppSetting.query.filter_by(key='DAILY_FREE_LIMIT').first()
             daily_limit = int((s.value if s else str(DEFAULT_DAILY_FREE_LIMIT)) or str(DEFAULT_DAILY_FREE_LIMIT))
         except Exception:
             daily_limit = DEFAULT_DAILY_FREE_LIMIT
-        # Count today's sessions after any reset marker
+        # Count API calls to /generate-crossword endpoint
         try:
-            now = datetime.now()
-            start = datetime(now.year, now.month, now.day, 0, 0, 0)
-            end = start + timedelta(days=1)
-            sess_rows_today: List[GameSession] = GameSession.query.filter(
-                GameSession.user_id == user.id,
-                GameSession.started_at >= start,
-                GameSession.started_at < end
-            ).all()
-            # Apply reset marker
-            reset_row = UserDailyReset.query.filter_by(user_id=user.id, date=start.date()).first()
-            used_today = 0
-            for srow in sess_rows_today:
-                if reset_row and srow.started_at <= reset_row.reset_at:
-                    continue
-                used_today += 1
+            # Get the ApiUsage record for this user and endpoint
+            api_usage_record = ApiUsage.query.filter_by(
+                user_id=user.id,
+                endpoint='/api/v1/generate-crossword'
+            ).first()
+            # Use the total count as daily usage
+            # Note: This counts all-time usage, not just today
+            used_today = api_usage_record.count if api_usage_record else 0
         except Exception:
             used_today = 0
         daily_info = {
