@@ -8,9 +8,8 @@
 class AuthManager {
   constructor() {
     this.currentUser = null;
-    this.isAuthenticated = !!(
-      typeof localStorage !== "undefined" && localStorage.getItem("token")
-    );
+    // Auth is derived from server-side JWT httpOnly cookie via /auth/me
+    this.isAuthenticated = false;
     this.bindUI();
     this.refreshAuthState();
   }
@@ -63,50 +62,41 @@ class AuthManager {
   refreshAuthState() {
     try {
       return new Promise((resolve) => {
-        const token = localStorage.getItem("token");
-        if (token) {
-          fetch(`${window.API_BASE}/api/v1/auth/me`, {
-            method: "GET",
-            headers: { Authorization: `Bearer ${token}` },
+        fetch(`${window.API_BASE}/api/v1/auth/me`, {
+          method: "GET",
+          credentials: "include",
+        })
+          .then((r) => {
+            if (r.status === 401) {
+              console.log("Not authenticated or session expired");
+              try {
+                localStorage.removeItem("user");
+              } catch (_) {}
+              this.isAuthenticated = false;
+              this.currentUser = null;
+              this.updateUI();
+              return null;
+            }
+            return r.json();
           })
-            .then((r) => {
-              if (r.status === 401) {
-                console.log("Token invalid or expired, clearing authentication");
-                try {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("user");
-                } catch (_) {}
-                this.isAuthenticated = false;
-                this.currentUser = null;
-                this.updateUI();
-                return null;
-              }
-              return r.json();
-            })
-            .then((data) => {
-              if (!data) return resolve();
-              if (data && data.success && data.user) {
-                this.currentUser = data.user;
-                try {
-                  localStorage.setItem("user", JSON.stringify(data.user));
-                } catch (_) {}
-                this.isAuthenticated = true;
-              } else {
-                this.isAuthenticated = true;
-              }
-              this.updateUI();
-              resolve();
-            })
-            .catch(() => {
-              this.updateUI();
-              resolve();
-            });
-        } else {
-          this.isAuthenticated = false;
-          this.currentUser = null;
-          this.updateUI();
-          resolve();
-        }
+          .then((data) => {
+            if (!data) return resolve();
+            if (data && data.success && data.user) {
+              this.currentUser = data.user;
+              try {
+                localStorage.setItem("user", JSON.stringify(data.user));
+              } catch (_) {}
+              this.isAuthenticated = true;
+            } else {
+              this.isAuthenticated = false;
+            }
+            this.updateUI();
+            resolve();
+          })
+          .catch(() => {
+            this.updateUI();
+            resolve();
+          });
       });
     } catch (_) {
       this.updateUI();
@@ -183,15 +173,14 @@ class AuthManager {
     try {
       const apiUsageEl = document.getElementById("apiUsage");
       const freeBanner = document.getElementById("freeBanner");
-      const token = localStorage.getItem("token");
-      if (!token || !apiUsageEl) {
+      if (!apiUsageEl) {
         if (apiUsageEl) apiUsageEl.style.display = "none";
         if (freeBanner) freeBanner.style.display = "none";
         return;
       }
       fetch(`${window.API_BASE}/api/v1/usage/me`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
       })
         .then((r) => {
           if (r.status === 401) {
@@ -580,6 +569,7 @@ class AuthManager {
       const r = await fetch(`${window.API_BASE}/api/v1/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
       const data = await r.json();
@@ -587,7 +577,6 @@ class AuthManager {
         throw new Error(
           data.error || (window.t ? t("login_failed") : "Login failed")
         );
-      if (data.access_token) localStorage.setItem("token", data.access_token);
       if (data.user)
         try {
           localStorage.setItem("user", JSON.stringify(data.user));
@@ -633,6 +622,7 @@ class AuthManager {
       const r = await fetch(`${window.API_BASE}/api/v1/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, email, password }),
       });
       const data = await r.json();
@@ -641,7 +631,6 @@ class AuthManager {
           data.error ||
             (window.t ? t("registration_failed") : "Registration failed")
         );
-      if (data.access_token) localStorage.setItem("token", data.access_token);
       if (data.user)
         try {
           localStorage.setItem("user", JSON.stringify(data.user));
@@ -684,6 +673,7 @@ class AuthManager {
       const r = await fetch(`${window.API_BASE}/api/v1/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await r.json();
@@ -713,8 +703,6 @@ class AuthManager {
     // Retrieve gameId from a temporary storage if needed for confirmation modals
     const gameIdForConfirm = sessionStorage.getItem('gameIdForConfirm');
 
-    const token = localStorage.getItem("token");
-
     if (type === 'modifyUsername') {
       document.getElementById('modifyUsernameFormElement')?.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -728,16 +716,13 @@ class AuthManager {
         this.showMessage(t('saving_changes'), 'info');
         fetch(`${window.API_BASE}/api/v1/auth/change-username`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ newUsername }),
         })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
           if (!ok) throw new Error(data.error || 'Failed to change username.');
-          // Check for a new token in the response and update localStorage
-          if (data.access_token) {
-            localStorage.setItem('token', data.access_token);
-          }
           this.showMessage(t('username_change_success'), 'success');
           // Wait for the success message to show, then refresh state and show the modal
           setTimeout(() => {
@@ -769,7 +754,8 @@ class AuthManager {
         this.showMessage(t('updating_password_msg'), 'info');
         fetch(`${window.API_BASE}/api/v1/auth/change-password`, {
           method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ currentPassword, newPassword }),
         })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))
@@ -842,7 +828,7 @@ class AuthManager {
         this.showMessage(t('deleting_game'), 'info');
         fetch(`${window.API_BASE}/api/v1/saved-games/${gameIdForConfirm}`, {
           method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` },
+          credentials: 'include',
         })
         .then(r => r.json().then(data => ({ ok: r.ok, data })))
         .then(({ ok, data }) => {
@@ -865,7 +851,6 @@ class AuthManager {
     if (type === 'logoutConfirm') {
       document.getElementById('confirmLogoutYes')?.addEventListener('click', () => {
         this.signOut();
-        window.location.reload();
       });
     } 
   }
@@ -888,19 +873,29 @@ class AuthManager {
   }
 
   signOut() {
-    try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    } catch (_) {}
-    this.currentUser = null;
-    this.isAuthenticated = false;
-    // Clear the game when user logs out
-    if (window.__game) {
-      try {
-        window.__game.clearGame();
-      } catch (_) {}
-    }
-    this.updateUI();
+    // Ask backend to clear httpOnly JWT cookie, then reset local state
+    fetch(`${window.API_BASE}/api/v1/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    })
+      .catch(() => {})
+      .finally(() => {
+        try {
+          localStorage.removeItem("user");
+        } catch (_) {}
+        this.currentUser = null;
+        this.isAuthenticated = false;
+        if (window.__game) {
+          try {
+            window.__game.clearGame();
+          } catch (_) {}
+        }
+        this.updateUI();
+        // Close any open auth/profile modal so the user sees the logged-out state
+        try {
+          this.closeModal();
+        } catch (_) {}
+      });
   }
 }
 
