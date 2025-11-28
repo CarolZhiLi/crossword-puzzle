@@ -397,14 +397,18 @@
   .auth-modal-content {
     width: 88%;
     max-width: 350px;
-    height: 50%;
-    max-height: 85vh;
+    height: auto;
+    max-height: 90vh;
     padding: 20px;
+    overflow-y: auto;
   }
 
   .auth-modal-body {
     flex-direction: column;
     padding: 0;
+    gap: 12px;
+    max-height: calc(90vh - 40px);
+    overflow-y: auto;
   }
 
   .auth-form {
@@ -475,6 +479,10 @@
     max-width: none;
     font-size: var(--font-size-md);
     padding: 12px;
+    color: var(--color-text);
+    background: var(--color-creamy-yellow);
+    border-color: var(--color-border);
+    font-weight: 600;
   }
 
   .auth-modal-content.profile-modal .saved-games-container {
