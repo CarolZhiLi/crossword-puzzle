@@ -11,14 +11,14 @@
     return { user, token };
   }
 
-  function renderRows(rows) {
+  function renderRows(rows, start = 0) {
     const tbody = document.querySelector('#usageTable tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
     (rows || []).forEach((r, i) => {
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td>${i+1}</td>
+        <td>${start + i + 1}</td>
         <td>${r.username || ''}</td>
         <td>${r.email || ''}</td>
         <td>${Number(r.total_calls || 0)}</td>
@@ -64,8 +64,8 @@
     }
     const data = await res.json();
     if (!res.ok || !data.success) throw new Error(data.error || 'Failed to load');
-    state.rows = data.results || [];
-    applyFilter(state);
+    state.allRows = data.results || [];
+    applyFilterAndRender(state);
     await loadAPIStats(state);
   }
 
@@ -85,7 +85,6 @@
     
     state.apiStats = data.stats || [];
     state.apiStatsPage = 0;
-    state.apiStatsPageSize = 8;
     
     renderAPIStats(state);
   }
@@ -131,10 +130,37 @@
     }
   }
 
-  function applyFilter(state) {
+  function renderUsagePage(state) {
     const q = (document.getElementById('searchBox')?.value || '').trim();
-    const filtered = filterRows(state.rows, q);
-    renderRows(filtered);
+    const filteredRows = filterRows(state.allRows, q);
+
+    const start = state.usagePage * state.usagePageSize;
+    const end = start + state.usagePageSize;
+    const usagePageData = filteredRows.slice(start, end);
+
+    renderRows(usagePageData, start);
+
+    const pageNum = document.getElementById('usagePageNum');
+    if (pageNum) {
+      const totalPages = Math.ceil(filteredRows.length / state.usagePageSize);
+      pageNum.textContent = `Page ${state.usagePage + 1} of ${totalPages > 0 ? totalPages : 1}`;
+    }
+
+    const prevBtn = document.getElementById('usagePrevBtn');
+    if (prevBtn) {
+      prevBtn.disabled = state.usagePage === 0;
+    }
+
+    const nextBtn = document.getElementById('usageNextBtn');
+    if (nextBtn) {
+      const lastPage = Math.ceil(filteredRows.length / state.usagePageSize) - 1;
+      nextBtn.disabled = state.usagePage >= lastPage;
+    }
+  }
+
+  function applyFilterAndRender(state) {
+    state.usagePage = 0; // Reset to first page on new filter
+    renderUsagePage(state);
   }
 
   function bindUI(state) {
@@ -144,11 +170,11 @@
     const resetBtn = document.getElementById('resetCallsBtn');
     const resetTodayBtn = document.getElementById('resetTodayBtn');
     const rangeSelect = document.getElementById('rangeSelect');
-    if (search) search.addEventListener('input', () => applyFilter(state));
+    if (search) search.addEventListener('input', () => applyFilterAndRender(state));
     if (refresh) refresh.addEventListener('click', () => loadData(state).catch(err => alert(err.message)));
     if (exportBtn) exportBtn.addEventListener('click', () => {
       const q = (document.getElementById('searchBox')?.value || '').trim();
-      const filtered = filterRows(state.rows || [], q);
+      const filtered = filterRows(state.allRows || [], q);
       const csv = toCSV(filtered);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -200,6 +226,29 @@
       loadData(state).catch(()=>{});
     });
 
+    const usagePrevBtn = document.getElementById('usagePrevBtn');
+    if (usagePrevBtn) {
+      usagePrevBtn.addEventListener('click', () => {
+        if (state.usagePage > 0) {
+          state.usagePage--;
+          renderUsagePage(state);
+        }
+      });
+    }
+
+    const usageNextBtn = document.getElementById('usageNextBtn');
+    if (usageNextBtn) {
+      usageNextBtn.addEventListener('click', () => {
+        const q = (document.getElementById('searchBox')?.value || '').trim();
+        const filteredRows = filterRows(state.allRows, q);
+        const lastPage = Math.ceil(filteredRows.length / state.usagePageSize) - 1;
+        if (state.usagePage < lastPage) {
+          state.usagePage++;
+          renderUsagePage(state);
+        }
+      });
+    }
+
     const apiStatsPrevBtn = document.getElementById('apiStatsPrevBtn');
     if (apiStatsPrevBtn) {
       apiStatsPrevBtn.addEventListener('click', () => {
@@ -227,10 +276,13 @@
     if (!auth) return;
     const state = { 
       token: auth.token, 
-      rows: [], 
+      allRows: [], 
+      usagePage: 0,
+      usagePageSize: 5,
       apiStats: [],
       apiStatsPage: 0,
-      apiStatsPageSize: 8
+      apiStatsPageSize: 5,
+      range: 'all'
     };
     bindUI(state);
     loadData(state).catch(err => alert(err.message));

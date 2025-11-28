@@ -181,6 +181,8 @@
     request_col: "Requests",
     apiStatsPrevBtn: "Previous",
     apiStatsNextBtn: "Next",
+    usagePrevBtn: "Previous",
+    usageNextBtn: "Next",
   };
 
   window.t = function(key, params){
