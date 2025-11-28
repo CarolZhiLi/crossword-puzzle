@@ -9,6 +9,17 @@ def build_config() -> dict:
 
     # JWT
     cfg['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'change-this-secret-in-production')
+    # Use httpOnly cookies for JWT auth (preferred for XSS protection)
+    cfg['JWT_TOKEN_LOCATION'] = ['cookies']
+    cfg['JWT_ACCESS_COOKIE_NAME'] = 'access_token'
+    cfg['JWT_ACCESS_COOKIE_PATH'] = '/'
+    # Allow toggling cookie security via env so local http dev still works
+    secure_flag = (os.getenv('JWT_COOKIE_SECURE') or 'false').strip().lower() == 'true'
+    cfg['JWT_COOKIE_SECURE'] = secure_flag
+    # For cross-origin cookie usage in production, set JWT_COOKIE_SAMESITE=None and JWT_COOKIE_SECURE=true
+    cfg['JWT_COOKIE_SAMESITE'] = os.getenv('JWT_COOKIE_SAMESITE') or ('None' if secure_flag else 'Lax')
+    # CSRF protection can be enabled later; for now keep flows simple
+    cfg['JWT_COOKIE_CSRF_PROTECT'] = False
 
     # SQLAlchemy
     database_url = os.getenv('DATABASE_URL')
