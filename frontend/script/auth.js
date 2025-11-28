@@ -221,9 +221,8 @@ class AuthManager {
             typeof daily.limit === "number" &&
             typeof daily.remaining === "number"
           ) {
-            const txt =
-              window.STRINGS?.en?.free_remaining?.(daily.remaining) ||
-              `Remaining free calls: ${daily.remaining}`;
+            // Short badge text so the remaining number is always visible
+            const txt = `${daily.remaining} left`;
             if (freeBanner) {
               freeBanner.textContent = txt;
               freeBanner.style.display = "inline-block";
