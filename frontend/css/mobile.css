@@ -433,4 +433,68 @@
   .forgot-password {
     font-size: var(--font-size-sm);
   }
+
+  /* Profile modal adjustments for small screens */
+  .auth-modal-content.profile-modal {
+    width: 92%;
+    max-width: 420px;
+    height: auto;
+    max-height: 90vh;
+    padding: 16px 12px;
+  }
+
+  .auth-modal-content.profile-modal .auth-modal-body {
+    height: auto;
+    max-height: calc(90vh - 60px);
+    overflow-y: auto;
+    padding: 0;
+    gap: 12px;
+  }
+
+  .auth-modal-content.profile-modal .auth-form-section {
+    padding: 8px 8px 16px;
+    gap: 12px;
+    justify-content: flex-start;
+  }
+
+  .auth-modal-content.profile-modal .profile-details {
+    font-size: var(--font-size-base);
+    line-height: 1.4;
+  }
+
+  .auth-modal-content.profile-modal .profile-details p {
+    margin: 8px 0;
+  }
+
+  .auth-modal-content.profile-modal .profile-actions {
+    gap: 10px;
+  }
+
+  .auth-modal-content.profile-modal .profile-actions .btn {
+    width: 100%;
+    max-width: none;
+    font-size: var(--font-size-md);
+    padding: 12px;
+  }
+
+  .auth-modal-content.profile-modal .saved-games-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .auth-modal-content.profile-modal .saved-game-card-wrapper {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .auth-modal-content.profile-modal .saved-game-card {
+    width: 100%;
+    max-width: none;
+    aspect-ratio: 16 / 10;
+  }
+
+  .auth-modal-content.profile-modal .btn-delete-game {
+    width: 100%;
+  }
 }
